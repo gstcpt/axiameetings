@@ -5,6 +5,7 @@ import { createLog } from '@/lib/logger';
 import { notifyParticipants } from '@/lib/notifier';
 import fs from 'fs';
 import path from 'path';
+import { put, del } from '@vercel/blob';
 
 // GET: get live meeting data
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -380,20 +381,33 @@ async function autoGeneratePVDocument(meetingId: number) {
             </html>
         `;
 
+        // Make sure to import { put } from '@vercel/blob'; at the top of your file
         const fileName = `pv-${meeting.id}-${Date.now()}.html`;
-        const dirPath = path.join(process.cwd(), 'public', 'uploads', 'pvs');
-        if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
+        let fileUrl = '';
+
+        // Switch based on environment
+        if (process.env.NODE_ENV === 'production') {
+            // VERCEL BLOB LOGIC
+            const blob = await put(`pvs/${fileName}`, html, {
+                access: 'public',
+                contentType: 'text/html',
+            });
+            fileUrl = blob.url;
+        } else {
+            // LOCALHOST LOGIC
+            const dirPath = path.join(process.cwd(), 'public', 'uploads', 'pvs');
+            if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+            const filePath = path.join(dirPath, fileName);
+            fs.writeFileSync(filePath, html);
+            fileUrl = `/uploads/pvs/${fileName}`;
         }
-        const filePath = path.join(dirPath, fileName);
-        fs.writeFileSync(filePath, html);
 
         // Add to meetings_documents
         await prisma.meetings_documents.create({
             data: {
                 meeting_id: meetingId,
                 file_title: `Procès-Verbal - ${meeting.subject}`,
-                file_path: `/uploads/pvs/${fileName}`,
+                file_path: fileUrl, // Saves either the localhost path or Vercel URL
             }
         });
 

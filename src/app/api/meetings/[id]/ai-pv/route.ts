@@ -5,6 +5,7 @@ import { generateWithRetry, geminiErrorMessage } from '@/lib/ai-provider';
 import { checkAiAccess } from '@/lib/ai-guard';
 import fs from 'fs';
 import path from 'path';
+import { put, del } from '@vercel/blob';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getAuthenticatedUser(req);
@@ -90,11 +91,25 @@ Commence directement par le HTML (<!DOCTYPE html>), sans explication.`;
         const pvsDir = path.join(process.cwd(), 'public', 'uploads', 'pvs');
         if (!fs.existsSync(pvsDir)) fs.mkdirSync(pvsDir, { recursive: true });
 
+        // Make sure to import { put } from '@vercel/blob'; at the top of your file
         const fileName = `ai-pv-${meetingId}-${Date.now()}.html`;
-        const filePath = path.join(pvsDir, fileName);
-        fs.writeFileSync(filePath, htmlContent, 'utf8');
+        let fileUrl = '';
 
-        const fileUrl = `/uploads/pvs/${fileName}`;
+        if (process.env.NODE_ENV === 'production') {
+            // VERCEL BLOB LOGIC
+            const blob = await put(`pvs/${fileName}`, htmlContent, {
+                access: 'public',
+                contentType: 'text/html',
+            });
+            fileUrl = blob.url;
+        } else {
+            // LOCALHOST LOGIC
+            const pvsDir = path.join(process.cwd(), 'public', 'uploads', 'pvs');
+            if (!fs.existsSync(pvsDir)) fs.mkdirSync(pvsDir, { recursive: true });
+            const filePath = path.join(pvsDir, fileName);
+            fs.writeFileSync(filePath, htmlContent, 'utf8');
+            fileUrl = `/uploads/pvs/${fileName}`;
+        }
 
         await prisma.meetings_documents.create({
             data: {
