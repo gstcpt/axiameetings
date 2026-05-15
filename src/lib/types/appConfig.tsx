@@ -1,0 +1,84 @@
+export interface AppSettings {
+    id: number;
+    email: string;
+    email_password: string;
+    host: string;
+    port: number;
+    ssl: boolean;
+    from_email: string;
+    from_name: string;
+    logo_file_name?: string | null;
+    favicon_file_name?: string | null;
+    contact_phone?: string | null;
+    contact_email?: string | null;
+    contact_adress?: string | null;
+    facebook?: string | null;
+    linkedin?: string | null;
+    tiktok?: string | null;
+    term_of_use?: string | null;
+    privacy_policy?: string | null;
+}
+
+export interface Newsletter {
+    id: number;
+    email: string;
+    created_at: string;
+}
+
+export interface Reference {
+    id: number;
+    name: string;
+    logo_file_name: string;
+    website: string;
+}
+
+export interface Pack {
+    id: number;
+    name: string;
+    price_month: number;
+    price_year: number;
+    packs_lines: PackLine[];
+}
+
+export interface PackLine {
+    id: number;
+    pack_id: number;
+    title: string;
+}
+
+export interface Log {
+    id: number;
+    message: string;
+    timestamp: string;
+    request: any;
+    payload: any;
+    response: any;
+    user_id: number;
+    user: {
+        fullname: string | null;
+        username: string | null;
+        email: string | null;
+        role: string | null;
+    };
+    company_id: number | null;
+    company?: {
+        name: string;
+    } | null;
+}
+
+export interface OverviewStats {
+    companies: number;
+    meetings: number;
+    users: number;
+    apis: number;
+    admins: number;
+    logs: number;
+    meetingsByStatus?: Record<string, number>;
+    meetingsByType?: Record<string, number>;
+    trendData?: { name: string; meetings: number }[];
+    usersByRole?: Record<string, number>;
+    apisByMethod?: Record<string, number>;
+    logsActivity?: { name: string; activity: number }[];
+    topCompanies?: { name: string; users: number }[];
+    meetingDates?: string[];
+}

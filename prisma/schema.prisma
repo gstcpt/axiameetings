@@ -1,0 +1,352 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model app_settings {
+  id                Int     @id @default(autoincrement())
+  email             String
+  email_password    String
+  host              String
+  port              Int
+  ssl               Boolean
+  from_email        String
+  from_name         String
+  contact_adress    String?
+  contact_email     String?
+  contact_phone     String?
+  facebook          String?
+  favicon_file_name String?
+  linkedin          String?
+  logo_file_name    String?
+  tiktok            String?
+  term_of_use       String?
+  privacy_policy    String?
+}
+
+model ia_tokens_keys {
+  id             Int              @id @default(autoincrement())
+  provider       String?
+  name           String?
+  credit_limit   String?
+  expiration     DateTime?
+  websocket_url  String?
+  api_key        String
+  api_secret     String?
+  project_name   String?
+  project_number String?
+  is_active      Boolean          @default(true)
+  created_at     DateTime         @default(now())
+  usage          ia_token_usage[]
+}
+
+model ia_token_usage {
+  id       Int            @id @default(autoincrement())
+  token_id Int
+  feature  String
+  used_at  DateTime       @default(now())
+  success  Boolean        @default(true)
+  token    ia_tokens_keys @relation(fields: [token_id], references: [id], onDelete: Cascade)
+}
+
+model newsletters {
+  id         Int      @id @default(autoincrement())
+  email      String
+  created_at DateTime @default(now())
+}
+
+model references {
+  id             Int    @id @default(autoincrement())
+  name           String
+  logo_file_name String
+  website        String
+}
+
+model packs {
+  id          Int           @id @default(autoincrement())
+  name        String
+  price_month Float
+  price_year  Float
+  packs_lines packs_lines[] @relation("pack_id_in_packs_lines")
+}
+
+model packs_lines {
+  id      Int    @id @default(autoincrement())
+  pack_id Int
+  title   String
+  pack    packs  @relation("pack_id_in_packs_lines", fields: [pack_id], references: [id], onDelete: Cascade)
+}
+
+model companies {
+  id                                Int                      @id @default(autoincrement())
+  name                              String
+  logo_url                          String
+  url                               String
+  database_schema                   String
+  have_notifications_service        Boolean                  @default(false)
+  notifications_service_endpoint_id Int?
+  have_messages_service             Boolean                  @default(false)
+  messages_service_endpoint_id      Int?
+  have_sms_service                  Boolean                  @default(false)
+  sms_service_endpoint_id           Int?
+  login_endpoint_id                 Int?
+  users_endpoint_id                 Int?
+  ai_is_active                      Boolean                  @default(false)
+  meeting_time_limit                meetings_duration?       @default(ONE_HOUR)
+  users_number_limit                Int?                     @default(10)
+  login_endpoint                    companies_apis?          @relation("companies_apis_login_endpoint", fields: [login_endpoint_id], references: [id], onDelete: SetNull)
+  messages_service_endpoint         companies_apis?          @relation("companies_apis_messages_endpoint", fields: [messages_service_endpoint_id], references: [id], onDelete: SetNull)
+  notifications_service_endpoint    companies_apis?          @relation("companies_apis_notifications_endpoint", fields: [notifications_service_endpoint_id], references: [id], onDelete: SetNull)
+  sms_service_endpoint              companies_apis?          @relation("companies_apis_sms_endpoint", fields: [sms_service_endpoint_id], references: [id], onDelete: SetNull)
+  users_endpoint                    companies_apis?          @relation("companies_apis_users_endpoint", fields: [users_endpoint_id], references: [id], onDelete: SetNull)
+  companies_admins_login            companies_admins_login[] @relation("company_id_in_companies_admins_login")
+  companies_apis_list               companies_apis[]         @relation("company_id_in_apis")
+  logs                              logs[]                   @relation("company_id_in_logs")
+  meetings                          meetings[]               @relation("company_id_in_meetings")
+  users                             users[]                  @relation("company_id_in_users")
+}
+
+model companies_apis {
+  id                              Int                 @id @default(autoincrement())
+  endpoint                        String
+  payload_example                 Json?
+  method                          String
+  response_example                Json?
+  company_id                      Int
+  login_companies                 companies[]         @relation("companies_apis_login_endpoint")
+  messages_service_companies      companies[]         @relation("companies_apis_messages_endpoint")
+  notifications_service_companies companies[]         @relation("companies_apis_notifications_endpoint")
+  sms_service_companies           companies[]         @relation("companies_apis_sms_endpoint")
+  users_companies                 companies[]         @relation("companies_apis_users_endpoint")
+  company                         companies           @relation("company_id_in_apis", fields: [company_id], references: [id], onDelete: Cascade)
+  formated_responses              formated_response[] @relation("endpoint_id_in_formated_response")
+}
+
+model formated_response {
+  id                    Int            @id @default(autoincrement())
+  endpoint_id           Int
+  response_key          String
+  formated_response_key String
+  endpoint              companies_apis @relation("endpoint_id_in_formated_response", fields: [endpoint_id], references: [id], onDelete: Cascade)
+}
+
+model meetings {
+  id                     Int                      @id @default(autoincrement())
+  subject                String
+  type                   meetings_types           @default(ORDINAIRE)
+  date                   String
+  time                   String
+  mode                   meetings_modes           @default(IN_PERSON)
+  location               String                   @default("")
+  duration               meetings_duration        @default(ONE_HOUR)
+  description            String?
+  isonline               meetings_isonline        @default(FALSE)
+  status                 meetings_statut          @default(SCHEDULED)
+  creator_id             Int
+  created_at             DateTime                 @default(now())
+  editor_id              Int
+  updated_at             DateTime                 @updatedAt
+  company_id             Int
+  summary                String?
+  company                companies                @relation("company_id_in_meetings", fields: [company_id], references: [id], onDelete: Cascade)
+  meetings_attendances   meetings_attendances[]   @relation("meeting_id_in_meetings_attendances")
+  meetings_documents     meetings_documents[]     @relation("meeting_id_in_documents")
+  meetings_invitations   meetings_invitations[]   @relation("meeting_id_in_meetings_invitations")
+  meetings_participants  meetings_participants[]  @relation("meeting_id_in_meetings_participants")
+  meetings_points        meetings_points[]        @relation("meeting_id_in_meetings_points")
+  meetings_turn_requests meetings_turn_requests[] @relation("meeting_id_in_turn_requests")
+}
+
+model meetings_points {
+  id              Int                   @id @default(autoincrement())
+  point           String
+  description     String?
+  type            meetings_points_types @default(SIMPLE)
+  meeting_id      Int
+  parent_id       Int?
+  meeting         meetings              @relation("meeting_id_in_meetings_points", fields: [meeting_id], references: [id])
+  parent          meetings_points?      @relation("parent_id_in_meetings_points", fields: [parent_id], references: [id])
+  meetings_points meetings_points[]     @relation("parent_id_in_meetings_points")
+  meetings_votes  meetings_votes[]      @relation("point_id_in_meetings_votes")
+}
+
+model meetings_documents {
+  id         Int      @id @default(autoincrement())
+  meeting_id Int
+  file_title String
+  file_path  String
+  meeting    meetings @relation("meeting_id_in_documents", fields: [meeting_id], references: [id])
+}
+
+model meetings_participants {
+  id                     Int                      @id @default(autoincrement())
+  email                  String
+  meeting_id             Int
+  token                  String
+  meetings_attendances   meetings_attendances[]   @relation("meetings_participant_id_in_meetings_attendances")
+  meetings_invitations   meetings_invitations[]   @relation("meetings_participant_id_in_meetings_invitations")
+  meeting                meetings                 @relation("meeting_id_in_meetings_participants", fields: [meeting_id], references: [id])
+  meetings_turn_requests meetings_turn_requests[] @relation("meetings_participant_id_in_turn_requests")
+  meetings_votes         meetings_votes[]         @relation("meetings_participant_id_in_meetings_votes")
+}
+
+model users {
+  id                     Int                      @id @default(autoincrement())
+  fullname               String?
+  email                  String?
+  username               String?
+  password               String?
+  role                   users_roles?             @default(PARTICIPANT)
+  company_id             Int?
+  identifiant_extern     Int?
+  phone                  String?
+  companies_admins_login companies_admins_login[] @relation("user_id_in_companies_admins_login")
+  logs                   logs[]                   @relation("user_id_in_logs")
+  company                companies?               @relation("company_id_in_users", fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+model meetings_invitations {
+  id                       Int                                  @id @default(autoincrement())
+  meeting_id               Int
+  meetings_participant_id  Int
+  meetings_invitation_date DateTime                             @default(now())
+  status                   meetings_invitations_response_status @default(PENDING)
+  meeting                  meetings                             @relation("meeting_id_in_meetings_invitations", fields: [meeting_id], references: [id])
+  meetings_participant     meetings_participants                @relation("meetings_participant_id_in_meetings_invitations", fields: [meetings_participant_id], references: [id])
+}
+
+model meetings_attendances {
+  id                          Int                         @id @default(autoincrement())
+  meeting_id                  Int
+  meetings_participant_id     Int
+  meetings_attendances_status meetings_attendances_status @default(ABSENT)
+  meeting                     meetings                    @relation("meeting_id_in_meetings_attendances", fields: [meeting_id], references: [id])
+  meetings_participant        meetings_participants       @relation("meetings_participant_id_in_meetings_attendances", fields: [meetings_participant_id], references: [id])
+}
+
+model meetings_votes {
+  id                      Int                     @id @default(autoincrement())
+  point_id                Int
+  meetings_participant_id Int
+  vote                    meetings_votes_response @default(NEUTRE)
+  meetings_participant    meetings_participants   @relation("meetings_participant_id_in_meetings_votes", fields: [meetings_participant_id], references: [id])
+  point                   meetings_points         @relation("point_id_in_meetings_votes", fields: [point_id], references: [id])
+}
+
+model logs {
+  id         Int        @id @default(autoincrement())
+  message    String
+  timestamp  DateTime   @default(now())
+  request    Json?
+  payload    Json?
+  response   Json?
+  user_id    Int?
+  company_id Int?
+  company    companies? @relation("company_id_in_logs", fields: [company_id], references: [id], onDelete: Cascade)
+  user       users?      @relation("user_id_in_logs", fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model companies_admins_login {
+  id                 Int       @id @default(autoincrement())
+  username           String?
+  password           String?
+  token_id           String?
+  user_id            Int
+  company_id         Int
+  identifiant_extern Int?
+  company            companies @relation("company_id_in_companies_admins_login", fields: [company_id], references: [id], onDelete: Cascade)
+  user               users     @relation("user_id_in_companies_admins_login", fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model meetings_turn_requests {
+  id                      Int                   @id @default(autoincrement())
+  meeting_id              Int
+  meetings_participant_id Int
+  status                  turn_request_status   @default(PENDING)
+  created_at              DateTime              @default(now())
+  meeting                 meetings              @relation("meeting_id_in_turn_requests", fields: [meeting_id], references: [id])
+  meetings_participant    meetings_participants @relation("meetings_participant_id_in_turn_requests", fields: [meetings_participant_id], references: [id])
+}
+
+model chat_sessions {
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  role       String?
+  messages   Json
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  locale     String   @default("en")
+  is_closed  Boolean  @default(false)
+  session_id String?  @unique
+}
+
+enum users_roles {
+  DEVELOPER
+  ADMIN
+  PARTICIPANT
+}
+
+enum meetings_types {
+  ORDINAIRE
+  EXTRAORDINAIRE
+  COMPLEMENTAIRE
+  DELEGUES
+}
+
+enum meetings_statut {
+  SCHEDULED
+  CANCELLED
+  STARTED
+  FINISHED
+}
+
+enum meetings_modes {
+  IN_PERSON
+  ONLINE
+  HYBRID
+}
+
+enum meetings_isonline {
+  TRUE
+  FALSE
+}
+
+enum meetings_duration {
+  ONE_HOUR
+  TWO_HOURS
+  THREE_HOURS
+  FOUR_HOURS
+  FIVE_HOURS
+}
+
+enum meetings_points_types {
+  SIMPLE
+  VOTE
+}
+
+enum meetings_invitations_response_status {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum meetings_attendances_status {
+  PRESENT
+  ABSENT
+}
+
+enum meetings_votes_response {
+  OUI
+  NON
+  NEUTRE
+}
+
+enum turn_request_status {
+  PENDING
+  ACCEPTED
+  REJECTED
+  FINISHED
+}
