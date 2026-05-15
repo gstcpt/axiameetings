@@ -25,14 +25,14 @@ export async function POST(req: NextRequest) {
         }
 
         const logsSerialized = logs.map(l =>
-            `[${format(new Date(l.timestamp), 'MM-dd HH:mm')}] ${l.user.username}(${l.user.role}) @ ${l.company?.name || 'GLOBAL'}: ${l.message}`
+            `[${format(new Date(l.timestamp), 'MM-dd HH:mm')}] ${l.user?.username}(${l.user?.role}) @ ${l.company?.name || 'GLOBAL'}: ${l.message}`
         ).join('\n');
 
         const totalLogs = logs.length;
         const byRole: Record<string, number> = {};
         const byCompany: Record<string, number> = {};
         logs.forEach(l => {
-            byRole[l.user.role || 'UNKNOWN'] = (byRole[l.user.role || 'UNKNOWN'] || 0) + 1;
+            byRole[l.user?.role || 'UNKNOWN'] = (byRole[l.user?.role || 'UNKNOWN'] || 0) + 1;
             const co = l.company?.name || 'GLOBAL';
             byCompany[co] = (byCompany[co] || 0) + 1;
         });
