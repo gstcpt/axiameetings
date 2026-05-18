@@ -12,12 +12,15 @@ import {
     Loader2, 
     Minimize2, 
     Send,
-    Check
+    Check,
+    Sun,
+    Moon
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { locales, Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Message {
     role: 'user' | 'assistant';
@@ -55,6 +58,9 @@ export function CornerControls() {
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
+
+    // --- Theme Toggle Logic ---
+    const { theme, toggleTheme } = useTheme();
 
     // --- Language Toggle Logic ---
     const [isLangOpen, setIsLangOpen] = useState(false);
@@ -172,10 +178,10 @@ export function CornerControls() {
                         animate={{ opacity: 1, x: 0, scale: 1 }}
                         exit={{ opacity: 0, x: isRTL ? -20 : 20, scale: 0.95 }}
                         className={cn(
-                            "absolute bottom-0 w-[calc(100vw-48px)] sm:w-[400px] bg-white rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden flex flex-col z-10",
-                            isRTL ? "left-20" : "right-20"
+                            "fixed sm:absolute bottom-0 w-[calc(100vw-32px)] sm:w-[400px] bg-white rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden flex flex-col z-10",
+                            isRTL ? "left-4 sm:left-20 bottom-24 sm:bottom-0" : "right-4 sm:right-20 bottom-24 sm:bottom-0"
                         )}
-                        style={{ maxHeight: isChatMinimized ? '72px' : '650px', height: '80vh' }}
+                        style={{ maxHeight: isChatMinimized ? '72px' : 'calc(100vh - 120px)', height: '80vh' }}
                     >
                         <div className="flex items-center justify-between px-8 py-6 bg-[#002B5B] text-white shrink-0">
                             <div className="flex items-center gap-4">
@@ -312,7 +318,18 @@ export function CornerControls() {
                     </motion.button>
                 </div>
 
-                {/* 3. Scroll To Top Button */}
+                {/* 3. Theme Toggle Button */}
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={toggleTheme}
+                    aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all border bg-white dark:bg-slate-800 text-[#002B5B] dark:text-yellow-400 border-slate-100 dark:border-slate-700"
+                >
+                    {theme === "dark" ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+                </motion.button>
+
+                {/* 4. Scroll To Top Button */}
                 <AnimatePresence>
                     {isScrollVisible && (
                         <motion.button

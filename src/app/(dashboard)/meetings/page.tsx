@@ -16,6 +16,7 @@ import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPicker } from '@/components/ui/UserPicker';
 import { AiFeatureGuard } from '@/components/AiFeatureGuard';
+import { MeetingCard } from '@/components/MeetingCard';
 
 import { Input } from '@/components/ui/inputs';
 import { Button } from '@/components/ui/button';
@@ -473,74 +474,10 @@ export default function MeetingsPage() {
                         <Typography variant="p" color="secondary" className="max-w-xs mx-auto text-xs font-medium">{t('emptyDesc')}</Typography>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {meetings.map((m, i) => {
-                            const cfg = statusConfig[m.status] || statusConfig.SCHEDULED;
-                            return (
-                                <motion.div key={m.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                    className="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:shadow-blue-900/5 transition-all duration-500 overflow-hidden flex flex-col h-full"
-                                >
-                                    <div className="p-4 pb-3 flex-1 space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <Badge variant={cfg.variant} className="h-4 px-2 text-[8px] uppercase font-bold shadow-sm">
-                                                {cfg.label}
-                                            </Badge>
-                                            <div className="flex items-center gap-1 text-slate-400 font-bold text-[8px] uppercase shrink-0">
-                                                <Calendar size={10} className="text-blue-500" />
-                                                {m.date}
-                                            </div>
-                                        </div>
-
-                                        <Typography variant="h3" className="group-hover:text-[#002B5B] transition-colors leading-tight text-xs font-bold line-clamp-2 min-h-[2rem]">{m.subject}</Typography>
-
-                                        <div className="grid grid-cols-2 gap-2.5">
-                                            <div className="bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
-                                                <div className="flex items-center gap-1.5 mb-1 text-slate-400">
-                                                    <Clock size={10} />
-                                                    <Typography variant="label" className="text-[9px] uppercase font-semibold">{t('card.time')}</Typography>
-                                                </div>
-                                                <Typography variant="large" className="text-xs font-semibold text-slate-700">{m.time}</Typography>
-                                            </div>
-                                            <div className="bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
-                                                <div className="flex items-center gap-1.5 mb-1 text-slate-400">
-                                                    <Users size={10} />
-                                                    <Typography variant="label" className="text-[9px] uppercase font-semibold">{t('card.attendees')}</Typography>
-                                                </div>
-                                                <Typography variant="large" className="text-xs font-semibold text-slate-700">{m.meetings_participants?.length || 0}</Typography>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-100 bg-white">
-                                            <div className="w-7 h-7 rounded-md bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
-                                                <MapPin size={10} className="text-[#002B5B]" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <Typography variant="label" className="text-[9px] uppercase font-semibold block mb-0.5 opacity-50">{t('card.location')}</Typography>
-                                                <Typography variant="small" className="text-slate-700 uppercase font-semibold text-[8px] truncate">
-                                                    {m.mode === 'ONLINE' ? t('card.virtual') : (m.location || t('card.notSpecified'))}
-                                                </Typography>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 pt-0 mt-1 flex flex-col sm:flex-row gap-2">
-                                        <Link href={`/meetings/${m.id}`} className="flex-1">
-                                            <Button variant="outline" className="w-full h-8 rounded-lg group-hover:bg-[#002B5B] group-hover:text-white hover:!bg-[#003d80] hover:!text-white transition-all text-[8px] font-bold uppercase">
-                                                {t('card.details')}
-                                            </Button>
-                                        </Link>
-                                        {(m.status === 'SCHEDULED' || m.status === 'STARTED') && (
-                                            <Link href={`/meetings/${m.id}/live`} className="flex-1">
-                                                <Button className="w-full h-8 rounded-lg shadow-md shadow-blue-900/5 text-[8px] font-bold uppercase">
-                                                    {m.status === 'STARTED' ? t('card.join') : tc('getStarted')}
-                                                    <ChevronRight className="ms-1 w-2.5 h-2.5 rtl:rotate-180" />
-                                                </Button>
-                                            </Link>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">
+                        {meetings.map((m) => (
+                            <MeetingCard key={m.id} meeting={m} />
+                        ))}
                     </div>
                 )
             ) : (

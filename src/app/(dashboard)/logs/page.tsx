@@ -5,10 +5,11 @@ import { useAuth } from '@/components/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Log, ApiResponse } from '@/lib/types';
 import { UserRole } from '@/lib/enums/users';
-import { BarChart3, Clock, User as UserIcon, Building2, Info, Sparkles, RefreshCw, AlertTriangle, TrendingUp, Shield, Zap, ChevronRight, Activity } from 'lucide-react';
+import { BarChart3, Clock, User as UserIcon, Building2, Info, Sparkles, RefreshCw, AlertTriangle, TrendingUp, Shield, Zap, ChevronRight, Activity, LayoutGrid, List } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
+import { cn } from '@/lib/utils';
 import { AITimerInline } from '@/components/ui/AITimer';
 import { useTranslations } from 'next-intl';
 
@@ -18,7 +19,6 @@ import { Modal, ConfirmModal } from '@/components/ui/modals';
 import { Trash2, Trash, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/cards';
 import { Badge } from '@/components/ui/badges';
-import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function LogsPage() {
@@ -35,6 +35,7 @@ export default function LogsPage() {
     const [logToDelete, setLogToDelete] = useState<Log | null>(null);
     const [bulkSelected, setBulkSelected] = useState<Log[]>([]);
     const [saving, setSaving] = useState(false);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
     useEffect(() => {
         if (!authLoading && user?.role !== UserRole.DEVELOPER) router.replace('/overview');
@@ -213,15 +214,37 @@ export default function LogsPage() {
                         </div>
                     </div>
 
-                    <Button
-                        onClick={handleAiAnalyze}
-                        disabled={aiLoading || isLoading}
-                        className="w-full md:w-auto h-10 px-6 shadow-lg shadow-violet-900/10 bg-linear-to-r from-[#002B5B] to-blue-600 border-none font-semibold text-sm uppercase"
-                    >
-                        {aiLoading ? <RefreshCw size={18} className="animate-spin me-2" /> : <Sparkles size={18} className="me-2 rtl:rotate-90" />}
-                        {aiLoading ? t('analyzing') : t('analyze')}
-                        <AITimerInline isLoading={aiLoading} className="ms-2" />
-                    </Button>
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <div className="flex bg-slate-50 p-0.5 rounded-lg border border-slate-100">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={cn(
+                                    "flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
+                                    viewMode === 'grid' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                )}
+                            >
+                                <LayoutGrid size={12} /> <span className="hidden md:inline">{tc('table.viewGrid')}</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={cn(
+                                    "flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
+                                    viewMode === 'list' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                )}
+                            >
+                                <List size={12} /> <span className="hidden md:inline">{tc('table.viewList')}</span>
+                            </button>
+                        </div>
+                        <Button
+                            onClick={handleAiAnalyze}
+                            disabled={aiLoading || isLoading}
+                            className="w-full md:w-auto h-10 px-6 shadow-lg shadow-violet-900/10 bg-linear-to-r from-[#002B5B] to-blue-600 border-none font-semibold text-sm uppercase"
+                        >
+                            {aiLoading ? <RefreshCw size={18} className="animate-spin me-2" /> : <Sparkles size={18} className="me-2 rtl:rotate-90" />}
+                            {aiLoading ? t('analyzing') : t('analyze')}
+                            <AITimerInline isLoading={aiLoading} className="ms-2" />
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -357,7 +380,8 @@ export default function LogsPage() {
                         searchPlaceholder={tc('search')}
                         bulkActions={bulkActions}
                         emptyMessage={tc('noData')}
-                        pageSize={10}
+                        pagesize={10}
+                        viewMode={viewMode}
                     />
                 </div>
             </div>

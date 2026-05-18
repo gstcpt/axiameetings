@@ -6,7 +6,7 @@ import { LucideIcon, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const inputVariants = cva(
-  "flex w-full rounded-2xl border bg-slate-50/50 px-4 py-3 text-sm font-medium text-[#002B5B] transition-all duration-300 placeholder:text-slate-300 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+  "flex w-full max-w-full rounded-2xl border bg-slate-50/50 px-4 py-3 text-sm font-medium text-[#002B5B] transition-all duration-300 placeholder:text-slate-300 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -21,6 +21,7 @@ const inputVariants = cva(
         default: "h-12",
         sm: "h-9 px-3 text-xs",
         lg: "h-14 px-6 text-base",
+        mobile: "h-10 px-3 text-sm",
       },
     },
     defaultVariants: {

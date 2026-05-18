@@ -7,10 +7,11 @@ import { Company, CompanyApi, ApiResponse } from '@/lib/types';
 import { MeetingDuration } from '@/lib/enums/meetings';
 import { UserRole } from '@/lib/enums/users';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Users as UsersIcon, Webhook, Building2, Settings2, CheckCircle2, XCircle, Sparkles, Info, Globe, Shield, Calendar, BarChart3, Database, Bell, MessageCircle, Mail } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users as UsersIcon, Webhook, Building2, Settings2, CheckCircle2, XCircle, Sparkles, Info, Globe, Shield, Calendar, BarChart3, Database, Bell, MessageCircle, Mail, LayoutGrid, List } from 'lucide-react';
 import Link from 'next/link';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
+import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
 import { Input } from '@/components/ui/inputs';
@@ -19,7 +20,6 @@ import { Typography } from '@/components/ui/typographys';
 import { Select } from '@/components/ui/selects';
 import { Badge } from '@/components/ui/badges';
 import { Card, CardContent } from '@/components/ui/cards';
-import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type ModalType = 'add' | 'edit' | 'delete' | 'bulk-delete' | 'configure' | 'view-services' | null;
@@ -67,6 +67,7 @@ export default function CompaniesPage() {
     const [config, setConfig] = useState(emptyConfig);
     const [companyApis, setCompanyApis] = useState<CompanyApi[]>([]);
     const [saving, setSaving] = useState(false);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
     useEffect(() => {
         if (!authLoading && user?.role !== UserRole.DEVELOPER) router.replace('/overview');
@@ -329,12 +330,34 @@ export default function CompaniesPage() {
                             </Typography>
                         </div>
                     </div>
-                    <Button
-                        onClick={openAdd}
-                        className="w-full md:w-auto h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm"
-                    >
-                        <Plus size={18} className="me-2 rtl:rotate-90" /> {t('new')}
-                    </Button>
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="flex bg-slate-50 p-0.5 rounded-lg border border-slate-100">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={cn(
+                                    "flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
+                                    viewMode === 'grid' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                )}
+                            >
+                                <LayoutGrid size={12} /> <span className="hidden md:inline">{tc('table.viewGrid')}</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={cn(
+                                    "flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
+                                    viewMode === 'list' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                )}
+                            >
+                                <List size={12} /> <span className="hidden md:inline">{tc('table.viewList')}</span>
+                            </button>
+                        </div>
+                        <Button
+                            onClick={openAdd}
+                            className="w-full md:w-auto h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm"
+                        >
+                            <Plus size={18} className="me-2 rtl:rotate-90" /> {t('new')}
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -347,6 +370,7 @@ export default function CompaniesPage() {
                     bulkActions={bulkActions}
                     emptyMessage={t('empty')}
                     pagesize={10}
+                    viewMode={viewMode}
                 />
             </Card>
 

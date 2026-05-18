@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { AuthUser } from '@/components/context/AuthContext';
 import { Toaster } from 'sonner';
 import { CornerControls } from '@/components/ui/CornerControls';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages, getTranslations } from 'next-intl/server';
@@ -44,11 +45,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <html lang={locale} dir={isRtl ? 'rtl' : 'ltr'} className={cn(isRtl ? alyamama.variable : elmsSans.variable)}>
             <body className={cn("min-h-screen bg-background antialiased", isRtl ? alyamama.className : elmsSans.className)}>
                 <NextIntlClientProvider locale={locale} messages={messages}>
-                    <AuthUser>
-                        {children}
-                        <CornerControls />
-                        <Toaster richColors position="top-right" />
-                    </AuthUser>
+                    <ThemeProvider>
+                        <AuthUser>
+                            {children}
+                            <CornerControls />
+                            <Toaster richColors position="top-right" />
+                        </AuthUser>
+                    </ThemeProvider>
                 </NextIntlClientProvider>
             </body>
         </html>

@@ -27,8 +27,11 @@ import {
     Trash2,
     CheckSquare,
     LucideIcon,
+    LayoutGrid,
+    List
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CustomCardDesign } from "./custom-card-design";
 
 export type Column<TData, TValue = unknown> = ColumnDef<TData, TValue>;
 
@@ -50,6 +53,7 @@ export interface DataTableProps<TData, TValue> {
     bulkActions?: BulkAction<TData>[];
     emptyMessage?: string;
     pagesize?: number;
+    viewMode?: 'list' | 'grid';
 }
 
 function SortIcon({ direction }: { direction: "asc" | "desc" | false }) {
@@ -68,6 +72,7 @@ export function DataTable<TData, TValue>({
     bulkActions = [],
     emptyMessage,
     pagesize,
+    viewMode = 'list',
 }: DataTableProps<TData, TValue>) {
     const tablePageSize = pagesize || pageSize;
     const t = useTranslations('Common.table');
@@ -208,7 +213,8 @@ export function DataTable<TData, TValue>({
             <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm">
                 
                 {/* Desktop View (Table) */}
-                <div className="hidden md:block overflow-x-auto custom-scrollbar">
+                {viewMode === 'list' && (
+                    <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full min-w-full">
                         <thead className="bg-slate-50 border-b border-slate-100">
                             {table.getHeaderGroups().map((headerGroup) => (
@@ -272,40 +278,14 @@ export function DataTable<TData, TValue>({
                         </tbody>
                     </table>
                 </div>
+                )}
 
                 {/* Mobile View (Cards) */}
-                <div className="md:hidden divide-y divide-slate-100">
+                {viewMode === 'grid' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {table.getRowModel().rows.length ? (
                         table.getRowModel().rows.map((row) => (
-                            <div key={row.id} className={cn("p-5 space-y-4", row.getIsSelected() ? "bg-[#002B5B]/5" : "bg-white")}>
-                                {row.getVisibleCells().map((cell) => {
-                                    if (cell.column.id === "__select__") {
-                                        return (
-                                            <div key={cell.id} className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
-                                                <span className="text-xs font-semibold uppercase text-slate-400">{t('mobile.select')}</span>
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </div>
-                                        );
-                                    }
-                                    if (cell.column.id === "actions") {
-                                        return (
-                                            <div key={cell.id} className="pt-3 mt-3 border-t border-slate-100 flex justify-end">
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </div>
-                                        );
-                                    }
-                                    return (
-                                        <div key={cell.id} className="flex flex-col gap-1.5">
-                                            <span className="text-xs font-semibold uppercase text-slate-400">
-                                                {typeof cell.column.columnDef.header === 'string' ? cell.column.columnDef.header : cell.column.id}
-                                            </span>
-                                            <div className="text-sm text-slate-700 font-normal break-words whitespace-normal overflow-hidden text-ellipsis">
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                            <CustomCardDesign key={row.id} row={row} />
                         ))
                     ) : (
                         <div className="p-8 text-center text-slate-400 font-normal text-sm">
@@ -313,6 +293,7 @@ export function DataTable<TData, TValue>({
                         </div>
                     )}
                 </div>
+                )}
             </div>
 
             {/* Pagination */}

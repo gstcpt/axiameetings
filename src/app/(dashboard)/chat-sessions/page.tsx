@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 import { UserRole } from '@/lib/enums/users';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Trash2, Pencil, Trash, User as UserIcon, Globe, Clock, RefreshCw, Sparkles, Loader2, FileText, TrendingUp, AlertTriangle, CheckCircle, Lightbulb, Play, Pause, ChevronLeft, ChevronRight, Activity, MessageCircle, Bot, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Pencil, Trash, User as UserIcon, Globe, Clock, RefreshCw, Sparkles, Loader2, FileText, TrendingUp, AlertTriangle, CheckCircle, Lightbulb, Play, Pause, ChevronLeft, ChevronRight, Activity, MessageCircle, Bot, ChevronDown, ChevronUp, LayoutGrid, List } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -16,8 +17,6 @@ import { Typography } from '@/components/ui/typographys';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/cards';
 import { Badge } from '@/components/ui/badges';
-import { cn } from '@/lib/utils';
-
 interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
@@ -62,6 +61,7 @@ export default function ChatSessionsPage() {
     const [report, setReport] = useState<AIReport | null>(null);
     const [generatingReport, setGeneratingReport] = useState(false);
     const [showReport, setShowReport] = useState(false);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const pollingRef = useRef<any>(null);
 
     useEffect(() => {
@@ -326,6 +326,26 @@ export default function ChatSessionsPage() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <div className="flex bg-slate-50 p-0.5 rounded-lg border border-slate-100">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={cn(
+                                    "flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
+                                    viewMode === 'grid' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                )}
+                            >
+                                <LayoutGrid size={12} /> <span className="hidden md:inline">{tc('table.viewGrid')}</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={cn(
+                                    "flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
+                                    viewMode === 'list' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
+                                )}
+                            >
+                                <List size={12} /> <span className="hidden md:inline">{tc('table.viewList')}</span>
+                            </button>
+                        </div>
                         <div className="flex items-center gap-3 w-full md:w-auto">
                             <Button
                                 variant="outline"
@@ -498,7 +518,8 @@ export default function ChatSessionsPage() {
                     searchPlaceholder={tc('table.searchPlaceholder')}
                     bulkActions={bulkActions}
                     emptyMessage={t('empty.title')}
-                    pageSize={10}
+                    pagesize={10}
+                    viewMode={viewMode}
                 />
             </Card>
 
