@@ -9,13 +9,19 @@ services:
     env_file:
       - .env.docker
     environment:
+      # Connects to your local PostgreSQL (pgAdmin4) running on the host machine.
+      # host.docker.internal resolves to the host IP from inside the container (works on Windows/Mac Docker Desktop).
       DATABASE_URL: postgresql://postgres:admin@host.docker.internal:5432/axiameetingforall?schema=public
-      PORT: 3000
+      PORT: 3002
       NODE_ENV: production
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "3002:3002"
     volumes:
       - uploads_data:/app/public/uploads
+    # Needed on Linux hosts where host.docker.internal is not available by default.
+    # On Windows/Mac Docker Desktop it works automatically — you can remove these lines if on Windows.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   uploads_data:

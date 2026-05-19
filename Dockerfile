@@ -8,7 +8,7 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 COPY package.json package-lock.json ./
-RUN npm install --prefer-offline
+RUN npm install --prefer-offline --ignore-scripts
 
 # ─────────────────────────────────────────────
 # Stage 2: Build the Next.js application
@@ -36,7 +36,7 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=3002
 
 # Copy only what's needed to run
 COPY --from=builder /app/public ./public
@@ -49,7 +49,7 @@ COPY --from=builder /app/prisma.config.js ./prisma.config.js
 
 RUN mkdir -p public/uploads/meetings public/uploads/pvs
 
-EXPOSE 3000
+EXPOSE 3002
 
 # Resolve any failed migrations then start
 CMD ["sh", "-c", "npx prisma migrate resolve --applied 20260505093546_add_new_models 2>/dev/null || true && npx prisma migrate resolve --applied 20260506000000_add_chat_sessions 2>/dev/null || true && npx prisma migrate deploy && node server.mjs"]

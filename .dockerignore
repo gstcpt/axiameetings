@@ -37,3 +37,17 @@ Thumbs.db
 
 # Uploads (mounted as volume at runtime)
 public/uploads
+
+# Large archives and temp files
+*.rar
+*.zip
+*.tar.gz
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Temp / test files
+temp_doc.html
+Untitled-*.txt
+check-logos.ts
+fix-logos.ts
+test.ts
