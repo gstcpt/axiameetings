@@ -103,8 +103,14 @@ export default function ReferencesPage() {
                 <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden border border-slate-100 shadow-sm">
                         {r.logo_file_name
-                            ? <img src={r.logo_file_name.startsWith('http') ? r.logo_file_name : `/uploads/${r.logo_file_name}`} alt={r.name} className="w-6 h-6 object-contain p-0.5" />
-                            : <ImageIcon size={14} className="text-slate-300" />}
+                            ? <img 
+                                src={r.logo_file_name.startsWith('http') ? r.logo_file_name : `/uploads/${r.logo_file_name}`} 
+                                alt={r.name} 
+                                className="w-6 h-6 object-contain p-0.5" 
+                                onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
+                              />
+                            : null}
+                        {!r.logo_file_name && <ImageIcon size={14} className="text-slate-300" />}
                     </div>
                     <Typography variant="large" className="text-slate-900 font-bold text-xs">{r.name}</Typography>
                 </div>

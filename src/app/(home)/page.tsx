@@ -37,7 +37,12 @@ function ReferenceCarousel({ references }: { references: PublicRef[] }) {
             <motion.div className="flex gap-20 items-center whitespace-nowrap py-4" animate={{ x: [0, -2000] }} transition={{ x: { repeat: Infinity, duration: 60, ease: "linear" } }}>
                 {[...references, ...references, ...references, ...references].map((ref, i) => (
                     <a key={`${ref.id}-${i}`} href={ref.website} target="_blank" rel="noopener noreferrer" className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700 hover:scale-110 shrink-0">
-                        <img src={ref.logo_file_name.startsWith('http') ? ref.logo_file_name : `/uploads/${ref.logo_file_name}`} alt={ref.name} className="h-10 w-auto object-contain" />
+                        <img 
+                            src={ref.logo_file_name.startsWith('http') ? ref.logo_file_name : `/uploads/${ref.logo_file_name}`} 
+                            alt={ref.name} 
+                            className="h-10 w-auto object-contain" 
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                        />
                     </a>
                 ))}
             </motion.div>
