@@ -12,6 +12,7 @@ import { useAuth } from "@/components/context/AuthContext";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { formatWebsiteUrl, formatLogoUrl } from "@/lib/utils";
 
 const fadeIn = { hidden: { opacity: 0, y: 30 }, visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.8, ease: [0.21, 0.6, 0.35, 1] } }) } as any;
 
@@ -36,9 +37,9 @@ function ReferenceCarousel({ references }: { references: PublicRef[] }) {
             <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#FDFDFD] to-transparent z-10" />
             <motion.div className="flex gap-20 items-center whitespace-nowrap py-4" animate={{ x: [0, -2000] }} transition={{ x: { repeat: Infinity, duration: 60, ease: "linear" } }}>
                 {[...references, ...references, ...references, ...references].map((ref, i) => (
-                    <a key={`${ref.id}-${i}`} href={ref.website} target="_blank" rel="noopener noreferrer" className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700 hover:scale-110 shrink-0">
+                    <a key={`${ref.id}-${i}`} href={formatWebsiteUrl(ref.website)} target="_blank" rel="noopener noreferrer" className="opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700 hover:scale-110 shrink-0">
                         <img 
-                            src={ref.logo_file_name.startsWith('http') ? ref.logo_file_name : `/uploads/${ref.logo_file_name}`} 
+                            src={formatLogoUrl(ref.logo_file_name)} 
                             alt={ref.name} 
                             className="h-10 w-auto object-contain" 
                             onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}

@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Globe, ExternalLink, Image as ImageIcon, LayoutGrid, List } from 'lucide-react';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
-import { cn } from '@/lib/utils';
+import { cn, formatWebsiteUrl, formatLogoUrl } from '@/lib/utils';
 
 import { Typography } from '@/components/ui/typographys';
 import { Button } from '@/components/ui/button';
@@ -104,7 +104,7 @@ export default function ReferencesPage() {
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden border border-slate-100 shadow-sm">
                         {r.logo_file_name
                             ? <img 
-                                src={r.logo_file_name.startsWith('http') ? r.logo_file_name : `/uploads/${r.logo_file_name}`} 
+                                src={formatLogoUrl(r.logo_file_name)} 
                                 alt={r.name} 
                                 className="w-6 h-6 object-contain p-0.5" 
                                 onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
@@ -120,7 +120,7 @@ export default function ReferencesPage() {
             accessorKey: 'website',
             header: t('table.website'),
             cell: ({ row }) => (
-                <a href={row.original.website} target="_blank" rel="noopener noreferrer"
+                <a href={formatWebsiteUrl(row.original.website)} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-2 text-[#002B5B] hover:text-blue-600 transition-colors font-bold group text-xs">
                     <span>{row.original.website}</span>
                     <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -11,7 +11,7 @@ import { Plus, Pencil, Trash2, Users as UsersIcon, Webhook, Building2, Settings2
 import Link from 'next/link';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
-import { cn } from '@/lib/utils';
+import { cn, formatWebsiteUrl, formatLogoUrl } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
 import { Input } from '@/components/ui/inputs';
@@ -215,7 +215,7 @@ export default function CompaniesPage() {
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 shadow-sm overflow-hidden p-1">
                         {c.logo_url 
                             ? <img 
-                                src={c.logo_url} 
+                                src={formatLogoUrl(c.logo_url)} 
                                 alt={c.name} 
                                 className="w-full h-full object-contain" 
                                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -235,7 +235,7 @@ export default function CompaniesPage() {
             accessorKey: 'url',
             header: t('form.url'),
             cell: ({ row }) => (
-                <a href={`https://${row.original.url}`} target="_blank" rel="noopener noreferrer" className="text-[#002B5B] hover:text-blue-600 transition-colors font-bold text-[11px] uppercase">
+                <a href={formatWebsiteUrl(row.original.url)} target="_blank" rel="noopener noreferrer" className="text-[#002B5B] hover:text-blue-600 transition-colors font-bold text-[11px] uppercase">
                     {row.original.url}
                 </a>
             ),

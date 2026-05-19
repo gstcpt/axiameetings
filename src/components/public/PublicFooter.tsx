@@ -9,6 +9,7 @@ import { FaFacebook as Facebook, FaLinkedinIn as Linkedin, FaTiktok as TikTok } 
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { Typography } from "@/components/ui/typographys";
+import { formatLogoUrl } from "@/lib/utils";
 
 interface PublicSettings {
     logo_file_name?: string | null;
@@ -26,11 +27,7 @@ export function PublicFooter({ settings }: { settings: PublicSettings }) {
     const [newsletterLoading, setNewsletterLoading] = useState(false);
     const t = useTranslations('Footer');
 
-    const logoSrc = settings.logo_file_name
-        ? (settings.logo_file_name.startsWith('http')
-            ? settings.logo_file_name
-            : (settings.logo_file_name === "AxiaMeetings.svg" ? "/AxiaMeetings.svg" : `/uploads/${settings.logo_file_name}`))
-        : "/AxiaMeetings.svg";
+    const logoSrc = formatLogoUrl(settings.logo_file_name) || "/AxiaMeetings.svg";
 
     const handleNewsletter = async (e: React.FormEvent) => {
         e.preventDefault();

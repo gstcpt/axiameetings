@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/inputs';
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typographys';
 import { Badge } from '@/components/ui/badges';
-import { cn } from '@/lib/utils';
+import { cn, formatLogoUrl } from '@/lib/utils';
 
 export default function LoginPage() {
     const [username, setUsername] = useState('');
@@ -96,7 +96,7 @@ export default function LoginPage() {
                                 className="relative z-10"
                             >
                                 <Image
-                                    src={settings.logo_file_name === "AxiaMeetings.svg" ? "/AxiaMeetings.svg" : (settings.logo_file_name ? `/uploads/${settings.logo_file_name}` : "/AxiaMeetings.svg")}
+                                    src={formatLogoUrl(settings.logo_file_name) || "/AxiaMeetings.svg"}
                                     alt="Axia Meetings"
                                     width={320}
                                     height={100}
