@@ -201,7 +201,8 @@ export default function LiveMeetingPage() {
             socketRef.current.disconnect();
           }
 
-          const newSocket = io(window.location.origin, {
+          const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin;
+          const newSocket = io(socketUrl, {
             timeout: 5000,
             reconnectionAttempts: 5,
             reconnectionDelay: 2000,

@@ -14,7 +14,8 @@ export function NotificationBridge() {
     useEffect(() => {
         if (!user || !user.email) return;
 
-        const socket = io(window.location.origin);
+        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin;
+        const socket = io(socketUrl);
 
         socket.on('connect', () => {
             console.log('Notification bridge connected');
