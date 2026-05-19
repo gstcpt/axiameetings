@@ -102,15 +102,21 @@ export default function ReferencesPage() {
             cell: ({ row: { original: r } }) => (
                 <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden border border-slate-100 shadow-sm">
-                        {r.logo_file_name
-                            ? <img 
+                        {r.logo_file_name && (
+                            <img 
                                 src={formatLogoUrl(r.logo_file_name)} 
                                 alt={r.name} 
                                 className="w-6 h-6 object-contain p-0.5" 
-                                onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
-                              />
-                            : null}
-                        {!r.logo_file_name && <ImageIcon size={14} className="text-slate-300" />}
+                                onError={(e) => { 
+                                    e.currentTarget.style.display = 'none'; 
+                                    e.currentTarget.nextElementSibling?.classList.remove('hidden'); 
+                                }}
+                            />
+                        )}
+                        <ImageIcon 
+                            size={14} 
+                            className={cn("text-slate-300", r.logo_file_name && "hidden")} 
+                        />
                     </div>
                     <Typography variant="large" className="text-slate-900 font-bold text-xs">{r.name}</Typography>
                 </div>

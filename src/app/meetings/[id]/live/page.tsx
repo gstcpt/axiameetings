@@ -202,6 +202,12 @@ export default function LiveMeetingPage() {
           }
 
           const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin;
+          
+          if (socketUrl.includes('.vercel.app')) {
+            console.warn('Socket.io connection bypassed: Vercel serverless environments do not support stateful Socket.io servers. If real-time features are needed, please set NEXT_PUBLIC_SOCKET_URL to a stateful WebSocket server.');
+            return;
+          }
+
           const newSocket = io(socketUrl, {
             timeout: 5000,
             reconnectionAttempts: 5,
@@ -216,6 +222,10 @@ export default function LiveMeetingPage() {
             if (!user && currentPartId) {
               newSocket.emit('join:request', { roomId: `meeting-${id}`, participantId: currentPartId, name: identity });
             }
+          });
+
+          newSocket.on('connect_error', (error) => {
+            console.warn('Live meeting socket connection error:', error.message);
           });
 
           newSocket.on('vote:started', ({ noteId, duration, description }) => {

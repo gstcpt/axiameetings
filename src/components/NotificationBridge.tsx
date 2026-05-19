@@ -15,11 +15,24 @@ export function NotificationBridge() {
         if (!user || !user.email) return;
 
         const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin;
-        const socket = io(socketUrl);
+        if (socketUrl.includes('.vercel.app')) {
+            console.warn('Socket.io connection bypassed: Vercel serverless environments do not support stateful Socket.io servers. If real-time features are needed, please set NEXT_PUBLIC_SOCKET_URL to a stateful WebSocket server.');
+            return;
+        }
+
+        const socket = io(socketUrl, {
+            timeout: 5000,
+            reconnectionAttempts: 3,
+            reconnectionDelay: 3000,
+        });
 
         socket.on('connect', () => {
             console.log('Notification bridge connected');
             socket.emit('join-user', user.email);
+        });
+
+        socket.on('connect_error', (error) => {
+            console.warn('Notification bridge socket connection error:', error.message);
         });
 
         socket.on('notification:new', (data: { title: string; body: string; meetingId: number; type: string }) => {

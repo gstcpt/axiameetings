@@ -213,14 +213,21 @@ export default function CompaniesPage() {
             cell: ({ row: { original: c } }) => (
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 shadow-sm overflow-hidden p-1">
-                        {c.logo_url 
-                            ? <img 
+                        {c.logo_url && (
+                            <img 
                                 src={formatLogoUrl(c.logo_url)} 
                                 alt={c.name} 
                                 className="w-full h-full object-contain" 
-                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                              /> 
-                            : <Building2 size={14} className="text-[#002B5B]" />}
+                                onError={(e) => { 
+                                    e.currentTarget.style.display = 'none'; 
+                                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                }}
+                            />
+                        )}
+                        <Building2 
+                            size={14} 
+                            className={cn("text-[#002B5B]", c.logo_url && "hidden")} 
+                        />
                     </div>
                     <div className="min-w-0">
                         <Typography variant="large" className="text-slate-900 font-bold text-xs leading-tight truncate">{c.name}</Typography>
