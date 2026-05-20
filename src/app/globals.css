@@ -105,13 +105,13 @@
   }
 
   body {
-    @apply text-slate-900 leading-normal antialiased selection:bg-blue-100 selection:text-blue-900;
+    @apply text-slate-900 dark:text-slate-100 leading-normal antialiased selection:bg-blue-100 selection:text-blue-900;
     line-height: 1.5;
     letter-spacing: normal !important;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-[#002B5B];
+    @apply font-semibold text-[#002B5B] dark:text-white;
     letter-spacing: normal !important;
   }
 }

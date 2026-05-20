@@ -15,10 +15,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <AuthGuard>
             <NotificationBridge />
-            <div className="flex min-h-screen bg-[#FDFDFD] relative overflow-hidden">
+            <div className="flex min-h-screen bg-[#FDFDFD] dark:bg-slate-950 relative overflow-hidden">
                 {/* Background decorative elements for the entire dashboard */}
-                <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-blue-50/30 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 -z-10 pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-indigo-50/20 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4 -z-10 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-blue-50/30 dark:bg-blue-950/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 -z-10 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-indigo-50/20 dark:bg-indigo-950/10 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4 -z-10 pointer-events-none"></div>
 
                 <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
                 

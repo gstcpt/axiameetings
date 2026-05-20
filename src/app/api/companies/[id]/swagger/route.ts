@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { formatWebsiteUrl } from '@/lib/utils';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getAuthenticatedUser(req);
@@ -20,7 +21,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         }
 
         const { docUrl } = await req.json();
-        const fetchUrl = docUrl || (company.url.endsWith('/api/doc') ? company.url : `${company.url.replace(/\/$/, '')}/api/doc`);
+        const formattedCompanyUrl = formatWebsiteUrl(company.url);
+        const fetchUrl = docUrl || (formattedCompanyUrl.endsWith('/api/doc') ? formattedCompanyUrl : `${formattedCompanyUrl.replace(/\/$/, '')}/api/doc`);
 
         console.log(`Fetching Swagger from: ${fetchUrl}`);
 

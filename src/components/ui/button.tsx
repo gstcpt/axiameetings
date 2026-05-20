@@ -9,22 +9,22 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[#002B5B] text-white hover:bg-blue-700 shadow-blue-900/20 shadow-lg",
+        default: "bg-[#002B5B] text-white hover:bg-blue-700 shadow-blue-900/20 shadow-lg dark:bg-blue-600 dark:hover:bg-blue-700 dark:shadow-none",
         outline:
-          "border-2 border-slate-200 bg-transparent text-slate-600 hover:bg-slate-50 hover:border-slate-300",
+          "border-2 border-slate-200 bg-transparent text-slate-600 hover:bg-slate-50 hover:border-slate-300 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-700",
         secondary:
-          "bg-slate-100 text-slate-900 hover:bg-slate-200",
+          "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700",
         ghost:
-          "hover:bg-slate-100 text-slate-500 hover:text-slate-900",
+          "hover:bg-slate-100 text-slate-500 hover:text-slate-900 dark:hover:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-100",
         destructive:
-          "bg-red-500 text-white hover:bg-red-600 shadow-red-900/20 shadow-lg",
+          "bg-red-500 text-white hover:bg-red-600 shadow-red-900/20 shadow-lg dark:shadow-none",
         danger:
-          "bg-red-500 text-white hover:bg-red-600 shadow-red-900/20 shadow-lg",
+          "bg-red-500 text-white hover:bg-red-600 shadow-red-900/20 shadow-lg dark:shadow-none",
         primary:
-          "bg-[#002B5B] text-white hover:bg-blue-700 shadow-blue-900/20 shadow-lg",
+          "bg-[#002B5B] text-white hover:bg-blue-700 shadow-blue-900/20 shadow-lg dark:bg-blue-600 dark:hover:bg-blue-700 dark:shadow-none",
         success:
-          "bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-900/20 shadow-lg",
-        link: "text-[#002B5B] underline-offset-4 hover:underline lowercase tracking-normal font-bold",
+          "bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-900/20 shadow-lg dark:shadow-none",
+        link: "text-[#002B5B] underline-offset-4 hover:underline lowercase tracking-normal font-bold dark:text-blue-400",
       },
       size: {
         default: "h-10 px-6 gap-2 sm:h-9 sm:px-4",

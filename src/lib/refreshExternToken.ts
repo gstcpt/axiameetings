@@ -1,4 +1,5 @@
 import { prisma } from './prisma';
+import { formatWebsiteUrl } from './utils';
 
 /**
  * Automatically authenticates with the external company login API
@@ -42,7 +43,10 @@ export async function refreshExternToken(companyId: number): Promise<string | nu
             data: { token_id: null }
         });
 
-        const apiUrl = endpoint.endpoint.startsWith('http') ? endpoint.endpoint : `${company.url}${endpoint.endpoint}`;
+        const formattedCompanyUrl = formatWebsiteUrl(company.url);
+        const apiUrl = endpoint.endpoint.startsWith('http')
+            ? endpoint.endpoint
+            : `${formattedCompanyUrl.replace(/\/$/, '')}/${endpoint.endpoint.replace(/^\//, '')}`;
         
         let payload: any = {
             username: adminLogin.username,

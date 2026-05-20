@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { formatWebsiteUrl } from '@/lib/utils';
 
 // GET: fetch current link status for the authenticated admin
 export async function GET(req: NextRequest) {
@@ -81,9 +82,10 @@ export async function POST(req: NextRequest) {
         const loginEndpoint = company.login_endpoint;
 
         // Build the full login URL
+        const formattedCompanyUrl = formatWebsiteUrl(company.url);
         const loginUrl = loginEndpoint.endpoint.startsWith('http')
             ? loginEndpoint.endpoint
-            : `${company.url}${loginEndpoint.endpoint}`;
+            : `${formattedCompanyUrl.replace(/\/$/, '')}/${loginEndpoint.endpoint.replace(/^\//, '')}`;
 
         // Build the payload using format mappings if available
         // Format mappings: response_key = their field name, formated_response_key = our field name

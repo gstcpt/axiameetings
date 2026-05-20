@@ -33,13 +33,13 @@ export function CustomCardDesign<TData>({ row }: CustomCardDesignProps<TData>) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-                "group relative bg-white/70 backdrop-blur-xl rounded-[2rem] p-8 border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,43,91,0.1)] transition-all duration-500 flex flex-col h-full overflow-hidden",
-                row.getIsSelected() && "border-[#002B5B]/30 bg-blue-50/20"
+                "group relative bg-white/70 backdrop-blur-xl rounded-[2rem] p-8 border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,43,91,0.1)] transition-all duration-500 flex flex-col h-full overflow-hidden dark:bg-slate-900/60 dark:border-slate-800/60 dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.8)]",
+                row.getIsSelected() && "border-[#002B5B]/30 bg-blue-50/20 dark:border-blue-500/30 dark:bg-blue-950/20"
             )}
         >
             {/* Animated Glow Backdrop */}
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#002B5B]/5 rounded-full blur-[60px] group-hover:bg-[#002B5B]/10 transition-colors duration-500" />
-            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-400/5 rounded-full blur-[60px] group-hover:bg-blue-400/10 transition-colors duration-500" />
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#002B5B]/5 dark:bg-[#002B5B]/10 rounded-full blur-[60px] group-hover:bg-[#002B5B]/10 dark:group-hover:bg-[#002B5B]/20 transition-colors duration-500" />
+            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-400/5 dark:bg-blue-400/10 rounded-full blur-[60px] group-hover:bg-blue-400/10 dark:group-hover:bg-blue-400/20 transition-colors duration-500" />
             
             {/* Top Accent Line */}
             <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#002B5B] via-blue-500 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -54,14 +54,14 @@ export function CustomCardDesign<TData>({ row }: CustomCardDesignProps<TData>) {
                     {titleCell && (
                         <div className="flex flex-col min-w-0 flex-1">
                             <div className="flex items-center gap-2 mb-1.5">
-                                <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[#002B5B]/40">
+                                <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[#002B5B]/40 dark:text-blue-400/40">
                                     {typeof titleCell.column.columnDef.header === 'string' 
                                         ? titleCell.column.columnDef.header 
                                         : titleCell.column.id}
                                 </span>
-                                <div className="h-px flex-1 bg-slate-100/50" />
+                                <div className="h-px flex-1 bg-slate-100/50 dark:bg-slate-800/50" />
                             </div>
-                            <h3 className="text-xl font-extrabold text-slate-900 group-hover:text-[#002B5B] transition-colors duration-300 leading-tight truncate tracking-tight">
+                            <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-50 group-hover:text-[#002B5B] dark:group-hover:text-blue-400 transition-colors duration-300 leading-tight truncate tracking-tight">
                                 {flexRender(titleCell.column.columnDef.cell, titleCell.getContext())}
                             </h3>
                         </div>
@@ -69,11 +69,11 @@ export function CustomCardDesign<TData>({ row }: CustomCardDesignProps<TData>) {
                 </div>
                 
                 {actionsCell ? (
-                    <div className="shrink-0 flex items-center justify-end bg-slate-50/50 rounded-2xl p-1 border border-slate-100 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+                    <div className="shrink-0 flex items-center justify-end bg-slate-50/50 dark:bg-slate-800 rounded-2xl p-1 border border-slate-100 dark:border-slate-700 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300">
                         {flexRender(actionsCell.column.columnDef.cell, actionsCell.getContext())}
                     </div>
                 ) : (
-                    <button className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all shrink-0 border border-transparent hover:border-slate-100">
+                    <button className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 transition-all shrink-0 border border-transparent hover:border-slate-100 dark:hover:border-slate-800">
                         <MoreVertical size={20} />
                     </button>
                 )}
@@ -82,13 +82,13 @@ export function CustomCardDesign<TData>({ row }: CustomCardDesignProps<TData>) {
             <div className="grid grid-cols-1 gap-6 relative z-10">
                 {remainingCells.map((cell, idx) => (
                     <div key={cell.id} className="flex flex-col min-w-0 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 50}ms` }}>
-                        <div className="flex items-center gap-2.5 text-[9px] font-black tracking-widest uppercase text-slate-400/80 mb-2">
+                        <div className="flex items-center gap-2.5 text-[9px] font-black tracking-widest uppercase text-slate-400/80 dark:text-slate-500/80 mb-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#002B5B] to-blue-400 shadow-sm" />
                             {typeof cell.column.columnDef.header === 'string' 
                                 ? cell.column.columnDef.header 
                                 : cell.column.id}
                         </div>
-                        <div className="text-sm font-bold text-slate-600 truncate leading-relaxed bg-slate-50/30 rounded-xl p-3 border border-slate-100/50 group-hover:bg-white/50 group-hover:border-white transition-all duration-300 shadow-xs">
+                        <div className="text-sm font-bold text-slate-600 dark:text-slate-300 truncate leading-relaxed bg-slate-50/30 dark:bg-slate-950/30 rounded-xl p-3 border border-slate-100/50 dark:border-slate-800/30 group-hover:bg-white/50 dark:group-hover:bg-slate-900/50 group-hover:border-white dark:group-hover:border-slate-800 transition-all duration-300 shadow-xs">
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </div>
                     </div>
@@ -96,13 +96,13 @@ export function CustomCardDesign<TData>({ row }: CustomCardDesignProps<TData>) {
             </div>
             
             {/* Bottom Footer Design Element */}
-            <div className="mt-8 pt-6 border-t border-slate-50/50 flex items-center justify-between relative z-10">
+            <div className="mt-8 pt-6 border-t border-slate-50/50 dark:border-slate-800/50 flex items-center justify-between relative z-10">
                 <div className="flex -space-x-2">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-slate-100" />
+                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800" />
                     ))}
                 </div>
-                <div className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">
+                <div className="text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-tighter">
                     Axia Meeting Intelligence
                 </div>
             </div>

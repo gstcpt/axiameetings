@@ -14,21 +14,21 @@ const badgeVariants = cva(
         primary:
           "border-transparent bg-[#002B5B] text-white shadow-sm",
         secondary:
-          "border-slate-200 bg-slate-50 text-slate-600",
+          "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300",
         success:
-          "border-transparent bg-emerald-500 text-white shadow-sm shadow-emerald-500/20",
+          "border-transparent bg-emerald-500 text-white shadow-sm shadow-emerald-500/20 dark:shadow-none",
         warning:
-          "border-transparent bg-amber-500 text-white shadow-sm shadow-amber-500/20",
+          "border-transparent bg-amber-500 text-white shadow-sm shadow-amber-500/20 dark:shadow-none",
         error:
-          "border-transparent bg-red-500 text-white shadow-sm shadow-red-500/20",
+          "border-transparent bg-red-500 text-white shadow-sm shadow-red-500/20 dark:shadow-none",
         danger:
-          "border-transparent bg-red-500 text-white shadow-sm shadow-red-500/20",
+          "border-transparent bg-red-500 text-white shadow-sm shadow-red-500/20 dark:shadow-none",
         destructive:
-          "border-transparent bg-red-500 text-white shadow-sm shadow-red-500/20",
+          "border-transparent bg-red-500 text-white shadow-sm shadow-red-500/20 dark:shadow-none",
         outline:
-          "border-slate-200 text-slate-700 bg-transparent",
+          "border-slate-200 text-slate-700 bg-transparent dark:border-slate-800 dark:text-slate-300",
         ghost:
-          "border-transparent bg-slate-100/50 text-slate-600 hover:bg-slate-100 transition-colors",
+          "border-transparent bg-slate-100/50 text-slate-600 hover:bg-slate-100 transition-colors dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800",
       },
       size: {
         default: "px-2.5 py-0.5 text-xs",

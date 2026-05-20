@@ -81,10 +81,10 @@ export default function LoginPage() {
                     <div className="bg-white rounded-[2rem] md:rounded-[4rem] shadow-[0_80px_160px_-40px_rgba(0,43,91,0.15)] border border-slate-100 overflow-hidden">
                         <div className="bg-[#002B5B] px-8 md:px-16 pt-16 md:pt-24 pb-12 md:pb-20 text-center flex flex-col items-center relative overflow-hidden">
                             {/* Animated Background Pattern */}
-                            <motion.div 
+                            <motion.div
                                 animate={{ opacity: [0.05, 0.1, 0.05] }}
                                 transition={{ duration: 5, repeat: Infinity }}
-                                className="absolute inset-0" 
+                                className="absolute inset-0"
                                 style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}
                             ></motion.div>
                             <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-black/20 to-transparent pointer-events-none"></div>
@@ -105,7 +105,7 @@ export default function LoginPage() {
                                     priority
                                 />
                             </motion.div>
-                            
+
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -123,7 +123,7 @@ export default function LoginPage() {
 
                         <form onSubmit={handleSubmit} className="px-8 md:px-16 py-12 md:py-20 space-y-8 md:space-y-10">
                             <div className="space-y-6">
-                                <Input 
+                                <Input
                                     label={t('email')}
                                     id="username"
                                     type="text"
@@ -135,7 +135,7 @@ export default function LoginPage() {
                                     autoComplete="username"
                                 />
 
-                                <Input 
+                                <Input
                                     label={t('password')}
                                     id="password"
                                     type="password"
@@ -148,7 +148,7 @@ export default function LoginPage() {
                                 />
                             </div>
 
-                            <motion.label 
+                            <motion.label
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.99 }}
                                 className={cn(

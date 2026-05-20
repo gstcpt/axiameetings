@@ -57,9 +57,9 @@ export interface DataTableProps<TData, TValue> {
 }
 
 function SortIcon({ direction }: { direction: "asc" | "desc" | false }) {
-    if (direction === "asc") return <ChevronUp className="h-3.5 w-3.5 text-[#002B5B]" />;
-    if (direction === "desc") return <ChevronDown className="h-3.5 w-3.5 text-[#002B5B]" />;
-    return <ChevronsUpDown className="h-3.5 w-3.5 text-slate-300" />;
+    if (direction === "asc") return <ChevronUp className="h-3.5 w-3.5 text-[#002B5B] dark:text-blue-400" />;
+    if (direction === "desc") return <ChevronDown className="h-3.5 w-3.5 text-[#002B5B] dark:text-blue-400" />;
+    return <ChevronsUpDown className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600" />;
 }
 export function DataTable<TData, TValue>({
     columns,
@@ -161,12 +161,12 @@ export function DataTable<TData, TValue>({
                                 value={globalFilter}
                                 onChange={(e) => setGlobalFilter(e.target.value)}
                                 placeholder={displaySearchPlaceholder}
-                                className="w-full pl-9 pr-9 py-2 text-sm rounded-xl border border-slate-200 focus:border-[#002B5B] focus:ring-2 focus:ring-[#002B5B]/10 outline-none bg-white transition-all"
+                                className="w-full pl-9 pr-9 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 focus:border-[#002B5B] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#002B5B]/10 dark:focus:ring-blue-500/10 outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-all"
                             />
                             {globalFilter && (
                                 <button
                                     onClick={() => setGlobalFilter("")}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -176,10 +176,10 @@ export function DataTable<TData, TValue>({
 
                     {/* Bulk actions bar */}
                     {bulkActions.length > 0 && selectedCount > 0 && (
-                        <div className="flex items-center gap-2 px-4 py-2 bg-[#002B5B]/5 border border-[#002B5B]/20 rounded-xl">
-                            <CheckSquare className="h-4 w-4 text-[#002B5B]" />
-                            <span className="text-sm font-semibold text-[#002B5B]">{t('selected', { count: selectedCount })}</span>
-                            <div className="w-px h-4 bg-[#002B5B]/20 mx-1" />
+                        <div className="flex items-center gap-2 px-4 py-2 bg-[#002B5B]/5 dark:bg-blue-950/20 border border-[#002B5B]/20 dark:border-blue-900/30 rounded-xl">
+                            <CheckSquare className="h-4 w-4 text-[#002B5B] dark:text-blue-400" />
+                            <span className="text-sm font-semibold text-[#002B5B] dark:text-blue-400">{t('selected', { count: selectedCount })}</span>
+                            <div className="w-px h-4 bg-[#002B5B]/20 dark:bg-blue-900/40 mx-1" />
                             {bulkActions.map((action, i) => (
                                 <button
                                     key={i}
@@ -190,8 +190,8 @@ export function DataTable<TData, TValue>({
                                     className={cn(
                                         "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold uppercase rounded-lg transition-all",
                                         action.variant === "danger"
-                                            ? "bg-red-500 hover:bg-red-600 text-white"
-                                            : "bg-[#002B5B] hover:bg-[#003d80] text-white"
+                                            ? "bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white"
+                                            : "bg-[#002B5B] hover:bg-[#003d80] dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
                                     )}
                                 >
                                     {renderActionIcon(action.icon)}
@@ -200,7 +200,7 @@ export function DataTable<TData, TValue>({
                             ))}
                             <button
                                 onClick={() => setRowSelection({})}
-                                className="ml-1 text-slate-400 hover:text-slate-600 transition-colors"
+                                className="ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 transition-colors"
                             >
                                 <X className="h-4 w-4" />
                             </button>
@@ -210,26 +210,26 @@ export function DataTable<TData, TValue>({
             )}
 
             {/* Table and Mobile Cards */}
-            <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
                 
                 {/* Desktop View (Table) */}
                 {viewMode === 'list' && (
                     <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full min-w-full">
-                        <thead className="bg-slate-50 border-b border-slate-100">
+                        <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <tr key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => (
                                         <th
                                             key={header.id}
-                                            className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase"
+                                            className="px-6 py-3 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase"
                                             style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
                                         >
                                             {header.isPlaceholder ? null : (
                                                 header.column.getCanSort() ? (
                                                     <button
                                                         onClick={header.column.getToggleSortingHandler()}
-                                                        className="flex items-center gap-1.5 hover:text-slate-700 transition-colors group"
+                                                        className="flex items-center gap-1.5 hover:text-slate-700 dark:hover:text-slate-300 transition-colors group"
                                                     >
                                                         {flexRender(header.column.columnDef.header, header.getContext())}
                                                         <SortIcon direction={header.column.getIsSorted()} />
@@ -243,7 +243,7 @@ export function DataTable<TData, TValue>({
                                 </tr>
                             ))}
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                             {table.getRowModel().rows.length ? (
                                 table.getRowModel().rows.map((row) => (
                                     <tr
@@ -251,14 +251,14 @@ export function DataTable<TData, TValue>({
                                         className={cn(
                                             "transition-colors",
                                             row.getIsSelected()
-                                                ? "bg-[#002B5B]/5"
-                                                : "bg-white hover:bg-slate-50/80"
+                                                ? "bg-[#002B5B]/5 dark:bg-blue-950/20"
+                                                : "bg-white hover:bg-slate-50/80 dark:bg-slate-900 dark:hover:bg-slate-800/80"
                                         )}
                                     >
                                         {row.getVisibleCells().map((cell) => (
                                             <td
                                                 key={cell.id}
-                                                className="px-6 py-3 text-sm text-slate-700 break-words whitespace-normal leading-normal"
+                                                className="px-6 py-3 text-sm text-slate-700 dark:text-slate-300 break-words whitespace-normal leading-normal"
                                             >
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </td>
@@ -299,7 +299,7 @@ export function DataTable<TData, TValue>({
             {/* Pagination */}
             {showPagination && (
                 <div className="flex items-center justify-between gap-6 flex-wrap px-1 pt-2">
-                    <div className="text-sm text-slate-500 font-medium">
+                    <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">
                         {totalFiltered === 0 ? (
                             t('pagination.noResults')
                         ) : (
@@ -308,7 +308,7 @@ export function DataTable<TData, TValue>({
                                     from: from,
                                     to: to,
                                     total: totalFiltered,
-                                    span: (chunks) => <span className="font-semibold text-slate-700">{chunks}</span>
+                                    span: (chunks) => <span className="font-semibold text-slate-700 dark:text-slate-200">{chunks}</span>
                                 })}
                                 {data.length !== totalFiltered && (
                                     <span className="text-slate-400">{t('pagination.filtered', { total: data.length })}</span>
@@ -318,20 +318,20 @@ export function DataTable<TData, TValue>({
                     </div>
                     <div className="flex items-center gap-1.5">
                         <button
-                            onClick={() => table.setPageIndex(0)}
-                            disabled={!table.getCanPreviousPage()}
-                            className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                            aria-label={t('pagination.first')}
+                             onClick={() => table.setPageIndex(0)}
+                             disabled={!table.getCanPreviousPage()}
+                             className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all bg-white dark:bg-slate-900"
+                             aria-label={t('pagination.first')}
                         >
-                            <ChevronsLeft className="h-4 w-4 text-slate-600" />
+                            <ChevronsLeft className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                         </button>
                         <button
                             onClick={() => table.previousPage()}
                             disabled={!table.getCanPreviousPage()}
-                            className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                            className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all bg-white dark:bg-slate-900"
                             aria-label={t('pagination.previous')}
                         >
-                            <ChevronLeft className="h-4 w-4 text-slate-600" />
+                            <ChevronLeft className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                         </button>
 
                         {/* Page numbers */}
@@ -353,12 +353,12 @@ export function DataTable<TData, TValue>({
                                     <button
                                         key={page}
                                         onClick={() => table.setPageIndex(page)}
-                                            className={cn(
-                                                "w-8 h-8 text-xs font-medium rounded-lg transition-all",
-                                                page === current
-                                                    ? "bg-[#002B5B] text-white shadow-sm"
-                                                    : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                                            )}
+                                             className={cn(
+                                                 "w-8 h-8 text-xs font-medium rounded-lg transition-all",
+                                                 page === current
+                                                     ? "bg-[#002B5B] dark:bg-blue-600 text-white shadow-sm"
+                                                     : "border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 bg-white dark:bg-slate-900"
+                                             )}
                                     >
                                         {page + 1}
                                     </button>
@@ -369,25 +369,25 @@ export function DataTable<TData, TValue>({
                         <button
                             onClick={() => table.nextPage()}
                             disabled={!table.getCanNextPage()}
-                            className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                            className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all bg-white dark:bg-slate-900"
                             aria-label={t('pagination.next')}
                         >
-                            <ChevronRight className="h-4 w-4 text-slate-600" />
+                            <ChevronRight className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                         </button>
                         <button
                             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                             disabled={!table.getCanNextPage()}
-                            className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                            className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all bg-white dark:bg-slate-900"
                             aria-label={t('pagination.last')}
                         >
-                            <ChevronsRight className="h-4 w-4 text-slate-600" />
+                            <ChevronsRight className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                         </button>
 
                         {/* Page size selector */}
                         <select
                             value={pageSizeState}
                             onChange={(e) => table.setPageSize(Number(e.target.value))}
-                            className="ml-2 px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-lg bg-white text-slate-600 focus:border-[#002B5B] outline-none cursor-pointer"
+                            className="ml-2 px-3 py-1.5 text-xs font-medium border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 focus:border-[#002B5B] dark:focus:border-blue-500 outline-none cursor-pointer"
                         >
                             {[5, 10, 20, 50, 100].map((size) => (
                                 <option key={size} value={size}>
