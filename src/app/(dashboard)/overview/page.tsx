@@ -63,7 +63,7 @@ const MiniCalendar = ({ meetingDates = [] }: { meetingDates?: string[] }) => {
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 flex flex-col h-full group hover:shadow-2xl hover:shadow-blue-900/5 dark:hover:shadow-black/20 transition-all duration-500"
+            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-full group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
         >
             <div className="flex items-center justify-between mb-4">
                 <div>
@@ -85,7 +85,7 @@ const MiniCalendar = ({ meetingDates = [] }: { meetingDates?: string[] }) => {
                             "p-1.5 rounded-lg flex flex-col items-center justify-center relative transition-all duration-300 h-8",
                             !d ? 'opacity-0' :
                                 d === today.getDate() ? 'bg-[#002B5B] text-white font-semibold shadow-xl shadow-blue-900/10 z-10' :
-                                    'text-slate-600 dark:text-slate-350 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 cursor-default'
+                                    'text-slate-600 font-medium hover:bg-slate-50 cursor-default'
                         )}
                     >
                         {d || ''}
@@ -136,18 +136,18 @@ export default function OverviewPage() {
     }, [tc]);
 
     const statCards = [
-        ...(isDeveloper ? [{ title: ts('companies'), value: stats?.companies ?? 0, icon: Building2, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/20', border: 'border-blue-100 dark:border-blue-900/30', href: '/companies' }] : []),
-        { title: t('stats.apis'), value: stats?.apis ?? 0, icon: Database, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50 dark:bg-cyan-950/20', border: 'border-cyan-100 dark:border-cyan-900/30', href: '/companies/apis' },
-        { title: t('stats.admins'), value: stats?.admins ?? 0, icon: ShieldCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20', border: 'border-emerald-100 dark:border-emerald-900/30', href: '/companies/admins' },
-        { title: ts('users'), value: stats?.users ?? 0, icon: Users, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-950/20', border: 'border-purple-100 dark:border-purple-900/30', href: '/users' },
-        { title: ts('meetings'), value: stats?.meetings ?? 0, icon: Video, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/20', border: 'border-rose-100 dark:border-rose-900/30', href: '/meetings' },
-        { title: t('stats.cancelled'), value: stats?.meetingsByStatus?.CANCELLED ?? 0, icon: Ban, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-950/20', border: 'border-red-100 dark:border-red-900/30', href: '/meetings' },
-        { title: ts('logs'), value: stats?.logs ?? 0, icon: ScrollText, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20', border: 'border-amber-100 dark:border-amber-900/30', href: '/logs' },
+        ...(isDeveloper ? [{ title: ts('companies'), value: stats?.companies ?? 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', href: '/companies' }] : []),
+        { title: t('stats.apis'), value: stats?.apis ?? 0, icon: Database, color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-100', href: '/companies/apis' },
+        { title: t('stats.admins'), value: stats?.admins ?? 0, icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', href: '/companies/admins' },
+        { title: ts('users'), value: stats?.users ?? 0, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', href: '/users' },
+        { title: ts('meetings'), value: stats?.meetings ?? 0, icon: Video, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', href: '/meetings' },
+        { title: t('stats.cancelled'), value: stats?.meetingsByStatus?.CANCELLED ?? 0, icon: Ban, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100', href: '/meetings' },
+        { title: ts('logs'), value: stats?.logs ?? 0, icon: ScrollText, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', href: '/logs' },
     ];
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-32 gap-6 bg-slate-50 dark:bg-slate-950 min-h-screen">
+            <div className="flex flex-col items-center justify-center py-32 gap-6 bg-slate-50 min-h-screen">
                 <div className="w-16 h-16 border-4 border-[#002B5B]/20 border-t-[#002B5B] rounded-full animate-spin" />
                 <Typography variant="label" className="animate-pulse">{tc('loading')}</Typography>
             </div>
@@ -166,7 +166,7 @@ export default function OverviewPage() {
     return (
         <div className="space-y-8 md:space-y-12 pb-20">
             {/* Premium Welcome Header */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm shadow-blue-900/5 dark:shadow-black/20 relative overflow-hidden">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm shadow-blue-900/5 relative overflow-hidden">
                 <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 relative z-10">
                     <div className="flex flex-col sm:flex-row items-center gap-6 md:gap-8 text-center sm:text-left w-full md:w-auto">
                         <div className="w-10 h-10 md:w-12 md:h-12 bg-[#002B5B] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-900/20 shrink-0 relative">
@@ -179,7 +179,7 @@ export default function OverviewPage() {
                                 <Typography variant="label" className="text-slate-500 font-bold uppercase text-[8px]">{new Date().toLocaleDateString(locale === 'ar' ? 'ar-TN' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short' })}</Typography>
                             </div>
                             <div className="space-y-0.5">
-                                <Typography variant="h2" className="text-[#002B5B] dark:text-white text-xl font-bold leading-tight">
+                                <Typography variant="h2" className="text-[#002B5B] text-xl font-bold leading-tight">
                                     {t('title')}
                                 </Typography>
                                 <Typography variant="p" color="secondary" className="max-w-xl text-[11px] font-bold uppercase">
@@ -208,11 +208,11 @@ export default function OverviewPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05, type: 'spring', damping: 20 }}
                                 className={cn(
-                                    "bg-white dark:bg-slate-900 rounded-2xl p-4 border shadow-sm h-full transition-all duration-500 flex flex-col justify-between relative overflow-hidden group-hover:shadow-2xl group-hover:shadow-blue-900/10 dark:group-hover:shadow-black/20 group-hover:-translate-y-1",
+                                    "bg-white rounded-2xl p-4 border shadow-sm h-full transition-all duration-500 flex flex-col justify-between relative overflow-hidden group-hover:shadow-2xl group-hover:shadow-blue-900/10 group-hover:-translate-y-1",
                                     stat.border
                                 )}
                             >
-                                <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-slate-50/50 dark:bg-slate-800/10 rounded-full blur-2xl group-hover:bg-blue-50/50 dark:group-hover:bg-blue-950/20 transition-colors duration-500" />
+                                <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-slate-50/50 rounded-full blur-2xl group-hover:bg-blue-50/50 transition-colors duration-500" />
                                 <div className="flex items-center justify-between mb-4 relative z-10">
                                     <Typography variant="label" className="text-[12px] font-bold uppercase text-slate-400 group-hover:text-[#002B5B] transition-colors">{stat.title}</Typography>
                                     <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border border-current/10 transition-transform duration-500 group-hover:scale-110", stat.bg, stat.color)}>
@@ -221,7 +221,7 @@ export default function OverviewPage() {
                                 </div>
                                 <div className="relative z-10 flex items-baseline gap-2">
                                     <AnimatedCounter value={stat.value} />
-                                    <div className="flex items-center text-emerald-500 text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded-md border border-emerald-100 dark:border-emerald-900/30">
+                                    <div className="flex items-center text-emerald-500 text-[9px] font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100">
                                         <ArrowUpRight size={10} className="me-1" />
                                         {t('stats.live')}
                                     </div>
@@ -242,11 +242,11 @@ export default function OverviewPage() {
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 lg:col-span-8 group hover:shadow-2xl hover:shadow-blue-900/5 dark:hover:shadow-black/20 transition-all duration-500"
+                    className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-8 group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
                 >
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-slate-800 text-[#002B5B] dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-slate-700">
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#002B5B] flex items-center justify-center border border-blue-100">
                                 <TrendingUp size={14} />
                             </div>
                             <div>
@@ -256,7 +256,7 @@ export default function OverviewPage() {
                         </div>
                         <div className="flex gap-2">
                             <div className="h-2 w-2 rounded-full bg-[#002B5B]" />
-                            <div className="h-2 w-2 rounded-full bg-slate-100 dark:bg-slate-800" />
+                            <div className="h-2 w-2 rounded-full bg-slate-100" />
                         </div>
                     </div>
                     <BarChartComponent
@@ -272,10 +272,10 @@ export default function OverviewPage() {
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 lg:col-span-4 flex flex-col group hover:shadow-2xl hover:shadow-blue-900/5 dark:hover:shadow-black/20 transition-all duration-500"
+                    className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-4 flex flex-col group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
                 >
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-100 dark:border-purple-900/30">
+                        <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
                             <PieChartIcon size={14} />
                         </div>
                         <div>
@@ -305,10 +305,10 @@ export default function OverviewPage() {
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 lg:col-span-4 group hover:shadow-2xl hover:shadow-blue-900/5 dark:hover:shadow-black/20 transition-all duration-500"
+                    className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-4 group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
                 >
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/30">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
                             <Users size={14} />
                         </div>
                         <div>
@@ -334,10 +334,10 @@ export default function OverviewPage() {
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 lg:col-span-8 group hover:shadow-2xl hover:shadow-blue-900/5 dark:hover:shadow-black/20 transition-all duration-500"
+                    className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-8 group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
                 >
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-100 dark:border-amber-900/30">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
                             <Activity size={14} />
                         </div>
                         <div>

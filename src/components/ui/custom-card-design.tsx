@@ -20,93 +20,92 @@ export function CustomCardDesign<TData>({ row }: CustomCardDesignProps<TData>) {
     // All other content cells
     const contentCells = cells.filter(c => c.column.id !== "__select__" && c.column.id !== "actions");
 
-    // To make it look gorgeous and less "table-like", we can highlight the FIRST column as a title.
     const titleCell = contentCells.length > 0 ? contentCells[0] : null;
     const remainingCells = contentCells.slice(1);
 
+    // Dynamic Image Detection for generic rows (e.g. companies, references)
+    const originalData = row.original as any;
+    const imageUrl = originalData?.logo_file_name || originalData?.logo_url || originalData?.image_url;
+    const formattedImg = imageUrl ? (imageUrl.startsWith('http') || imageUrl.startsWith('/') ? imageUrl : `/uploads/${imageUrl}`) : null;
+
     return (
         <motion.div
-            whileHover={{ 
-                y: -8,
-                transition: { duration: 0.3, ease: "easeOut" }
-            }}
+            whileHover={{ y: -8, transition: { duration: 0.3, ease: "easeOut" } }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-                "group relative bg-white/70 backdrop-blur-xl rounded-[2rem] p-8 border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,43,91,0.1)] transition-all duration-500 flex flex-col h-full overflow-hidden dark:bg-slate-900/60 dark:border-slate-800/60 dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.8)]",
-                row.getIsSelected() && "border-[#002B5B]/30 bg-blue-50/20 dark:border-blue-500/30 dark:bg-blue-950/20"
+                "group relative bg-[#0a0715] rounded-3xl border border-purple-500/10 shadow-[0_0_20px_rgba(168,85,247,0.05)] hover:shadow-[0_0_35px_rgba(168,85,247,0.15)] transition-all duration-500 flex flex-col h-full overflow-hidden",
+                row.getIsSelected() && "border-purple-500/50 ring-2 ring-purple-500/20"
             )}
         >
-            {/* Animated Glow Backdrop */}
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#002B5B]/5 dark:bg-[#002B5B]/10 rounded-full blur-[60px] group-hover:bg-[#002B5B]/10 dark:group-hover:bg-[#002B5B]/20 transition-colors duration-500" />
-            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-400/5 dark:bg-blue-400/10 rounded-full blur-[60px] group-hover:bg-blue-400/10 dark:group-hover:bg-blue-400/20 transition-colors duration-500" />
-            
-            {/* Top Accent Line */}
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#002B5B] via-blue-500 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Dark Purple Glow Background Element */}
+            <div className="absolute -top-32 -right-32 w-64 h-64 bg-purple-600/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-purple-600/20 transition-all duration-700" />
+            <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-blue-600/20 transition-all duration-700" />
 
-            <div className="flex justify-between items-start mb-8 relative z-10">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                    {selectCell && (
-                        <div className="pt-1.5 shrink-0 scale-110">
-                            {flexRender(selectCell.column.columnDef.cell, selectCell.getContext())}
+            {/* Top Area with Optional Select */}
+            {selectCell && (
+                <div className="absolute top-4 right-4 z-20">
+                    <div className="scale-110">
+                        {flexRender(selectCell.column.columnDef.cell, selectCell.getContext())}
+                    </div>
+                </div>
+            )}
+
+            <div className="p-6 flex flex-col flex-1 relative z-10 space-y-6">
+                {/* Image and Title Row */}
+                <div className="flex items-center gap-4">
+                    {formattedImg && (
+                        <div className="w-14 h-14 rounded-2xl bg-white/5 border border-purple-500/20 overflow-hidden flex-shrink-0 flex items-center justify-center p-2 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={formattedImg} alt="Logo" className="w-full h-full object-contain" />
                         </div>
                     )}
+                    
                     {titleCell && (
-                        <div className="flex flex-col min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1.5">
-                                <span className="text-[10px] font-black tracking-[0.2em] uppercase text-[#002B5B]/40 dark:text-blue-400/40">
-                                    {typeof titleCell.column.columnDef.header === 'string' 
-                                        ? titleCell.column.columnDef.header 
-                                        : titleCell.column.id}
-                                </span>
-                                <div className="h-px flex-1 bg-slate-100/50 dark:bg-slate-800/50" />
+                        <div className="min-w-0 flex-1">
+                            <div className="text-[9px] font-black tracking-[0.15em] uppercase text-purple-400/70 mb-1">
+                                {typeof titleCell.column.columnDef.header === 'string' 
+                                    ? titleCell.column.columnDef.header 
+                                    : titleCell.column.id}
                             </div>
-                            <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-50 group-hover:text-[#002B5B] dark:group-hover:text-blue-400 transition-colors duration-300 leading-tight truncate tracking-tight">
+                            <h3 className="text-xl font-bold text-white leading-tight truncate tracking-tight group-hover:text-purple-300 transition-colors">
                                 {flexRender(titleCell.column.columnDef.cell, titleCell.getContext())}
                             </h3>
                         </div>
                     )}
                 </div>
-                
-                {actionsCell ? (
-                    <div className="shrink-0 flex items-center justify-end bg-slate-50/50 dark:bg-slate-800 rounded-2xl p-1 border border-slate-100 dark:border-slate-700 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-                        {flexRender(actionsCell.column.columnDef.cell, actionsCell.getContext())}
-                    </div>
-                ) : (
-                    <button className="w-10 h-10 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 transition-all shrink-0 border border-transparent hover:border-slate-100 dark:hover:border-slate-800">
-                        <MoreVertical size={20} />
-                    </button>
-                )}
-            </div>
 
-            <div className="grid grid-cols-1 gap-6 relative z-10">
-                {remainingCells.map((cell, idx) => (
-                    <div key={cell.id} className="flex flex-col min-w-0 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 50}ms` }}>
-                        <div className="flex items-center gap-2.5 text-[9px] font-black tracking-widest uppercase text-slate-400/80 dark:text-slate-500/80 mb-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#002B5B] to-blue-400 shadow-sm" />
-                            {typeof cell.column.columnDef.header === 'string' 
-                                ? cell.column.columnDef.header 
-                                : cell.column.id}
+                {/* Grid of properties */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+                    {remainingCells.map((cell, idx) => (
+                        <div key={cell.id} className="flex flex-col min-w-0 bg-white/[0.02] hover:bg-white/[0.04] transition-colors rounded-xl p-3.5 border border-white/[0.05]">
+                            <div className="text-[9px] font-black tracking-widest uppercase text-slate-500 mb-1 truncate">
+                                {typeof cell.column.columnDef.header === 'string' 
+                                    ? cell.column.columnDef.header 
+                                    : cell.column.id}
+                            </div>
+                            <div className="text-xs font-semibold text-slate-300 truncate">
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </div>
                         </div>
-                        <div className="text-sm font-bold text-slate-600 dark:text-slate-300 truncate leading-relaxed bg-slate-50/30 dark:bg-slate-950/30 rounded-xl p-3 border border-slate-100/50 dark:border-slate-800/30 group-hover:bg-white/50 dark:group-hover:bg-slate-900/50 group-hover:border-white dark:group-hover:border-slate-800 transition-all duration-300 shadow-xs">
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </div>
-                    </div>
-                ))}
-            </div>
-            
-            {/* Bottom Footer Design Element */}
-            <div className="mt-8 pt-6 border-t border-slate-50/50 dark:border-slate-800/50 flex items-center justify-between relative z-10">
-                <div className="flex -space-x-2">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800" />
                     ))}
                 </div>
-                <div className="text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-tighter">
-                    Axia Meeting Intelligence
+                
+                {/* Bottom Action Area */}
+                <div className="pt-4 border-t border-white/[0.08] flex items-center justify-end w-full">
+                    {actionsCell ? (
+                        <div className="w-full flex justify-end gap-2 [&>*]:w-full [&>button]:w-full [&_button]:w-full [&_.flex]:w-full [&_button]:bg-white/5 [&_button:hover]:bg-purple-500/20 [&_button:hover]:text-purple-300 [&_button]:border-white/10 [&_button]:backdrop-blur-sm [&_button]:text-slate-300">
+                            {flexRender(actionsCell.column.columnDef.cell, actionsCell.getContext())}
+                        </div>
+                    ) : (
+                        <button className="w-full h-10 flex items-center justify-center bg-white/5 hover:bg-purple-500/20 border border-white/10 rounded-xl text-slate-300 transition-all font-bold text-xs uppercase tracking-wider backdrop-blur-sm shadow-sm hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                            {t('selectRow')}
+                        </button>
+                    )}
                 </div>
             </div>
         </motion.div>
     );
 }
+
 

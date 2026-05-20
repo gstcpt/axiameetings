@@ -1,6 +1,5 @@
 import { prisma } from './prisma';
 import { refreshExternToken } from './refreshExternToken';
-import { formatWebsiteUrl } from './utils';
 
 interface NotificationPayload {
     title: string;
@@ -15,10 +14,7 @@ export async function sendPushNotification(companyId: number, data: Notification
         const company = await prisma.companies.findUnique({ where: { id: companyId }, include: { notifications_service_endpoint: { include: { formated_responses: true } } } });
         if (!company || !company.have_notifications_service || !company.notifications_service_endpoint) { return; }
         const endpoint = company.notifications_service_endpoint;
-        const formattedCompanyUrl = formatWebsiteUrl(company.url);
-        const apiUrl = endpoint.endpoint.startsWith('http')
-            ? endpoint.endpoint
-            : `${formattedCompanyUrl.replace(/\/$/, '')}/${endpoint.endpoint.replace(/^\//, '')}`;
+        const apiUrl = endpoint.endpoint.startsWith('http') ? endpoint.endpoint : `${company.url}${endpoint.endpoint}`;
 
         // Get participants' external IDs from the users table
         const users = await prisma.users.findMany({ where: { email: { in: data.participants }, company_id: companyId }, select: { email: true, identifiant_extern: true } });

@@ -4,7 +4,6 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { refreshExternToken } from '@/lib/refreshExternToken';
-import { formatWebsiteUrl } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
     const user = await getAuthenticatedUser(req);
@@ -61,10 +60,9 @@ export async function POST(req: NextRequest) {
         }
 
         const usersEndpoint = company.users_endpoint;
-        const formattedCompanyUrl = formatWebsiteUrl(company.url);
         const externalUrl = usersEndpoint.endpoint.startsWith('http')
             ? usersEndpoint.endpoint
-            : `${formattedCompanyUrl.replace(/\/$/, '')}/${usersEndpoint.endpoint.replace(/^\//, '')}`;
+            : `${company.url}${usersEndpoint.endpoint}`;
 
         let currentToken = adminLink?.token_id;
         let externalRes;

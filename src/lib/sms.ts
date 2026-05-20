@@ -1,6 +1,5 @@
 import { prisma } from './prisma';
 import { refreshExternToken } from './refreshExternToken';
-import { formatWebsiteUrl } from './utils';
 
 interface SMSPayload {
     body: string;
@@ -23,10 +22,9 @@ export async function sendSMS(companyId: number, data: SMSPayload) {
         }
 
         const endpoint = company.sms_service_endpoint;
-        const formattedCompanyUrl = formatWebsiteUrl(company.url);
         const apiUrl = endpoint.endpoint.startsWith('http')
             ? endpoint.endpoint
-            : `${formattedCompanyUrl.replace(/\/$/, '')}/${endpoint.endpoint.replace(/^\//, '')}`;
+            : `${company.url}${endpoint.endpoint}`;
 
         // Get participants' phone numbers from the users table
         const users = await prisma.users.findMany({

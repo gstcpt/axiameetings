@@ -164,7 +164,7 @@ export function ChatWidget({ meetingId }: ChatWidgetProps) {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.98 }}
                                         transition={{ duration: 0.25, ease: "easeOut" }}
-                                        className={`absolute bottom-[76px] sm:bottom-20 ${isRTL ? 'left-0' : 'right-0'} w-[calc(100vw-40px)] sm:w-[380px] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,43,91,0.12)] border border-slate-100 overflow-hidden flex flex-col transition-all duration-300`}
+                                        className={`absolute bottom-[76px] sm:bottom-20 ${isRTL ? 'left-0' : 'right-0'} w-[290px] xs:w-[320px] sm:w-[380px] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,43,91,0.12)] border border-slate-100 overflow-hidden flex flex-col transition-all duration-300`}
                                         style={{ 
                                             height: minimized ? '56px' : 'auto',
                                             maxHeight: minimized ? '56px' : 'min(600px, calc(100vh - 140px))',

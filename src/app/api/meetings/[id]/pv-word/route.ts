@@ -9,23 +9,22 @@ import {
 } from 'docx';
 import fs from 'fs';
 import path from 'path';
-import { put, del } from '@vercel/blob';
 
 // ─── Colour palette matching the PV HTML design ───────────────────────────────
-const NAVY = '002B5B';
-const GRAY = '94a3b8';
-const EDGE = 'e2e8f0';
-const GREEN = '15803d';
-const RED = 'b91c1c';
-const WHITE = 'FFFFFF';
-const LGRAY = 'f8fafc';
+const NAVY   = '002B5B';
+const GRAY   = '94a3b8';
+const EDGE   = 'e2e8f0';
+const GREEN  = '15803d';
+const RED    = 'b91c1c';
+const WHITE  = 'FFFFFF';
+const LGRAY  = 'f8fafc';
 
 // ─── Text helpers ─────────────────────────────────────────────────────────────
 const tx = (text: string, opts: Partial<{ bold: boolean; size: number; color: string; allCaps: boolean; italics: boolean }> = {}) =>
     new TextRun({ text, bold: opts.bold ?? false, size: opts.size ?? 20, color: opts.color ?? '334155', allCaps: opts.allCaps ?? false, italics: opts.italics ?? false });
 
-const boldTx = (text: string, size = 20, color = '1e293b') => tx(text, { bold: true, size, color });
-const labelTx = (text: string) => tx(text, { bold: true, size: 18, color: GRAY, allCaps: true });
+const boldTx  = (text: string, size = 20, color = '1e293b') => tx(text, { bold: true, size, color });
+const labelTx = (text: string)                              => tx(text, { bold: true, size: 18, color: GRAY, allCaps: true });
 
 // No-border shorthand
 const noB = () => ({ style: BorderStyle.NONE, size: 0, color: WHITE });
@@ -140,22 +139,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         });
 
         if (existingPvs.length > 0 && !overwrite) {
-            return NextResponse.json({
-                status: false,
-                message: 'EXISTING_PV',
-                count: existingPvs.length
+            return NextResponse.json({ 
+                status: false, 
+                message: 'EXISTING_PV', 
+                count: existingPvs.length 
             });
         }
 
         if (overwrite && existingPvs.length > 0) {
             for (const pv of existingPvs) {
-                // Check if the file is in Vercel Blob or Local
-                if (pv.file_path.includes('.blob.vercel-storage.com')) {
-                    await del(pv.file_path); // Delete from Vercel
-                } else {
-                    const fullPath = path.join(process.cwd(), 'public', pv.file_path);
-                    if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath); // Delete locally
-                }
+                const fullPath = path.join(process.cwd(), 'public', pv.file_path);
+                if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
                 await prisma.meetings_documents.delete({ where: { id: pv.id } });
             }
         }
@@ -179,13 +173,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         if (!meeting) return NextResponse.json({ status: false, message: 'Meeting not found' }, { status: 404 });
 
-        const company = meeting.company;
-        const points = meeting.meetings_points ?? [];
-        const total = meeting.meetings_participants?.length ?? 0;
-        const present = meeting.meetings_attendances?.filter((a: any) => a.meetings_attendances_status === 'PRESENT').length ?? 0;
-        const absent = total - present;
-        const refStr = `PV-${meeting.id}/${new Date(meeting.date).getFullYear()}`;
-        const dateStr = new Date(meeting.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        const company   = meeting.company;
+        const points    = meeting.meetings_points ?? [];
+        const total     = meeting.meetings_participants?.length ?? 0;
+        const present   = meeting.meetings_attendances?.filter((a: any) => a.meetings_attendances_status === 'PRESENT').length ?? 0;
+        const absent    = total - present;
+        const refStr    = `PV-${meeting.id}/${new Date(meeting.date).getFullYear()}`;
+        const dateStr   = new Date(meeting.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
         const dateShort = new Date(meeting.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
         // ── Logo ──────────────────────────────────────────────────────────────
@@ -245,7 +239,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             infoRow('Lieu', meeting.location || 'Non spécifié'),
         ];
         if (company?.name) infoRows.push(infoRow('Syndic / Société', company.name));
-        if (company?.url) infoRows.push(infoRow('Site web', company.url));
+        if (company?.url)  infoRows.push(infoRow('Site web', company.url));
 
         const infoTable = new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
@@ -257,31 +251,31 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const agendaHeaderRow = new TableRow({
             tableHeader: true,
             children: [
-                headerCell('#', 6),
+                headerCell('#',                 6),
                 headerCell('Point / Résolution', 54),
-                headerCell('Type', 10),
-                headerCell('Pour', 10),
-                headerCell('Contre', 10),
-                headerCell('Abs.', 10),
+                headerCell('Type',              10),
+                headerCell('Pour',              10),
+                headerCell('Contre',            10),
+                headerCell('Abs.',              10),
             ],
         });
 
         const agendaRows = points.map((point: any, idx: number) => {
             const isVote = point.type === 'VOTE';
-            const votes = point.meetings_votes ?? [];
-            const oui = votes.filter((v: any) => String(v.vote).toUpperCase() === 'OUI').length;
-            const non = votes.filter((v: any) => String(v.vote).toUpperCase() === 'NON').length;
+            const votes  = point.meetings_votes ?? [];
+            const oui    = votes.filter((v: any) => String(v.vote).toUpperCase() === 'OUI').length;
+            const non    = votes.filter((v: any) => String(v.vote).toUpperCase() === 'NON').length;
             const neutre = votes.filter((v: any) => ['NEUTRE', 'ABS'].includes(String(v.vote).toUpperCase())).length;
-            const fill = idx % 2 === 0 ? WHITE : LGRAY;
+            const fill   = idx % 2 === 0 ? WHITE : LGRAY;
 
             return new TableRow({
                 children: [
                     agendaCell(String(idx + 1).padStart(2, '0'), { color: NAVY, align: AlignmentType.CENTER, fill }),
-                    agendaCell(point.point, { fill }),
-                    agendaCell(isVote ? 'VOTE' : 'INFO', { color: isVote ? NAVY : GRAY, align: AlignmentType.CENTER, fill }),
-                    agendaCell(isVote ? String(oui) : '—', { color: GREEN, align: AlignmentType.CENTER, fill }),
-                    agendaCell(isVote ? String(non) : '—', { color: RED, align: AlignmentType.CENTER, fill }),
-                    agendaCell(isVote ? String(neutre) : '—', { color: GRAY, align: AlignmentType.CENTER, fill }),
+                    agendaCell(point.point,                       { fill }),
+                    agendaCell(isVote ? 'VOTE' : 'INFO',          { color: isVote ? NAVY : GRAY, align: AlignmentType.CENTER, fill }),
+                    agendaCell(isVote ? String(oui)    : '—',     { color: GREEN, align: AlignmentType.CENTER, fill }),
+                    agendaCell(isVote ? String(non)    : '—',     { color: RED,   align: AlignmentType.CENTER, fill }),
+                    agendaCell(isVote ? String(neutre) : '—',     { color: GRAY,  align: AlignmentType.CENTER, fill }),
                 ],
             });
         });
@@ -299,8 +293,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
                             children: [
                                 new Paragraph({ children: [tx('Statistiques de présence', { bold: true, size: 18, color: NAVY, allCaps: true })], spacing: { after: 60 } }),
                                 new Paragraph({ children: [labelTx('Total invités: '), boldTx(String(total), 19)] }),
-                                new Paragraph({ children: [labelTx('Présents: '), boldTx(String(present), 19, GREEN)] }),
-                                new Paragraph({ children: [labelTx('Absents: '), boldTx(String(absent), 19, RED)] }),
+                                new Paragraph({ children: [labelTx('Présents: '),      boldTx(String(present), 19, GREEN)] }),
+                                new Paragraph({ children: [labelTx('Absents: '),       boldTx(String(absent),  19, RED)] }),
                             ],
                         }),
                         new TableCell({
@@ -340,14 +334,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
                 properties: {
                     page: {
                         size: {
-                            width: convertInchesToTwip(8.27),   // A4 width
+                            width:  convertInchesToTwip(8.27),   // A4 width
                             height: convertInchesToTwip(11.69),  // A4 height
                         },
                         margin: {
-                            top: convertInchesToTwip(0.6),
+                            top:    convertInchesToTwip(0.6),
                             bottom: convertInchesToTwip(0.8),
-                            left: convertInchesToTwip(0.7),
-                            right: convertInchesToTwip(0.7),
+                            left:   convertInchesToTwip(0.7),
+                            right:  convertInchesToTwip(0.7),
                         },
                     },
                 },
@@ -422,31 +416,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         });
 
         // ── Save & register ────────────────────────────────────────────────────
-        const fileName = `pv-${meetingId}-${Date.now()}.docx`;
-        const buffer = await Packer.toBuffer(doc);
-        let fileUrl = '';
+        const pvDir = path.join(process.cwd(), 'public', 'uploads', 'pvs');
+        if (!fs.existsSync(pvDir)) fs.mkdirSync(pvDir, { recursive: true });
 
-        if (process.env.NODE_ENV === 'production') {
-            // VERCEL BLOB LOGIC
-            const blob = await put(`pvs/${fileName}`, buffer, {
-                access: 'public',
-                contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            });
-            fileUrl = blob.url;
-        } else {
-            // LOCALHOST LOGIC
-            const pvDir = path.join(process.cwd(), 'public', 'uploads', 'pvs');
-            if (!fs.existsSync(pvDir)) fs.mkdirSync(pvDir, { recursive: true });
-            const filePath = path.join(pvDir, fileName);
-            fs.writeFileSync(filePath, buffer);
-            fileUrl = `/uploads/pvs/${fileName}`;
-        }
+        const fileName = `pv-${meetingId}-${Date.now()}.docx`;
+        const filePath = path.join(pvDir, fileName);
+        fs.writeFileSync(filePath, await Packer.toBuffer(doc));
+
+        const fileUrl = `/uploads/pvs/${fileName}`;
 
         await prisma.meetings_documents.create({
             data: {
-                meeting_id: meetingId,
-                file_title: `PV Word — ${meeting.subject} (${new Date(meeting.date).toLocaleDateString('fr-FR')})`,
-                file_path: fileUrl,
+                meeting_id:  meetingId,
+                file_title:  `PV Word — ${meeting.subject} (${new Date(meeting.date).toLocaleDateString('fr-FR')})`,
+                file_path:   fileUrl,
             },
         });
 

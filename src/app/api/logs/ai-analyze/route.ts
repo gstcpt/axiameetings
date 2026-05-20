@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
         }
 
         const logsSerialized = logs.map(l =>
-            `[${format(new Date(l.timestamp), 'MM-dd HH:mm')}] ${l.user?.username}(${l.user?.role}) @ ${l.company?.name || 'GLOBAL'}: ${l.message}`
+            `[${format(new Date(l.timestamp), 'MM-dd HH:mm')}] ${l.user?.username ?? 'SYSTEM'}(${l.user?.role ?? 'SYSTEM'}) @ ${l.company?.name || 'GLOBAL'}: ${l.message}`
         ).join('\n');
 
         const totalLogs = logs.length;

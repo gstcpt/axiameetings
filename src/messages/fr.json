@@ -61,9 +61,7 @@
             "pageInfo": "{current} / {total}",
             "mobile": {
                 "select": "Sélectionner"
-            },
-            "viewList": "Vue Liste",
-            "viewGrid": "Vue Grille"
+            }
         },
         "actions": "Actions",
         "details": "Détails",
@@ -98,8 +96,6 @@
         "na": "N/A",
         "yes": "Oui",
         "no": "Non",
-        "accepted": "Acceptés",
-        "invited": "Invités",
         "active": "Actif",
         "inactive": "Inactif",
         "next": "Suivant",

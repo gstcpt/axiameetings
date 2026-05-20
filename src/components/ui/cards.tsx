@@ -10,12 +10,12 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-white border border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,43,91,0.06)] dark:bg-slate-900 dark:border-slate-800 dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)]",
-        elevated: "bg-white shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] dark:bg-slate-900 dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.6)]",
-        outline: "bg-transparent border border-slate-200 hover:border-[#002B5B]/30 dark:border-slate-800 dark:hover:border-blue-500/50",
-        filled: "bg-slate-50 hover:bg-slate-100/80 dark:bg-slate-800/40 dark:hover:bg-slate-800/70",
-        glass: "bg-white/70 backdrop-blur-3xl border border-white/40 shadow-xl dark:bg-slate-900/60 dark:border-slate-800/40 dark:shadow-black/30",
-        gradient: "bg-gradient-to-br from-white to-slate-50 border border-slate-200 dark:from-slate-900 dark:to-slate-950 dark:border-slate-800",
+        default: "bg-white border border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,43,91,0.06)]",
+        elevated: "bg-white shadow-[0_12px_40px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)]",
+        outline: "bg-transparent border border-slate-200 hover:border-[#002B5B]/30",
+        filled: "bg-slate-50 hover:bg-slate-100/80",
+        glass: "bg-white/70 backdrop-blur-3xl border border-white/40 shadow-xl",
+        gradient: "bg-gradient-to-br from-white to-slate-50 border border-slate-200",
       },
       padding: {
         none: "",

@@ -8,16 +8,16 @@ import { LucideIcon } from "lucide-react";
 import { Typography } from "@/components/ui/typographys";
 
 const selectVariants = cva(
-  "flex w-full rounded-2xl border bg-slate-50/50 px-4 py-3 text-sm font-medium text-[#002B5B] transition-all duration-300 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 appearance-none cursor-pointer dark:bg-slate-900/50 dark:text-slate-100 dark:focus:bg-slate-950",
+  "flex w-full rounded-2xl border bg-slate-50/50 px-4 py-3 text-sm font-medium text-[#002B5B] transition-all duration-300 focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 appearance-none cursor-pointer",
   {
     variants: {
       variant: {
         default:
-          "border-slate-100 focus:border-[#002B5B] focus:ring-4 focus:ring-[#002B5B]/5 dark:border-slate-800 dark:focus:border-blue-500 dark:focus:ring-blue-500/5",
+          "border-slate-100 focus:border-[#002B5B] focus:ring-4 focus:ring-[#002B5B]/5",
         error:
-          "border-red-200 focus:border-red-500 focus:ring-4 focus:ring-red-500/5 dark:border-red-950 dark:focus:border-red-500 dark:focus:ring-red-500/5",
+          "border-red-200 focus:border-red-500 focus:ring-4 focus:ring-red-500/5",
         success:
-          "border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 dark:border-emerald-950 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/5",
+          "border-emerald-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5",
       },
     },
     defaultVariants: {

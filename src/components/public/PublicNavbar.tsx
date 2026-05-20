@@ -10,7 +10,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { Home, ArrowLeft } from "lucide-react";
 import { Typography } from "@/components/ui/typographys";
 import { toast } from "sonner";
-import { formatLogoUrl } from "@/lib/utils";
 
 interface PublicSettings {
     logo_file_name?: string | null;
@@ -25,7 +24,7 @@ export function PublicNavbar({ settings }: { settings: PublicSettings }) {
     const tc = useTranslations('Common');
     const isHome = pathname === "/";
 
-    const logoSrc = formatLogoUrl(settings.logo_file_name) || "/AxiaMeetings.svg";
+    const logoSrc = settings.logo_file_name ? (settings.logo_file_name.startsWith('http') ? settings.logo_file_name : (settings.logo_file_name === "AxiaMeetings.svg" ? "/AxiaMeetings.svg" : `/uploads/${settings.logo_file_name}`)) : "/AxiaMeetings.svg";
 
     const handleLogout = async () => {
         try {

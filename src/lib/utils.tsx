@@ -5,18 +5,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatWebsiteUrl(url: string | null | undefined): string {
-  if (!url) return '';
-  const trimmed = url.trim();
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-  if (trimmed.startsWith('//')) {
-    return `https:${trimmed}`;
-  }
-  return `https://${trimmed}`;
-}
-
 export function formatLogoUrl(logo: string | null | undefined): string {
   if (!logo) return '';
   const trimmed = logo.trim();

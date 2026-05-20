@@ -7,10 +7,9 @@ import { useRouter } from 'next/navigation';
 import { User, ApiResponse } from '@/lib/types';
 import { UserRole } from '@/lib/enums/users';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, RefreshCw, User as UserIcon, Building2, Phone, Mail, Hash, Shield, Users, LayoutGrid, List } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, User as UserIcon, Building2, Phone, Mail, Hash, Shield, Users } from 'lucide-react';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
-import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
 import { Input } from '@/components/ui/inputs';
@@ -19,6 +18,8 @@ import { Typography } from '@/components/ui/typographys';
 import { Select } from '@/components/ui/selects';
 import { Badge } from '@/components/ui/badges';
 import { Card, CardContent } from '@/components/ui/cards';
+import { cn } from '@/lib/utils';
+
 type ModalType = 'add' | 'edit' | 'delete' | 'bulk-delete' | 'import' | null;
 const emptyForm = { fullname: '', email: '', username: '', password: '', role: 'PARTICIPANT', company_id: '', phone: '', identifiant_extern: '' };
 
@@ -32,7 +33,6 @@ export default function UsersPage() {
     const [modal, setModal] = useState<ModalType>(null);
     const [selected, setSelected] = useState<User | null>(null);
     const [bulkSelected, setBulkSelected] = useState<User[]>([]);
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [form, setForm] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
     const [importing, setImporting] = useState(false);
@@ -271,26 +271,6 @@ export default function UsersPage() {
                                 />
                             </div>
                         )}
-                        <div className="flex bg-slate-50 p-0.5 rounded-lg border border-slate-100 w-full md:w-auto">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={cn(
-                                    "flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
-                                    viewMode === 'grid' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
-                                )}
-                            >
-                                <LayoutGrid size={12} /> <span className="hidden md:inline">{tc('table.viewGrid')}</span>
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={cn(
-                                    "flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
-                                    viewMode === 'list' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
-                                )}
-                            >
-                                <List size={12} /> <span className="hidden md:inline">{tc('table.viewList')}</span>
-                            </button>
-                        </div>
                         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
                             <Button variant="outline" className="w-full md:w-auto h-10 px-6 border border-slate-100 font-semibold text-sm" onClick={() => {
                                 if (user?.role === UserRole.DEVELOPER && !selectedCompanyFilter) { toast.error(t('importModal.errorNoCompany')); return; }
@@ -315,7 +295,6 @@ export default function UsersPage() {
                     bulkActions={bulkActions}
                     emptyMessage={t('empty')}
                     pagesize={10}
-                    viewMode={viewMode}
                 />
             </Card>
 

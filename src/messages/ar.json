@@ -61,9 +61,7 @@
             "pageInfo": "{current} / {total}",
             "mobile": {
                 "select": "اختيار"
-            },
-            "viewList": "عرض القائمة",
-            "viewGrid": "عرض الشبكة"
+            }
         },
         "actions": "الإجراءات",
         "details": "التفاصيل",
@@ -98,8 +96,6 @@
         "na": "غير متوفر",
         "yes": "نعم",
         "no": "لا",
-        "accepted": "مقبول",
-        "invited": "مدعو",
         "active": "نشط",
         "inactive": "غير نشط",
         "next": "التالي",

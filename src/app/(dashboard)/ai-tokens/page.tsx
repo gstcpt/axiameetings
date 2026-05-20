@@ -8,7 +8,8 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import {
     Sparkles, Plus, Pencil, Trash2,
-    MessageSquare, FileText, Zap, Scale, ListTodo, Search, HelpCircle, Activity, Globe, Shield, Calendar, BarChart3, Cpu, LayoutGrid, List, AlertTriangle, Eye, EyeOff, RefreshCw
+    RefreshCw, Eye, EyeOff, Clock, AlertTriangle,
+    MessageSquare, FileText, Zap, Scale, ListTodo, Search, HelpCircle, Activity, Globe, Shield, Calendar, BarChart3, Cpu
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
@@ -18,7 +19,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/cards';
 import { Input } from '@/components/ui/inputs';
 import { Badge } from '@/components/ui/badges';
-import { DataTable, Column } from '@/components/ui/data-tables';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -112,7 +112,6 @@ export default function AITokensPage() {
     const [selected, setSelected] = useState<AIToken | null>(null);
     const [form, setForm] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [showKey, setShowKey] = useState<Record<number, boolean>>({});
 
     useEffect(() => {
@@ -215,128 +214,6 @@ export default function AITokensPage() {
         </div>
     );
 
-    const columns: Column<AIToken>[] = [
-        {
-            accessorKey: 'provider',
-            header: t('table.providerName'),
-            cell: ({ row: { original: token } }: { row: { original: AIToken } }) => {
-                const pInfo = providerInfo(token.provider);
-                const isExpired = token.expiration && new Date(token.expiration) < new Date();
-                return (
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                            <Badge variant={token.provider === 'gemini' ? 'primary' : token.provider === 'groq' ? 'warning' : 'default'} className="h-4.5 px-1.5 text-[9px] font-bold uppercase">
-                                {pInfo.label}
-                            </Badge>
-                            {token.name && <Typography variant="large" className="text-slate-900 font-semibold text-xs">{token.name}</Typography>}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {isExpired ? (
-                                <Badge variant="destructive" size="sm" className="h-3.5 px-1.5 gap-1 text-[8px] uppercase font-bold">
-                                    <AlertTriangle size={8} /> {t('provider.expired')}
-                                </Badge>
-                            ) : token.expiration && (
-                                <div className="flex items-center gap-1 text-slate-400">
-                                    <Calendar size={10} />
-                                    <span className="text-[9px] font-bold">{format(new Date(token.expiration), 'MMM d, yyyy')}</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-            }
-        },
-        {
-            accessorKey: 'api_key',
-            header: t('table.apiKey'),
-            cell: ({ row: { original: token } }: { row: { original: AIToken } }) => (
-                <div className="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 w-fit">
-                    <Typography variant="small" className="font-mono text-slate-500 text-[10px]">
-                        {showKey[token.id] ? token.api_key : maskKey(token.api_key)}
-                    </Typography>
-                    <button onClick={() => setShowKey(s => ({ ...s, [token.id]: !s[token.id] }))}
-                        className="text-slate-300 hover:text-[#002B5B] transition-colors">
-                        {showKey[token.id] ? <EyeOff size={10} /> : <Eye size={10} />}
-                    </button>
-                </div>
-            )
-        },
-        {
-            id: 'stats',
-            header: t('table.todayUsed'),
-            cell: ({ row: { original: token } }: { row: { original: AIToken } }) => {
-                const { todayTotal, creditLimit, isExhausted } = token.stats;
-                const usedPct = creditLimit && creditLimit > 0 ? Math.min(100, Math.round((todayTotal / creditLimit) * 100)) : null;
-                return (
-                    <div className="flex flex-col items-center gap-1">
-                        <Typography variant="h4" className={cn("text-sm font-bold", isExhausted ? "text-red-600" : "text-slate-900")}>{todayTotal}</Typography>
-                        {creditLimit && (
-                            <div className="w-16 space-y-0.5">
-                                <div className="h-0.5 bg-slate-100 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${usedPct}%` }}
-                                        className={cn("h-full rounded-full", usedPct! >= 100 ? "bg-red-500" : usedPct! >= 80 ? "bg-amber-500" : "bg-emerald-500")}
-                                    />
-                                </div>
-                                <Typography variant="small" color="secondary" className="text-[9px] font-medium">
-                                    {tc('of')} {creditLimit}
-                                </Typography>
-                            </div>
-                        )}
-                    </div>
-                );
-            }
-        },
-        {
-            id: 'remaining',
-            header: t('table.remaining'),
-            cell: ({ row: { original: token } }: { row: { original: AIToken } }) => {
-                const { remaining, creditLimit, isExhausted } = token.stats;
-                return remaining !== null ? (
-                    <div className="flex flex-col items-center">
-                        <Typography variant="h4" className={cn("text-sm font-bold", remaining === 0 ? "text-red-600" : remaining < (creditLimit! * 0.2) ? "text-amber-600" : "text-emerald-600")}>
-                            {remaining}
-                        </Typography>
-                        {isExhausted && <Typography variant="small" className="text-red-500 font-bold leading-none mt-0.5 text-[9px] uppercase">{t('provider.resetsAt')}</Typography>}
-                    </div>
-                ) : (
-                    <Typography variant="p" color="secondary" className="text-slate-300">—</Typography>
-                );
-            }
-        },
-        {
-            accessorKey: 'is_active',
-            header: t('table.status'),
-            cell: ({ row: { original: token } }: { row: { original: AIToken } }) => (
-                <button
-                    onClick={() => toggleActive(token)}
-                    className={cn(
-                        "relative inline-flex h-4.5 w-8 items-center rounded-full transition-all duration-300",
-                        token.is_active ? "bg-emerald-500" : "bg-slate-200"
-                    )}
-                >
-                    <motion.span
-                        animate={{ x: token.is_active ? 18 : 3 }}
-                        className="inline-block h-3 w-3 rounded-full bg-white shadow-sm"
-                    />
-                </button>
-            )
-        },
-        {
-            id: 'actions',
-            header: tc('actions'),
-            enableSorting: false,
-            cell: ({ row: { original: token } }: { row: { original: AIToken } }) => (
-                <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => { setSelected(token); setModal('view-details'); }} className="h-7 w-7 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Eye size={14} /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(token)} className="h-7 w-7 text-amber-500 hover:bg-amber-50 rounded-lg transition-all"><Pencil size={14} /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => openDelete(token)} className="h-7 w-7 text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={14} /></Button>
-                </div>
-            )
-        }
-    ];
-
     return (
         <div className="space-y-8 pb-20">
             {/* Header Section */}
@@ -356,26 +233,6 @@ export default function AITokensPage() {
                     </div>
 
                     <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="flex bg-slate-50 p-0.5 rounded-lg border border-slate-100">
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={cn(
-                                    "flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
-                                    viewMode === 'grid' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
-                                )}
-                            >
-                                <LayoutGrid size={12} /> <span className="hidden md:inline">{tc('table.viewGrid')}</span>
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={cn(
-                                    "flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase",
-                                    viewMode === 'list' ? "bg-white text-[#002B5B] shadow-sm" : "text-slate-400 hover:text-slate-600"
-                                )}
-                            >
-                                <List size={12} /> <span className="hidden md:inline">{tc('table.viewList')}</span>
-                            </button>
-                        </div>
                         <Button variant="outline" size="icon" onClick={fetchTokens} className="h-10 w-10 shrink-0 border-slate-100">
                             <RefreshCw size={18} className={cn("text-slate-500", loading && "animate-spin")} />
                         </Button>
@@ -422,17 +279,120 @@ export default function AITokensPage() {
                     </Button>
                 </div>
             ) : (
-                <Card className="rounded-2xl border-slate-200 overflow-hidden">
-                    <DataTable
-                        columns={columns}
-                        data={tokens}
-                        searchable
-                        searchPlaceholder={tc('table.searchPlaceholder')}
-                        emptyMessage={t('empty.title')}
-                        pagesize={10}
-                        viewMode={viewMode}
-                    />
-                </Card>
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-slate-50/50 border-b border-slate-100">
+                                    <th className="px-4 md:px-6 py-3 text-left"><Typography variant="label" color="secondary" className="font-bold text-[9px] uppercase">{t('table.providerName')}</Typography></th>
+                                    <th className="px-4 md:px-6 py-3 text-left"><Typography variant="label" color="secondary" className="font-bold text-[9px] uppercase">{t('table.apiKey')}</Typography></th>
+                                    <th className="px-4 md:px-6 py-3 text-center"><Typography variant="label" color="secondary" className="font-bold text-[9px] uppercase">{t('table.todayUsed')}</Typography></th>
+                                    <th className="px-4 md:px-6 py-3 text-center"><Typography variant="label" color="secondary" className="font-bold text-[9px] uppercase">{t('table.remaining')}</Typography></th>
+                                    <th className="px-4 md:px-6 py-3 text-center"><Typography variant="label" color="secondary" className="font-bold text-[9px] uppercase">{t('table.status')}</Typography></th>
+                                    <th className="px-4 md:px-6 py-3 text-center"><Typography variant="label" color="secondary" className="font-bold text-[9px] uppercase">{tc('actions')}</Typography></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {tokens.map(token => {
+                                    const pInfo = providerInfo(token.provider);
+                                    const isExpired = token.expiration && new Date(token.expiration) < new Date();
+                                    const { todayTotal, todaySuccess, todayFailed, remaining, creditLimit, isExhausted, byFeature } = token.stats;
+                                    const usedPct = creditLimit && creditLimit > 0 ? Math.min(100, Math.round((todayTotal / creditLimit) * 100)) : null;
+
+                                    return (
+                                        <tr key={token.id} className={cn("hover:bg-slate-50/50 transition-colors group", !token.is_active && "opacity-60")}>
+                                            <td className="px-4 md:px-6 py-3">
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant={token.provider === 'gemini' ? 'primary' : token.provider === 'groq' ? 'warning' : 'default'} className="h-4.5 px-1.5 text-[9px] font-bold uppercase">
+                                                            {pInfo.label}
+                                                        </Badge>
+                                                        {token.name && <Typography variant="large" className="text-slate-900 font-semibold text-xs">{token.name}</Typography>}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {isExpired ? (
+                                                            <Badge variant="destructive" size="sm" className="h-3.5 px-1.5 gap-1 text-[8px] uppercase font-bold">
+                                                                <AlertTriangle size={8} /> {t('provider.expired')}
+                                                            </Badge>
+                                                        ) : token.expiration && (
+                                                            <div className="flex items-center gap-1 text-slate-400">
+                                                                <Calendar size={10} />
+                                                                <span className="text-[9px] font-bold">{format(new Date(token.expiration), 'MMM d, yyyy')}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 md:px-6 py-3">
+                                                <div className="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 w-fit">
+                                                    <Typography variant="small" className="font-mono text-slate-500 text-[10px]">
+                                                        {showKey[token.id] ? token.api_key : maskKey(token.api_key)}
+                                                    </Typography>
+                                                    <button onClick={() => setShowKey(s => ({ ...s, [token.id]: !s[token.id] }))}
+                                                        className="text-slate-300 hover:text-[#002B5B] transition-colors">
+                                                        {showKey[token.id] ? <EyeOff size={10} /> : <Eye size={10} />}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 md:px-6 py-3 text-center">
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <Typography variant="h4" className={cn("text-sm font-bold", isExhausted ? "text-red-600" : "text-slate-900")}>{todayTotal}</Typography>
+                                                    {creditLimit && (
+                                                        <div className="w-16 space-y-0.5">
+                                                            <div className="h-0.5 bg-slate-100 rounded-full overflow-hidden">
+                                                                <motion.div
+                                                                    initial={{ width: 0 }}
+                                                                    animate={{ width: `${usedPct}%` }}
+                                                                    className={cn("h-full rounded-full", usedPct! >= 100 ? "bg-red-500" : usedPct! >= 80 ? "bg-amber-500" : "bg-emerald-500")}
+                                                                />
+                                                            </div>
+                                                            <Typography variant="small" color="secondary" className="text-[9px] font-medium">
+                                                                {tc('of')} {creditLimit}
+                                                            </Typography>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 md:px-6 py-3 text-center">
+                                                {remaining !== null ? (
+                                                    <div className="flex flex-col items-center">
+                                                        <Typography variant="h4" className={cn("text-sm font-bold", remaining === 0 ? "text-red-600" : remaining < (creditLimit! * 0.2) ? "text-amber-600" : "text-emerald-600")}>
+                                                            {remaining}
+                                                        </Typography>
+                                                        {isExhausted && <Typography variant="small" className="text-red-500 font-bold leading-none mt-0.5 text-[9px] uppercase">{t('provider.resetsAt')}</Typography>}
+                                                    </div>
+                                                ) : (
+                                                    <Typography variant="p" color="secondary" className="text-slate-300">—</Typography>
+                                                )}
+                                            </td>
+                                            <td className="px-4 md:px-6 py-3 text-center">
+                                                <button
+                                                    onClick={() => toggleActive(token)}
+                                                    className={cn(
+                                                        "relative inline-flex h-4.5 w-8 items-center rounded-full transition-all duration-300",
+                                                        token.is_active ? "bg-emerald-500" : "bg-slate-200"
+                                                    )}
+                                                >
+                                                    <motion.span
+                                                        animate={{ x: token.is_active ? 18 : 3 }}
+                                                        className="inline-block h-3 w-3 rounded-full bg-white shadow-sm"
+                                                    />
+                                                </button>
+                                            </td>
+                                            <td className="px-4 md:px-6 py-3">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <Button variant="ghost" size="icon" onClick={() => { setSelected(token); setModal('view-details'); }} className="h-7 w-7 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Eye size={14} /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => openEdit(token)} className="h-7 w-7 text-amber-500 hover:bg-amber-50 rounded-lg transition-all"><Pencil size={14} /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => openDelete(token)} className="h-7 w-7 text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={14} /></Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             )}
 
             {/* Add/Edit Modal */}
