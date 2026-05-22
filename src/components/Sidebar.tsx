@@ -22,6 +22,7 @@ import {
     Package,
     MessageCircle,
     Sparkles,
+    MoreHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/context/AuthContext';
@@ -29,11 +30,13 @@ import { UserRole } from '@/lib/enums/users';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
+    isCompact?: boolean;
+    toggleCompact?: () => void;
     isOpen?: boolean;
     onClose?: () => void;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, isCompact, toggleCompact }: SidebarProps) {
     const pathname = usePathname();
     const { user } = useAuth();
     const t = useTranslations('Dashboard.sidebar');
@@ -48,24 +51,27 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         { icon: Calendar, label: t('meetings'), href: '/meetings' },
     ];
 
-    const adminItems = [];
-    if (isAdmin) {
-        adminItems.push({ icon: Users, label: t('users'), href: '/users' });
-        adminItems.push({ icon: Link2, label: t('linkApp'), href: '/companies/link' });
+    const appSettingsItems = [];
+    if (isDeveloper) {
+        appSettingsItems.push({ icon: Settings, label: tc('configurations') || 'Configurations', href: '/configurations' });
+        appSettingsItems.push({ icon: Package, label: t('packs'), href: '/packs' });
+        appSettingsItems.push({ icon: Globe, label: t('references'), href: '/references' });
+        appSettingsItems.push({ icon: Mail, label: t('newsletters'), href: '/newsletters' });
+        appSettingsItems.push({ icon: MessageCircle, label: t('chatSessions'), href: '/chat-sessions' });
+        appSettingsItems.push({ icon: Sparkles, label: t('aiTokens'), href: '/ai-tokens' });
+        appSettingsItems.push({ icon: FileText, label: tc('logs') || 'Logs', href: '/logs' });
     }
 
-    const developerItems = [];
+    const featuresItems = [];
     if (isDeveloper) {
-        developerItems.push({ icon: Building2, label: t('companies'), href: '/companies' });
-        developerItems.push({ icon: Users, label: t('admins'), href: '/companies/admins' });
-        developerItems.push({ icon: Webhook, label: t('companyApis'), href: '/companies/apis' });
-        developerItems.push({ icon: Link2, label: t('linkApp'), href: '/companies/link' });
-        developerItems.push({ icon: Users, label: t('users'), href: '/users' });
-        developerItems.push({ icon: Package, label: t('packs'), href: '/packs' });
-        developerItems.push({ icon: Globe, label: t('references'), href: '/references' });
-        developerItems.push({ icon: Mail, label: t('newsletters'), href: '/newsletters' });
-        developerItems.push({ icon: MessageCircle, label: t('chatSessions'), href: '/chat-sessions' });
-        developerItems.push({ icon: Sparkles, label: t('aiTokens'), href: '/ai-tokens' });
+        featuresItems.push({ icon: Building2, label: t('companies'), href: '/companies' });
+        featuresItems.push({ icon: Link2, label: t('linkApp'), href: '/companies/link' });
+        featuresItems.push({ icon: Users, label: t('admins'), href: '/companies/admins' });
+        featuresItems.push({ icon: Webhook, label: t('companyApis'), href: '/companies/apis' });
+        featuresItems.push({ icon: Users, label: t('users'), href: '/users' });
+    } else if (isAdmin) {
+        featuresItems.push({ icon: Users, label: t('users'), href: '/users' });
+        featuresItems.push({ icon: Link2, label: t('linkApp'), href: '/companies/link' });
     }
 
     const systemItems = [
@@ -83,8 +89,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         }`}
                 >
                     <item.icon size={20} className={isActive ? 'text-blue-400' : 'group-hover:text-blue-400 transition-colors'} />
-                    <span className="font-medium text-sm tracking-normal">{item.label}</span>
-                    {isActive && (
+                    {!isCompact && <span className="font-medium text-sm tracking-normal">{item.label}</span>}
+                    {!isCompact && isActive && (
                         <motion.div layoutId="active-pill" className="ms-auto">
                             <ChevronRight size={14} className="text-blue-400 rtl:rotate-180" />
                         </motion.div>
@@ -95,7 +101,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     };
 
     const SectionHeader = ({ label }: { label: string }) => (
-        <p className="px-5 mt-5 mb-2 text-[10px] uppercase font-bold text-white/30">{label}</p>
+        <div className={`px-5 mt-5 mb-2 text-[10px] uppercase font-bold text-white/30 ${isCompact ? "flex justify-center" : ""}`}>
+            {isCompact ? <MoreHorizontal size={14} /> : label}
+        </div>
     );
 
     let idx = 0;
@@ -116,7 +124,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </AnimatePresence>
 
             <aside className={cn(
-                "w-72 h-screen bg-[#002B5B] text-white flex flex-col fixed inset-y-0 start-0 z-50 border-e border-white/5 transition-all duration-300",
+                `${isCompact ? "w-20" : "w-72"} h-screen bg-[#002B5B] text-white flex flex-col fixed inset-y-0 start-0 z-50 border-e border-white/5 transition-all duration-300`,
                 isOpen 
                     ? "translate-x-0" 
                     : isRtl ? "translate-x-full" : "-translate-x-full",
@@ -128,15 +136,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                         >
-                            <Image
-                                src="/AxiaMeetings.svg"
-                                alt="Axia Meetings Logo"
-                                width={160}
-                                height={54}
-                                className="h-10 w-auto"
-                                style={{ filter: 'brightness(0) invert(1)' }}
-                                priority
-                            />
+                            {isCompact ? (
+                                <div className="font-bold text-2xl text-white">A</div>
+                            ) : (
+                                <Image
+                                    src="/AxiaMeetings.svg"
+                                    alt="Axia Meetings Logo"
+                                    width={160}
+                                    height={54}
+                                    className="h-10 w-auto filter-white"
+                                    priority
+                                />
+                            )}
                         </motion.div>
                     </div>
                     <button onClick={onClose} className="lg:hidden p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-xl transition-all">
@@ -145,28 +156,27 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </div>
 
                 <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto sidebar-scrollbar">
-                    <SectionHeader label={tc('main')} />
+                    <SectionHeader label={tc('main') || 'Main'} />
                     {mainItems.map((item) => <NavItem key={item.href} item={item} index={idx++} />)}
 
-                    {adminItems.length > 0 && (
+                    {appSettingsItems.length > 0 && (
                         <>
-                            <SectionHeader label={tc('administration')} />
-                            {adminItems.map((item) => <NavItem key={item.href} item={item} index={idx++} />)}
+                            <SectionHeader label={'App Settings'} />
+                            {appSettingsItems.map((item) => <NavItem key={item.href} item={item} index={idx++} />)}
                         </>
                     )}
 
-                    {developerItems.length > 0 && (
+                    {featuresItems.length > 0 && (
                         <>
-                            <SectionHeader label={tc('developer')} />
-                            {developerItems.map((item) => <NavItem key={item.href} item={item} index={idx++} />)}
+                            <SectionHeader label={'Features'} />
+                            {featuresItems.map((item) => <NavItem key={item.href} item={item} index={idx++} />)}
                         </>
                     )}
 
-                    <SectionHeader label={tc('system')} />
+                    <SectionHeader label={tc('system') || 'System'} />
                     {systemItems.map((item) => <NavItem key={item.href} item={item} index={idx++} />)}
                 </nav>
 
-                {/* Support section removed per user request */}
             </aside>
         </>
     );

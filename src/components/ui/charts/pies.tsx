@@ -42,15 +42,7 @@ export default function PieChartComponent({
               <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
             ))}
           </Pie>
-          <Tooltip
-            contentStyle={{
-              borderRadius: "16px",
-              border: "none",
-              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-              fontSize: "12px",
-              fontWeight: "bold",
-            }}
-          />
+          <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)", padding: "12px" }} />
           <Legend
             verticalAlign="bottom"
             align="center"

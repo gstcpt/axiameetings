@@ -71,7 +71,7 @@ export default function HomePage() {
                 {/* HERO 3.0 */}
                 <section ref={targetRef} className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-white">
                     <div className="absolute inset-0 -z-10">
-                        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(#002B5B 1.5px, transparent 1.5px)', backgroundSize: '48px 48px' }} />
+                        <div className="absolute inset-0 opacity-[0.02] bg-radial-blue" />
                     </div>
 
                     <div className="max-w-7xl mx-auto px-6 w-full py-20">

@@ -7,10 +7,11 @@ import { Company, CompanyApi, ApiResponse } from '@/lib/types';
 import { MeetingDuration } from '@/lib/enums/meetings';
 import { UserRole } from '@/lib/enums/users';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Users as UsersIcon, Webhook, Building2, Settings2, CheckCircle2, XCircle, Sparkles, Info, Globe, Shield, Calendar, BarChart3, Database, Bell, MessageCircle, Mail } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users as UsersIcon, Webhook, Building2, Settings2, CheckCircle2, XCircle, Sparkles, Info, Globe, Shield, Calendar, BarChart3, Database, Bell, MessageCircle, Mail , LayoutGrid, List as ListIcon, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
+import { ListGridToggle } from '@/components/ui/ListGridToggle';
 import { useTranslations } from 'next-intl';
 
 import { Input } from '@/components/ui/inputs';
@@ -21,6 +22,7 @@ import { Badge } from '@/components/ui/badges';
 import { Card, CardContent } from '@/components/ui/cards';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CompanyCard } from '@/components/CompanyCard';
 
 type ModalType = 'add' | 'edit' | 'delete' | 'bulk-delete' | 'configure' | 'view-services' | null;
 const emptyForm = {
@@ -36,6 +38,7 @@ const emptyConfig = {
     have_notifications_service: false, notifications_service_endpoint_id: '',
     have_messages_service: false, messages_service_endpoint_id: '',
     have_sms_service: false, sms_service_endpoint_id: '',
+    have_mail_service: false, push_mails_endpoint_id: '',
 };
 
 interface CompanyWithConfig extends Company {
@@ -47,6 +50,9 @@ interface CompanyWithConfig extends Company {
     messages_service_endpoint_id: number | null;
     have_sms_service: boolean;
     sms_service_endpoint_id: number | null;
+    mail_is_active: boolean;
+    have_mail_service: boolean;
+    push_mails_endpoint_id: number | null;
     ai_is_active: boolean;
     companies_apis_list?: CompanyApi[];
 }
@@ -61,6 +67,7 @@ export default function CompaniesPage() {
     const [companies, setCompanies] = useState<CompanyWithConfig[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [modal, setModal] = useState<ModalType>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [selected, setSelected] = useState<CompanyWithConfig | null>(null);
     const [bulkSelected, setBulkSelected] = useState<CompanyWithConfig[]>([]);
     const [form, setForm] = useState(emptyForm);
@@ -112,6 +119,8 @@ export default function CompaniesPage() {
             messages_service_endpoint_id: c.messages_service_endpoint_id ? String(c.messages_service_endpoint_id) : '',
             have_sms_service: c.have_sms_service,
             sms_service_endpoint_id: c.sms_service_endpoint_id ? String(c.sms_service_endpoint_id) : '',
+            have_mail_service: c.have_mail_service,
+            push_mails_endpoint_id: c.push_mails_endpoint_id ? String(c.push_mails_endpoint_id) : '',
         });
         try {
             const res = await fetch(`/api/companies/apis?companyId=${c.id}`);
@@ -152,6 +161,8 @@ export default function CompaniesPage() {
                 messages_service_endpoint_id: config.have_messages_service && config.messages_service_endpoint_id ? Number(config.messages_service_endpoint_id) : null,
                 have_sms_service: config.have_sms_service,
                 sms_service_endpoint_id: config.have_sms_service && config.sms_service_endpoint_id ? Number(config.sms_service_endpoint_id) : null,
+                have_mail_service: (config as any).have_mail_service,
+                push_mails_endpoint_id: (config as any).have_mail_service && (config as any).push_mails_endpoint_id ? Number((config as any).push_mails_endpoint_id) : null,
             };
             const res = await fetch(`/api/companies/${selected.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
             const result: ApiResponse<Company> = await res.json();
@@ -183,18 +194,31 @@ export default function CompaniesPage() {
         finally { setSaving(false); }
     };
 
-    const toggleAiAccess = async (company: CompanyWithConfig) => {
+    const toggleAiAccess = async (company: Company) => {
         try {
             const res = await fetch(`/api/companies/${company.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ai_is_active: !company.ai_is_active }),
             });
-            const result = await res.json();
-            if (result.status) {
+            if (res.ok) {
                 toast.success(company.ai_is_active ? t('ai.disabled') : t('ai.enabled'));
                 fetchCompanies();
-            } else toast.error(result.message || tc('error'));
+            }
+        } catch { toast.error(tc('error')); }
+    };
+
+    const toggleMailAccess = async (company: Company) => {
+        try {
+            const res = await fetch(`/api/companies/${company.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mail_is_active: !company.mail_is_active }),
+            });
+            if (res.ok) {
+                toast.success(company.mail_is_active ? 'Axia Mail Disabled' : 'Axia Mail Enabled');
+                fetchCompanies();
+            }
         } catch { toast.error(tc('error')); }
     };
 
@@ -242,7 +266,8 @@ export default function CompaniesPage() {
                     !!c.users_endpoint_id,
                     c.have_notifications_service,
                     c.have_messages_service,
-                    c.have_sms_service
+                    c.have_sms_service,
+                    !!c.push_mails_endpoint_id
                 ].filter(Boolean).length;
 
                 return (
@@ -273,6 +298,25 @@ export default function CompaniesPage() {
                 >
                     <Sparkles size={9} className={cn(c.ai_is_active ? 'animate-pulse' : '')} />
                     {c.ai_is_active ? t('ai.on') : t('ai.off')}
+                </button>
+            ),
+        },
+        {
+            id: 'mail',
+            header: 'Mail SMTP',
+            enableSorting: false,
+            cell: ({ row: { original: c } }) => (
+                <button
+                    onClick={() => toggleMailAccess(c)}
+                    title={c.mail_is_active ? 'Click to disable' : 'Click to enable'}
+                    className={cn(
+                        "flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-bold border transition-all duration-300 uppercase",
+                        c.mail_is_active
+                            ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 shadow-sm"
+                            : "bg-slate-50 border-slate-100 text-slate-300 hover:bg-slate-100 hover:text-slate-500"
+                    )}
+                >
+                    {c.mail_is_active ? 'ON' : 'OFF'}
                 </button>
             ),
         },
@@ -329,17 +373,43 @@ export default function CompaniesPage() {
                             </Typography>
                         </div>
                     </div>
-                    <Button
-                        onClick={openAdd}
-                        className="w-full md:w-auto h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm"
-                    >
-                        <Plus size={18} className="me-2 rtl:rotate-90" /> {t('new')}
-                    </Button>
+                    
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <Button variant="outline" size="icon" onClick={fetchCompanies} className="h-10 w-10 shrink-0 border-slate-100">
+                            <RefreshCw size={18} className={cn("text-slate-500", isLoading && "animate-spin")} />
+                        </Button>
+
+                        <ListGridToggle
+                            viewMode={viewMode}
+                            setViewMode={setViewMode}
+                            className="w-full md:w-auto mt-4 md:mt-0 ltr:mr-4 rtl:ml-4"
+                        />
+
+                        <Button
+                            onClick={openAdd}
+                            className="flex-1 md:flex-none h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm"
+                        >
+                            <Plus size={18} className="me-2 rtl:rotate-90" /> {t('new')}
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            <Card className="rounded-2xl border-slate-200 overflow-hidden">
-                <DataTable
+            {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                    {companies?.map((c: any) => (
+                        <CompanyCard 
+                            key={c.id} 
+                            company={c} 
+                            onEdit={() => typeof openEdit !== 'undefined' ? openEdit(c) : {}} 
+                            onViewServices={() => { setSelected(c); setModal('view-services'); }}
+                            onToggleAi={() => toggleAiAccess(c)}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
+                    <DataTable
                     columns={columns}
                     data={companies}
                     searchable
@@ -348,7 +418,8 @@ export default function CompaniesPage() {
                     emptyMessage={t('empty')}
                     pagesize={10}
                 />
-            </Card>
+                </div>
+            )}
 
             {/* Add / Edit Modal */}
             <Modal isOpen={modal === 'add' || modal === 'edit'} onClose={closeModal}
@@ -417,8 +488,9 @@ export default function CompaniesPage() {
                         <div className="grid grid-cols-1 gap-2.5">
                             {[
                                 { toggleKey: 'have_notifications_service', endpointKey: 'notifications_service_endpoint_id', label: t('config.notifLabel'), desc: t('config.notifDesc') },
-                                { toggleKey: 'have_messages_service', endpointKey: 'messages_service_endpoint_id', label: t('config.msgLabel'), desc: t('config.msgDesc') },
+                                { toggleKey: 'have_messages_service', endpointKey: 'messages_service_endpoint_id', label: 'Messages API', desc: 'Push message integration' },
                                 { toggleKey: 'have_sms_service', endpointKey: 'sms_service_endpoint_id', label: t('config.smsLabel'), desc: t('config.smsDesc') },
+                                { toggleKey: 'have_mail_service', endpointKey: 'push_mails_endpoint_id', label: 'Push Mails API', desc: 'Push mails via external API' },
                             ].map((f) => (
                                 <div key={f.toggleKey} className={cn("p-3.5 bg-slate-50/30 border border-slate-100 rounded-xl transition-all hover:bg-slate-50", (config as any)[f.toggleKey] && "border-[#002B5B]/20")}>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

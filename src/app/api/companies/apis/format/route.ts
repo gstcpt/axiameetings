@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
                         endpoint_id: Number(endpoint_id),
                         response_key: m.response_key,
                         formated_response_key: m.formated_response_key,
+                        format_for: m.format_for || 'RESPONSE',
                     })),
             });
         }

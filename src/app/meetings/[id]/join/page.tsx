@@ -113,8 +113,7 @@ export default function JoinMeetingPage() {
             {/* Ultra-Premium Background Elements */}
             <div className="absolute -top-[10%] -right-[10%] w-[60%] h-[60%] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-                 style={{ backgroundImage: 'linear-gradient(#002B5B 0.5px, transparent 0.5px), linear-gradient(90deg, #002B5B 0.5px, transparent 0.5px)', backgroundSize: '40px 40px' }} />
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-grid-blue" />
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.98, y: 20 }}
@@ -125,7 +124,7 @@ export default function JoinMeetingPage() {
                 <div className="bg-white/80 backdrop-blur-2xl rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,43,91,0.12)] border border-white/50 overflow-hidden">
                     {/* Header: Immersive & Dynamic */}
                     <div className="bg-[#002B5B] p-10 md:p-12 text-white relative">
-                        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                        <div className="absolute inset-0 opacity-20 bg-radial-white-small" />
                         <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl" />
                         
                         <div className="relative z-10">

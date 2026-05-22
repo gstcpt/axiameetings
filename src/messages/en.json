@@ -107,6 +107,8 @@
         "administration": "Administration",
         "developer": "Developer",
         "system": "System",
+        "configurations": "Configurations",
+        "logs": "Logs",
         "select": "Select",
         "refresh": "Refresh",
         "mo": "mo",
@@ -736,6 +738,9 @@
         }
     },
     "Meetings": {
+        "aiSummary": {
+            "title": "AI Summary"
+        },
         "title": "Meeting Management",
         "subtitle": "Plan and track your work sessions.",
         "new": "New Meeting",
@@ -1063,10 +1068,12 @@
             "success": "Success",
             "byFeature": "By Feature",
             "status": "Status",
+            "label": "Status",
             "details": "Details",
             "actions": "Actions"
         },
         "provider": {
+            "label": "Provider",
             "chatOrder": "Chat #{order}",
             "genOrder": "Gen #{order}",
             "expired": "EXPIRED",

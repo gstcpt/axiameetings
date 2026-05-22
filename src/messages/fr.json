@@ -107,6 +107,8 @@
         "administration": "Administration",
         "developer": "Développeur",
         "system": "Système",
+        "configurations": "Configurations",
+        "logs": "Journaux",
         "select": "Sélectionner",
         "refresh": "Actualiser",
         "mo": "mois",
@@ -736,6 +738,9 @@
         }
     },
     "Meetings": {
+        "aiSummary": {
+            "title": "Résumé IA"
+        },
         "title": "Gestion des Réunions",
         "subtitle": "Planifiez et suivez vos sessions de travail.",
         "new": "Nouvelle Réunion",
@@ -1063,10 +1068,12 @@
             "success": "Succès",
             "byFeature": "Par Fonctionnalité",
             "status": "Statut",
+            "label": "Statut",
             "details": "Détails",
             "actions": "Actions"
         },
         "provider": {
+            "label": "Fournisseur",
             "chatOrder": "Chat #{order}",
             "genOrder": "Gén #{order}",
             "expired": "EXPIREE",

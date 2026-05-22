@@ -3,8 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getMailTransporter, getEmailTemplate } from '@/lib/mail';
 import { createLog } from '@/lib/logger';
-import { notifyParticipants } from '@/lib/notifier';
-
+import { dispatchMeetingPush } from '@/lib/push';
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getAuthenticatedUser(req);
     if (!user) return NextResponse.json({ status: false, message: 'Unauthorized' }, { status: 401 });
@@ -71,6 +70,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
                         }, { status: 403 });
                     }
                 }
+            }
+        }
+
+        // Fetch existing to compare status and validate date
+        const existingMeeting = await prisma.meetings.findUnique({
+            where: { id: Number(id) },
+            select: { status: true, company_id: true, date: true, time: true }
+        });
+
+        if (!existingMeeting) {
+            return NextResponse.json({ status: false, message: 'Meeting not found' }, { status: 404 });
+        }
+
+        // Validate date/time not in past
+        if (rest.date !== undefined || rest.time !== undefined) {
+            const updatedDate = rest.date !== undefined ? rest.date : existingMeeting.date;
+            const updatedTime = rest.time !== undefined ? rest.time : existingMeeting.time;
+            const meetingDateTime = new Date(`${updatedDate}T${updatedTime}`);
+            if (meetingDateTime < new Date()) {
+                return NextResponse.json({ status: false, message: 'La date et l\'heure de la réunion ne peuvent pas être dans le passé.' }, { status: 400 });
             }
         }
 
@@ -161,52 +180,30 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             },
         });
 
-        let expiredToken = false;
-        let pushMessage = '';
+        const adminLocale = req.cookies.get('NEXT_LOCALE')?.value || 'fr';
+
         if (sendRescheduleNotification && meeting.meetings_participants.length > 0) {
-            const result = await notifyParticipants({
+            dispatchMeetingPush({
                 companyId: meeting.company_id,
-                meeting,
-                type: 'UPDATE',
-                subject: `Modifiée`,
-                body: `${meeting.subject}`,
-                participants: meeting.meetings_participants
-            }).catch((err: any) => {
-                console.error('Update notification failed:', err);
-                return { expired: false, pushMessage: '' };
+                meetingId: meeting.id,
+                action: 'RESCHEDULE',
+                adminLocale
             });
-            if (result?.expired) {
-                expiredToken = true;
-                if (result.pushMessage) pushMessage = result.pushMessage;
-            }
         }
 
-        const statusChanged = body.status && body.status !== meeting.status;
+        const statusChanged = body.status && existingMeeting && body.status !== existingMeeting.status;
         if (statusChanged && meeting.meetings_participants.length > 0) {
-            const notifTitleMap: any = {
-                'STARTED':   'En direct',
-                'FINISHED':  'Terminée',
-                'CANCELLED': 'Annulée',
-                'SCHEDULED': 'Planifiée'
-            };
-            const notifBodyMap: any = {
-                'STARTED':   `${meeting.subject}`,
-                'FINISHED':  `${meeting.subject}`,
-                'CANCELLED': `${meeting.subject}`,
-                'SCHEDULED': `${meeting.subject} (${meeting.date} ${meeting.time})`
-            };
-            const result = await notifyParticipants({
+            let action: any = 'UPDATE';
+            if (body.status === 'STARTED') action = 'START';
+            if (body.status === 'CANCELLED') action = 'CANCEL';
+            if (body.status === 'FINISHED') action = 'FINISHED';
+
+            dispatchMeetingPush({
                 companyId: meeting.company_id,
-                meeting,
-                type: body.status === 'STARTED' ? 'START' : body.status === 'CANCELLED' ? 'CANCEL' : body.status === 'FINISHED' ? 'FINISHED' : 'UPDATE',
-                subject: notifTitleMap[body.status] || 'Modifiée',
-                body: notifBodyMap[body.status] || `${meeting.subject}`,
-                participants: meeting.meetings_participants
-            }).catch((err: any) => {
-                console.error('Status notification failed:', err);
-                return { expired: false };
+                meetingId: meeting.id,
+                action,
+                adminLocale
             });
-            if (result?.expired) expiredToken = true;
         }
         await createLog({
             message: statusChanged
@@ -218,7 +215,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             response: meeting
         });
 
-        return NextResponse.json({ status: true, data: meeting, expiredToken, pushMessage });
+        return NextResponse.json({ status: true, data: meeting });
     } catch (error: any) {
         console.error('Error updating meeting:', error);
         return NextResponse.json({ status: false, message: 'Internal server error' }, { status: 500 });
@@ -254,22 +251,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         await prisma.meetings.delete({ where: { id: meetingId } });
 
         // Send push notification for deletion
-        const participants = await prisma.meetings_participants.findMany({ where: { meeting_id: meetingId } });
-        let expiredToken = false;
-        if (participants.length > 0) {
-            const result = await notifyParticipants({
-                companyId: meeting.company_id,
-                meeting,
-                type: 'CANCEL',
-                subject: `Annulée`,
-                body: `${meeting.subject}`,
-                participants: participants
-            }).catch((err: any) => {
-                console.error('Cancel notification failed:', err);
-                return { expired: false };
-            });
-            if (result?.expired) expiredToken = true;
-        }
+        const adminLocale = req.cookies.get('NEXT_LOCALE')?.value || 'fr';
+        dispatchMeetingPush({
+            companyId: meeting.company_id,
+            meetingId: meeting.id,
+            action: 'CANCEL',
+            adminLocale
+        });
 
         await createLog({
             message: `Meeting deleted: ${meeting.subject}`,
@@ -279,7 +267,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
             response: { success: true }
         });
 
-        return NextResponse.json({ status: true, message: 'Meeting deleted', expiredToken });
+        return NextResponse.json({ status: true, message: 'Meeting deleted' });
     } catch (error) {
         console.error('Error deleting meeting:', error);
         return NextResponse.json({ status: false, message: 'Internal server error' }, { status: 500 });

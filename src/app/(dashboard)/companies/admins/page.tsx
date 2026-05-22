@@ -1,14 +1,16 @@
 'use client';
 
+import { UserAdminCard } from '@/components/UserAdminCard';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ApiResponse } from '@/lib/types';
 import { UserRole } from '@/lib/enums/users';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, User, Link2, ShieldCheck, Mail, Key, Hash, Building2, ExternalLink } from 'lucide-react';
+import { Plus, Pencil, Trash2, User, Link2, ShieldCheck, Mail, Key, Hash, Building2, ExternalLink , LayoutGrid, List as ListIcon, RefreshCw } from 'lucide-react';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
+import { ListGridToggle } from '@/components/ui/ListGridToggle';
 
 import { Typography } from '@/components/ui/typographys';
 import { Button } from '@/components/ui/button';
@@ -45,6 +47,7 @@ export default function CompanyAdminsPage() {
     const [admins, setAdmins] = useState<Admin[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [modal, setModal] = useState<ModalType>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [selected, setSelected] = useState<Admin | null>(null);
     const [bulkSelected, setBulkSelected] = useState<Admin[]>([]);
     const [form, setForm] = useState(emptyForm);
@@ -231,17 +234,36 @@ export default function CompanyAdminsPage() {
                             </Typography>
                         </div>
                     </div>
-                    <Button
-                        onClick={openAdd}
-                        className="w-full md:w-auto h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm"
-                    >
-                        <Plus size={18} className="me-2" /> {t('add')}
-                    </Button>
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <Button variant="outline" size="icon" onClick={fetchAdmins} className="h-10 w-10 shrink-0 border-slate-100">
+                            <RefreshCw size={18} className={cn("text-slate-500", isLoading && "animate-spin")} />
+                        </Button>
+
+                        <ListGridToggle
+                            viewMode={viewMode}
+                            setViewMode={setViewMode}
+                            className="w-full md:w-auto mt-4 md:mt-0 ltr:mr-4 rtl:ml-4"
+                        />
+
+                        <Button
+                            onClick={openAdd}
+                            className="flex-1 md:flex-none h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm"
+                        >
+                            <Plus size={18} className="me-2" /> {t('add')}
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            <Card className="rounded-2xl border-slate-200 overflow-hidden shadow-sm">
-                <DataTable
+            {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                    {admins?.map((u: any) => (
+                        <UserAdminCard key={u.id} user={u} onEdit={() => typeof openEdit !== 'undefined' ? openEdit(u) : {}} onDelete={() => typeof openDelete !== 'undefined' ? openDelete(u) : {}} />
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
+                    <DataTable
                     columns={columns}
                     data={admins}
                     searchable
@@ -250,7 +272,8 @@ export default function CompanyAdminsPage() {
                     emptyMessage={t('empty')}
                     pagesize={10}
                 />
-            </Card>
+                </div>
+            )}
 
             {/* Add / Edit Modal */}
             <Modal isOpen={modal === 'add' || modal === 'edit'} onClose={closeModal}

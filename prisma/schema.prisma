@@ -92,6 +92,9 @@ model companies {
   messages_service_endpoint_id      Int?
   have_sms_service                  Boolean                  @default(false)
   sms_service_endpoint_id           Int?
+  mail_is_active                    Boolean                  @default(false)
+  have_mail_service                 Boolean                  @default(false)
+  push_mails_endpoint_id            Int?
   login_endpoint_id                 Int?
   users_endpoint_id                 Int?
   ai_is_active                      Boolean                  @default(false)
@@ -101,6 +104,7 @@ model companies {
   messages_service_endpoint         companies_apis?          @relation("companies_apis_messages_endpoint", fields: [messages_service_endpoint_id], references: [id], onDelete: SetNull)
   notifications_service_endpoint    companies_apis?          @relation("companies_apis_notifications_endpoint", fields: [notifications_service_endpoint_id], references: [id], onDelete: SetNull)
   sms_service_endpoint              companies_apis?          @relation("companies_apis_sms_endpoint", fields: [sms_service_endpoint_id], references: [id], onDelete: SetNull)
+  push_mails_endpoint               companies_apis?          @relation("companies_apis_push_mails_endpoint", fields: [push_mails_endpoint_id], references: [id], onDelete: SetNull)
   users_endpoint                    companies_apis?          @relation("companies_apis_users_endpoint", fields: [users_endpoint_id], references: [id], onDelete: SetNull)
   companies_admins_login            companies_admins_login[] @relation("company_id_in_companies_admins_login")
   companies_apis_list               companies_apis[]         @relation("company_id_in_apis")
@@ -120,17 +124,19 @@ model companies_apis {
   messages_service_companies      companies[]         @relation("companies_apis_messages_endpoint")
   notifications_service_companies companies[]         @relation("companies_apis_notifications_endpoint")
   sms_service_companies           companies[]         @relation("companies_apis_sms_endpoint")
+  push_mails_companies            companies[]         @relation("companies_apis_push_mails_endpoint")
   users_companies                 companies[]         @relation("companies_apis_users_endpoint")
   company                         companies           @relation("company_id_in_apis", fields: [company_id], references: [id], onDelete: Cascade)
   formated_responses              formated_response[] @relation("endpoint_id_in_formated_response")
 }
 
 model formated_response {
-  id                    Int            @id @default(autoincrement())
+  id                    Int                    @id @default(autoincrement())
   endpoint_id           Int
   response_key          String
   formated_response_key String
-  endpoint              companies_apis @relation("endpoint_id_in_formated_response", fields: [endpoint_id], references: [id], onDelete: Cascade)
+  format_for            formated_response_type @default(RESPONSE)
+  endpoint              companies_apis         @relation("endpoint_id_in_formated_response", fields: [endpoint_id], references: [id], onDelete: Cascade)
 }
 
 model meetings {
@@ -287,6 +293,11 @@ enum users_roles {
   DEVELOPER
   ADMIN
   PARTICIPANT
+}
+
+enum formated_response_type {
+  PAYLOAD
+  RESPONSE
 }
 
 enum meetings_types {

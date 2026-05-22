@@ -459,7 +459,7 @@ export default function LiveMeetingPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-md w-full p-10 bg-slate-900/50 backdrop-blur-2xl rounded-2xl border border-white/5 text-center relative overflow-hidden shadow-2xl"
         >
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(white 1.5px, transparent 1.5px)', backgroundSize: '32px 32px' }} />
+          <div className="absolute inset-0 opacity-[0.03] bg-radial-white-medium" />
           <div className="w-20 h-20 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse shadow-[0_0_50px_rgba(59,130,246,0.2)] border border-blue-500/20">
             <CalendarDays size={40} />
           </div>

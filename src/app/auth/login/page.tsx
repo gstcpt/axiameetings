@@ -84,8 +84,7 @@ export default function LoginPage() {
                             <motion.div 
                                 animate={{ opacity: [0.05, 0.1, 0.05] }}
                                 transition={{ duration: 5, repeat: Infinity }}
-                                className="absolute inset-0" 
-                                style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}
+                                className="absolute inset-0 bg-radial-white"
                             ></motion.div>
                             <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-black/20 to-transparent pointer-events-none"></div>
 
@@ -100,8 +99,7 @@ export default function LoginPage() {
                                     alt="Axia Meetings"
                                     width={320}
                                     height={100}
-                                    className="h-12 md:h-20 w-auto"
-                                    style={{ filter: 'brightness(0) invert(1)' }}
+                                    className="h-12 md:h-20 w-auto filter-white"
                                     priority
                                 />
                             </motion.div>

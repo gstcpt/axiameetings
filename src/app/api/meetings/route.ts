@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getMailTransporter, getEmailTemplate } from '@/lib/mail';
 import { createLog } from '@/lib/logger';
-import { notifyParticipants } from '@/lib/notifier';
+import { dispatchMeetingPush } from '@/lib/push';
+import crypto from 'crypto';
 
 export async function GET(req: NextRequest) {
     const user = await getAuthenticatedUser(req);
@@ -48,6 +49,12 @@ export async function POST(req: NextRequest) {
         }
 
         const targetCompanyId = user.role === 'ADMIN' ? user.companyId! : Number(company_id);
+
+        // Enforce meeting date is not in the past
+        const meetingDateTime = new Date(`${date}T${time}`);
+        if (meetingDateTime < new Date()) {
+            return NextResponse.json({ status: false, message: 'La date et l\'heure de la réunion ne peuvent pas être dans le passé.' }, { status: 400 });
+        }
 
         // Enforce meeting time limit
         if (duration) {
@@ -102,24 +109,15 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        // Send universal notifications if participants exist
-        let expiredToken = false;
-        const participantsList = (meeting as any).meetings_participants || [];
-        if (participantsList.length > 0) {
-            const result = await notifyParticipants({
-                companyId: targetCompanyId,
-                meeting,
-                type: 'INVITATION',
-                subject: `Nouvelle`,
-                body: `${meeting.subject}`,
-                participants: participantsList
-            }).catch((err: any) => {
-                console.error('Notifications failed:', err);
-                return { expired: false };
-            });
-            if (result?.expired) expiredToken = true;
-        }
-
+        // Dispatch push notifications to external apps & emails
+        const adminLocale = req.cookies.get('NEXT_LOCALE')?.value || 'fr';
+        // We don't block the response. It runs in the background.
+        dispatchMeetingPush({
+            companyId: targetCompanyId,
+            meetingId: meeting.id,
+            action: 'CREATE',
+            adminLocale
+        });
 
         await createLog({
             message: `Meeting created: ${meeting.subject}`,
@@ -129,7 +127,7 @@ export async function POST(req: NextRequest) {
             response: meeting
         });
 
-        return NextResponse.json({ status: true, data: meeting, expiredToken }, { status: 201 });
+        return NextResponse.json({ status: true, data: meeting }, { status: 201 });
     } catch (error) {
         console.error('Error creating meeting:', error);
         return NextResponse.json({ status: false, message: 'Internal server error' }, { status: 500 });

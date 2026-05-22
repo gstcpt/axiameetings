@@ -17,6 +17,9 @@ export interface Company {
     messages_service_endpoint_id: number | null;
     have_sms_service: boolean;
     sms_service_endpoint_id: number | null;
+    mail_is_active: boolean;
+    have_mail_service: boolean;
+    push_mails_endpoint_id: number | null;
     meeting_time_limit: MeetingDuration | null;
     users_number_limit: number | null;
     ai_is_active: boolean;
@@ -38,6 +41,7 @@ export interface FormatedResponse {
     endpoint_id: number;
     response_key: string;
     formated_response_key: string;
+    format_for: 'PAYLOAD' | 'RESPONSE';
 }
 
 export interface CompanyAdminLogin {

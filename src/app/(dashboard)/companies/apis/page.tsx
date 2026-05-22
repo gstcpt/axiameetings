@@ -1,14 +1,16 @@
 'use client';
 
+import { CustomCard } from '@/components/ui/custom-card';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CompanyApi, ApiResponse } from '@/lib/types';
 import { UserRole } from '@/lib/enums/users';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Sliders, Globe, Code2, Link2, DownloadCloud, Layers, ArrowRight, X, Lightbulb, Database, Shield, Loader2, CheckCircle2, Webhook } from 'lucide-react';
+import { Plus, Pencil, Trash2, Sliders, Globe, Code2, Link2, DownloadCloud, Layers, ArrowRight, X, Lightbulb, Database, Shield, Loader2, CheckCircle2, Webhook , LayoutGrid, List as ListIcon, RefreshCw } from 'lucide-react';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
+import { ListGridToggle } from '@/components/ui/ListGridToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { Typography } from '@/components/ui/typographys';
@@ -35,6 +37,7 @@ export default function CompanyApisPage() {
     const [apis, setApis] = useState<CompanyApi[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [modal, setModal] = useState<ModalType>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [selected, setSelected] = useState<CompanyApi | null>(null);
     const [bulkSelected, setBulkSelected] = useState<CompanyApi[]>([]);
     const [form, setForm] = useState(emptyForm);
@@ -42,7 +45,7 @@ export default function CompanyApisPage() {
     const [swaggerApis, setSwaggerApis] = useState<any[]>([]);
     const [selectedSwaggerApis, setSelectedSwaggerApis] = useState<Set<number>>(new Set());
     const [docUrl, setDocUrl] = useState('');
-    const [formatMappings, setFormatMappings] = useState<{ response_key: string; formated_response_key: string }[]>([]);
+    const [formatMappings, setFormatMappings] = useState<{ response_key: string; formated_response_key: string; format_for: 'PAYLOAD' | 'RESPONSE' }[]>([]);
     const [companies, setCompanies] = useState<{ id: number; name: string }[]>([]);
 
     useEffect(() => {
@@ -91,7 +94,7 @@ export default function CompanyApisPage() {
     const openDelete = (a: CompanyApi) => { setSelected(a); setModal('delete'); };
     const openFormat = (a: CompanyApi) => {
         setSelected(a);
-        setFormatMappings(a.formated_responses?.map(r => ({ response_key: r.response_key, formated_response_key: r.formated_response_key })) || []);
+        setFormatMappings(a.formated_responses?.map(r => ({ response_key: r.response_key, formated_response_key: r.formated_response_key, format_for: r.format_for as 'PAYLOAD' | 'RESPONSE' || 'RESPONSE' })) || []);
         setModal('format');
     };
 
@@ -305,20 +308,49 @@ export default function CompanyApisPage() {
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <Button variant="outline" size="icon" onClick={fetchApis} className="h-10 w-10 shrink-0 border-slate-100">
+                            <RefreshCw size={18} className={cn("text-slate-500", isLoading && "animate-spin")} />
+                        </Button>
+
                         {companyId && (
                             <Button variant="outline" onClick={openImport} className="w-full md:w-auto h-10 px-6 border border-slate-100 font-semibold text-sm">
-                                <DownloadCloud size={18} className="me-2 text-blue-500" /> {t('import')}
+                                <DownloadCloud size={18} className="me-2 text-blue-500" /> <span>{t('import')}</span>
                             </Button>
                         )}
-                        <Button onClick={openAdd} className="w-full md:w-auto h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm">
-                            <Plus size={18} className="me-2" /> {t('add')}
+                        
+                        <ListGridToggle
+                            viewMode={viewMode}
+                            setViewMode={setViewMode}
+                            className="w-full md:w-auto mt-4 md:mt-0 ltr:mr-4 rtl:ml-4"
+                        />
+
+                        <Button onClick={openAdd} className="flex-1 md:flex-none h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm">
+                            <Plus size={18} className="me-2" /> <span>{t('add')}</span>
                         </Button>
                     </div>
                 </div>
             </div>
 
-            <Card className="rounded-2xl border-slate-200 overflow-hidden shadow-sm">
-                <DataTable
+            {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                    {apis?.map((a: CompanyApi) => (
+                        <CustomCard 
+                            key={a.id} 
+                            title={a.endpoint} 
+                            subtitle={a.company?.name || `#${a.company_id}`} 
+                            badge={{ text: a.method, variant: methodVariant(a.method) === 'primary' ? 'default' : methodVariant(a.method) }} 
+                            stats={[
+                                { label: t('table.mappingsLabel'), value: a.formated_responses?.length || 0 }
+                            ]} 
+                            actionLabel={tc('edit')}
+                            onAction={() => typeof openEdit !== 'undefined' ? openEdit(a) : {}} 
+                            icon={<Webhook size={20} />}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
+                    <DataTable
                     columns={columns}
                     data={apis}
                     searchable
@@ -327,7 +359,8 @@ export default function CompanyApisPage() {
                     emptyMessage={t('empty')}
                     pagesize={10}
                 />
-            </Card>
+                </div>
+            )}
 
             {/* Add / Edit Modal */}
             <Modal isOpen={modal === 'add' || modal === 'edit'} onClose={closeModal}
@@ -383,8 +416,8 @@ export default function CompanyApisPage() {
                                 >
                                     <Lightbulb size={11} className="me-1.5" /> {tpl.label}
                                 </Button>
-                            ))}
-                        </div>
+                    ))}
+                </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -506,8 +539,8 @@ export default function CompanyApisPage() {
                                                 <Typography variant="small" color="secondary" className="text-[11px] line-clamp-2 leading-relaxed">{api.summary || t('swagger.noSummary')}</Typography>
                                             </div>
                                         </motion.div>
-                                    ))}
-                                </div>
+                    ))}
+                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -571,6 +604,17 @@ export default function CompanyApisPage() {
                                         icon={CheckCircle2}
                                     />
                                 </div>
+                                <div className="flex-1 space-y-2 w-full md:w-auto">
+                                    <Typography variant="label" className="px-1 uppercase text-sm text-slate-400">Direction</Typography>
+                                    <Select
+                                        value={m.format_for}
+                                        onValueChange={(val) => { const n = [...formatMappings]; n[i].format_for = val as 'PAYLOAD' | 'RESPONSE'; setFormatMappings(n); }}
+                                        options={[
+                                            { value: 'RESPONSE', label: 'Response' },
+                                            { value: 'PAYLOAD', label: 'Payload' },
+                                        ]}
+                                    />
+                                </div>
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -585,7 +629,7 @@ export default function CompanyApisPage() {
 
                     <Button
                         variant="ghost"
-                        onClick={() => setFormatMappings([...formatMappings, { response_key: '', formated_response_key: '' }])}
+                        onClick={() => setFormatMappings([...formatMappings, { response_key: '', formated_response_key: '', format_for: 'RESPONSE' }])}
                         className="w-full h-11 border-2 border-dashed border-slate-100 rounded-xl hover:border-[#002B5B]/30 hover:bg-[#002B5B]/5 transition-all text-[#002B5B] font-bold uppercase text-xs"
                     >
                         <Plus size={16} className="me-2" /> {t('format.add')}

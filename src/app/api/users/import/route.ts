@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { refreshExternToken } from '@/lib/refreshExternToken';
+import { executeExternalApiAction } from '@/lib/externalApiEngine';
 
 export async function POST(req: NextRequest) {
     const user = await getAuthenticatedUser(req);
@@ -27,101 +27,31 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        // Get the admin's linked token
-        const adminLink = await prisma.companies_admins_login.findFirst({
-            where: { user_id: targetUserId, company_id: targetCompanyId },
-        });
-
-        if (!adminLink?.token_id) {
-            return NextResponse.json({
-                status: false,
-                message: 'Please link your application first via Companies → Link Application.',
-            }, { status: 400 });
-        }
-
-        // Get the company with its configured users endpoint
+        // Get the company to check users limit
         const company = await prisma.companies.findUnique({
             where: { id: targetCompanyId },
-            include: {
-                users_endpoint: { include: { formated_responses: true } },
-                _count: { select: { users: true } }
-            },
+            include: { _count: { select: { users: true } } },
         });
 
         if (!company) {
             return NextResponse.json({ status: false, message: 'Company not found' }, { status: 404 });
         }
 
-        if (!company.users_endpoint) {
+        const engineResult = await executeExternalApiAction({
+            companyId: targetCompanyId,
+            actionType: 'get_users'
+        });
+
+        if (!engineResult.success) {
             return NextResponse.json({
                 status: false,
-                message: 'No users endpoint configured. Ask your developer to set it up in Companies → Configure Services.',
-            }, { status: 400 });
+                message: engineResult.message || 'Failed to fetch users from external API'
+            }, { status: engineResult.status || 400 });
         }
 
-        const usersEndpoint = company.users_endpoint;
-        const externalUrl = usersEndpoint.endpoint.startsWith('http')
-            ? usersEndpoint.endpoint
-            : `${company.url}${usersEndpoint.endpoint}`;
-
-        let currentToken = adminLink?.token_id;
-        let externalRes;
-        let externalData;
-
-        // Implementation of the retry logic for token expiration
-        for (let attempt = 1; attempt <= 2; attempt++) {
-            externalRes = await fetch(externalUrl, {
-                method: usersEndpoint.method || 'GET',
-                headers: {
-                    ...(currentToken ? { Authorization: `Bearer ${currentToken}` } : {}),
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            const text = await externalRes.text();
-            
-            if (!externalRes.ok) {
-                // If it's a token expiration error and it's the first attempt, try to refresh
-                if (attempt === 1 && (externalRes.status === 401 || text.includes('Expired') || text.includes('expiré') || text.toLowerCase().includes('token'))) {
-                    console.log(`[Import] Token expired for company ${targetCompanyId}. Attempting refresh...`);
-                    const newToken = await refreshExternToken(targetCompanyId);
-                    if (newToken) {
-                        currentToken = newToken;
-                        continue; // Retry the fetch with the new token
-                    }
-                }
-                
-                // If refresh failed or it's not a token error, return the error
-                return NextResponse.json({
-                    status: false,
-                    message: `External API returned ${externalRes.status}. ${text.includes('Expired') ? 'Your token may have expired.' : ''} Check your service configuration.`,
-                }, { status: 502 });
-            }
-
-            try {
-                externalData = JSON.parse(text);
-                
-                // Some APIs return 200 OK but with an error message inside the JSON
-                if (externalData.success === false || externalData.error || externalData.status === false || externalData.status === 'error') {
-                    const errorMsg = externalData.message || '';
-                    if (attempt === 1 && (errorMsg.includes('expiré') || errorMsg.includes('Expired') || errorMsg.toLowerCase().includes('token'))) {
-                         const newToken = await refreshExternToken(targetCompanyId);
-                         if (newToken) {
-                             currentToken = newToken;
-                             continue;
-                         }
-                    }
-                }
-                
-                break; // Success or unrecoverable error
-            } catch (e) {
-                return NextResponse.json({ status: false, message: 'External API returned invalid JSON' }, { status: 502 });
-            }
-        }
-        // Support common response shapes
-        const rawUsers: any[] = Array.isArray(externalData)
-            ? externalData
-            : externalData.data || externalData.users || externalData.results || externalData.items || [];
+        const rawUsers: any[] = Array.isArray(engineResult.data)
+            ? engineResult.data
+            : (engineResult.data?.data || engineResult.data?.users || engineResult.data?.results || engineResult.data?.items || []);
 
         if (rawUsers.length === 0) {
             return NextResponse.json({
@@ -131,28 +61,11 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Build field mapping: their field name → our field name
-        const fieldMap: Record<string, string> = {};
-        for (const m of usersEndpoint.formated_responses) {
-            fieldMap[m.response_key] = m.formated_response_key;
-        }
-
-        const mapUser = (raw: any): Record<string, any> => {
-            const mapped: Record<string, any> = {};
-            for (const [theirKey, ourKey] of Object.entries(fieldMap)) {
-                if (raw[theirKey] !== undefined) mapped[ourKey] = raw[theirKey];
-            }
-            // Merge: mapped fields override raw fields
-            return { ...raw, ...mapped };
-        };
-
         let imported = 0;
         let currentCount = company._count.users;
         const limit = company.users_number_limit ?? 10;
 
-        for (const rawUser of rawUsers) {
-            const u = mapUser(rawUser);
-
+        for (const u of rawUsers) {
             const email: string | null = u.email || u.mail || null;
             const username: string | null = u.username || u.login || u.user_name || (email ? email.split('@')[0] : null);
             if (!username) continue;

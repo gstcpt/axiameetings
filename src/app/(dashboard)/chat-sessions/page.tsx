@@ -1,5 +1,6 @@
 'use client';
 
+import { CustomCard } from '@/components/ui/custom-card';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/components/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -7,9 +8,10 @@ import { UserRole } from '@/lib/enums/users';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
 import { toast } from 'sonner';
-import { Trash2, Pencil, Trash, User as UserIcon, Globe, Clock, RefreshCw, Sparkles, Loader2, FileText, TrendingUp, AlertTriangle, CheckCircle, Lightbulb, Play, Pause, ChevronLeft, ChevronRight, Activity, MessageCircle, Bot, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Pencil, Trash, User as UserIcon, Globe, Clock, RefreshCw, Sparkles, Loader2, FileText, TrendingUp, AlertTriangle, CheckCircle, Lightbulb, Play, Pause, ChevronLeft, ChevronRight, Activity, MessageCircle, Bot, ChevronDown, ChevronUp , LayoutGrid, List as ListIcon} from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ListGridToggle } from '@/components/ui/ListGridToggle';
 import { useTranslations } from 'next-intl';
 
 import { Typography } from '@/components/ui/typographys';
@@ -53,6 +55,7 @@ export default function ChatSessionsPage() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [loading, setLoading] = useState(true);
     const [modal, setModal] = useState<'delete' | 'bulk-delete' | 'view' | null>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [selected, setSelected] = useState<ChatSession | null>(null);
     const [bulkSelected, setBulkSelected] = useState<ChatSession[]>([]);
     const [deleting, setDeleting] = useState(false);
@@ -342,6 +345,12 @@ export default function ChatSessionsPage() {
                             <Button variant="outline" size="icon" onClick={() => fetchSessions()} className="h-10 w-10 shrink-0 border-slate-100">
                                 <RefreshCw size={18} className={cn("text-slate-500", loading && "animate-spin")} />
                             </Button>
+
+                            <ListGridToggle
+                                viewMode={viewMode}
+                                setViewMode={setViewMode}
+                                className="hidden md:flex"
+                            />
                         </div>
 
                         <Button
@@ -490,8 +499,27 @@ export default function ChatSessionsPage() {
             </AnimatePresence>
 
             {/* Sessions Table */}
-            <Card className="rounded-2xl border-slate-200 overflow-hidden shadow-sm">
-                <DataTable
+            {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                    {sessions?.map((s: ChatSession) => (
+                        <CustomCard 
+                            key={s.id} 
+                            title={`Session #${s.session_id.slice(0,8)}`} 
+                            subtitle={s.messages?.find(m => m.role === 'user')?.content || t('session.noUserMessages')} 
+                            badge={{ text: !s.is_closed ? t('session.active') : t('session.closed'), variant: !s.is_closed ? 'default' : 'secondary' }}
+                            stats={[
+                                { label: t('report.stats.avgMessages'), value: s.messages?.length || 0 }
+                            ]}  
+                            actionLabel={tc('details')}
+                            onAction={() => { setSelected(s); setModal('view'); }}
+                            highlight={!s.is_closed}
+                            icon={!s.is_closed ? <Activity size={20} /> : <Bot size={20} />}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
+                    <DataTable
                     columns={columns}
                     data={sessions}
                     searchable
@@ -500,7 +528,8 @@ export default function ChatSessionsPage() {
                     emptyMessage={t('empty.title')}
                     pageSize={10}
                 />
-            </Card>
+                </div>
+            )}
 
 
 

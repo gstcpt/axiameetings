@@ -39,49 +39,19 @@ export default function BarChartComponent({
           data={data}
           margin={{ top: 10, right: 10, left: horizontal ? 20 : -20, bottom: 0 }}
         >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            vertical={horizontal}
-            horizontal={!horizontal}
-            stroke="#e2e8f0"
-          />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#002B5B" />
           {horizontal ? (
             <>
-              <XAxis type="number" hide />
-              <YAxis
-                type="category"
-                dataKey={xKey}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: "#94a3b8", fontWeight: 700 }}
-              />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: "#94a3b8", fontSize: 12}} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{fill: "#94a3b8", fontSize: 12}} dx={-10} />
             </>
           ) : (
             <>
-              <XAxis
-                dataKey={xKey}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: "#94a3b8", fontWeight: 700 }}
-                dy={10}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12, fill: "#94a3b8", fontWeight: 700 }}
-              />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: "#94a3b8", fontSize: 12}} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{fill: "#94a3b8", fontSize: 12}} dx={-10} />
             </>
           )}
-          <Tooltip
-            cursor={{ fill: "#f1f5f9" }}
-            contentStyle={{
-              borderRadius: "16px",
-              border: "none",
-              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-              fontSize: "12px",
-              fontWeight: "bold",
-            }}
-          />
+          <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)", padding: "12px" }} />
           <Legend
             verticalAlign="top"
             align="right"

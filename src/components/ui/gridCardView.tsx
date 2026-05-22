@@ -281,7 +281,7 @@ export function GridCardView<TData, TValue = unknown>({
                                         key={row.id}
                                         onClick={() => onRowClick?.(row.original)}
                                         className={cn(
-                                            "bg-white hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors",
+                                            "bg-white hover:bg-slate-50 :bg-slate-800/80 transition-colors",
                                             onRowClick && "cursor-pointer"
                                         )}
                                     >

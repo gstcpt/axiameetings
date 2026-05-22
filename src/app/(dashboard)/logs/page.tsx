@@ -1,11 +1,12 @@
 'use client';
 
+import { CustomCard } from '@/components/ui/custom-card';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/components/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Log, ApiResponse } from '@/lib/types';
 import { UserRole } from '@/lib/enums/users';
-import { BarChart3, Clock, User as UserIcon, Building2, Info, Sparkles, RefreshCw, AlertTriangle, TrendingUp, Shield, Zap, ChevronRight, Activity } from 'lucide-react';
+import { BarChart3, Clock, User as UserIcon, Building2, Info, Sparkles, RefreshCw, AlertTriangle, TrendingUp, Shield, Zap, ChevronRight, Activity , LayoutGrid, List as ListIcon} from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
@@ -32,6 +33,7 @@ export default function LogsPage() {
     const [aiAnalysis, setAiAnalysis] = useState<any>(null);
     const [aiLoading, setAiLoading] = useState(false);
     const [modal, setModal] = useState<'delete' | 'bulk-delete' | null>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [logToDelete, setLogToDelete] = useState<Log | null>(null);
     const [bulkSelected, setBulkSelected] = useState<Log[]>([]);
     const [saving, setSaving] = useState(false);
@@ -350,6 +352,27 @@ export default function LogsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Table Area */}
                 <div className="lg:col-span-12 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-4">
+                    
+            {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                    {logs?.map((l: any) => (
+                        <CustomCard 
+                            key={l.id} 
+                            title={l.action} 
+                            subtitle={l.details || tc('noData')} 
+                            badge={{ text: l.status || "INFO", variant: l.status === "ERROR" ? "destructive" : "default" }} 
+                            stats={[
+                                {label: tc('user'), value: l.user?.username || t('system')},
+                                {label: tc('company'), value: l.company?.name || tc('global')}
+                            ]} 
+                            actionLabel={tc('view')}
+                            onAction={() => setSelectedLog(l)}
+                            icon={<Activity size={20} />}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
                     <DataTable
                         columns={columns}
                         data={logs}
@@ -359,6 +382,8 @@ export default function LogsPage() {
                         emptyMessage={tc('noData')}
                         pageSize={10}
                     />
+                </div>
+            )}
                 </div>
             </div>
 

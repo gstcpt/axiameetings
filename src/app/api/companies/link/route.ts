@@ -90,10 +90,12 @@ export async function POST(req: NextRequest) {
         // So to send: find mapping where formated_response_key = 'username' → use response_key as their field name
         let loginPayload: Record<string, string> = {};
 
-        if (loginEndpoint.formated_responses.length > 0) {
+        const payloadMappings = loginEndpoint.formated_responses.filter((m: any) => m.format_for === 'PAYLOAD');
+
+        if (payloadMappings.length > 0) {
             // Map our field names → their field names
             const ourToTheir: Record<string, string> = {};
-            for (const m of loginEndpoint.formated_responses) {
+            for (const m of payloadMappings) {
                 ourToTheir[m.formated_response_key] = m.response_key;
             }
             // Use mapped field names, fall back to standard names
@@ -142,10 +144,11 @@ export async function POST(req: NextRequest) {
         }
 
         // Extract token from response using format mappings
-        if (loginEndpoint.formated_responses.length > 0) {
+        const responseMappings = loginEndpoint.formated_responses.filter((m: any) => m.format_for === 'RESPONSE');
+        if (responseMappings.length > 0) {
             // Find mapping where formated_response_key = 'token'
-            const tokenMapping = loginEndpoint.formated_responses.find(
-                (m) => m.formated_response_key === 'token'
+            const tokenMapping = responseMappings.find(
+                (m: any) => m.formated_response_key === 'token'
             );
             if (tokenMapping) {
                 // Support nested paths like "data.token" using dot notation
@@ -179,9 +182,9 @@ export async function POST(req: NextRequest) {
 
         // Extract identifiant_extern (external user ID)
         let identifiantExtern: number | null = null;
-        if (loginEndpoint.formated_responses.length > 0) {
-            const idMapping = loginEndpoint.formated_responses.find(
-                (m) => m.formated_response_key === 'identifiant_extern' || m.formated_response_key === 'id'
+        if (responseMappings.length > 0) {
+            const idMapping = responseMappings.find(
+                (m: any) => m.formated_response_key === 'identifiant_extern' || m.formated_response_key === 'id'
             );
             if (idMapping) {
                 const keys = idMapping.response_key.split('.');

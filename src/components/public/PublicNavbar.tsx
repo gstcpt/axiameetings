@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/context/AuthContext";
 import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
-import { Home, ArrowLeft } from "lucide-react";
+import { Home, ArrowLeft, Menu, X } from "lucide-react";
+import { useState } from "react";
 import { Typography } from "@/components/ui/typographys";
 import { toast } from "sonner";
 
@@ -17,6 +18,7 @@ interface PublicSettings {
 }
 
 export function PublicNavbar({ settings }: { settings: PublicSettings }) {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { user, logout, loading } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
@@ -64,6 +66,12 @@ export function PublicNavbar({ settings }: { settings: PublicSettings }) {
                                 <Link href="/#pricing" className="group">
                                     <Typography variant="label" className="text-slate-500 group-hover:text-[#002B5B] transition-colors">{t('pricing')}</Typography>
                                 </Link>
+                                <Link href="/privacy-policy" className="group">
+                                    <Typography variant="label" className="text-slate-500 group-hover:text-[#002B5B] transition-colors">Privacy</Typography>
+                                </Link>
+                                <Link href="/terms-of-use" className="group">
+                                    <Typography variant="label" className="text-slate-500 group-hover:text-[#002B5B] transition-colors">Terms</Typography>
+                                </Link>
                             </motion.div>
                         ) : (
                             <motion.div
@@ -82,8 +90,14 @@ export function PublicNavbar({ settings }: { settings: PublicSettings }) {
                         )}
                     </AnimatePresence>
                 </div>
+                <div className="md:hidden flex items-center">
+                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
 
-                <div className="flex items-center gap-4">
+
+                <div className="hidden md:flex items-center gap-4">
                     {!loading && (
                         user ? (
                             <>
@@ -115,6 +129,56 @@ export function PublicNavbar({ settings }: { settings: PublicSettings }) {
                         )
                     )}
                 </div>
+            
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="md:hidden absolute top-full left-6 right-6 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
+                    >
+                        <div className="flex flex-col p-4 gap-4">
+                            {isHome ? (
+                                <>
+                                    <Link href="/#features" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">{t('features')}</Link>
+                                    <Link href="/#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">{t('process')}</Link>
+                                    <Link href="/#pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">{t('pricing')}</Link>
+                                    <Link href="/privacy-policy" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">Privacy Policy</Link>
+                                    <Link href="/terms-of-use" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">Terms of Use</Link>
+                                </>
+                            ) : (
+                                <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">
+                                    <ArrowLeft size={16} /> {t('returnHome')}
+                                </Link>
+                            )}
+                            
+                            <div className="h-px bg-slate-100 my-2"></div>
+                            
+                            {!loading && (
+                                user ? (
+                                    <>
+                                        <Link href="/overview" onClick={() => setIsMobileMenuOpen(false)}>
+                                            <Button variant="ghost" className="w-full justify-center">{t('dashboard')}</Button>
+                                        </Link>
+                                        <Button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="w-full">{t('logout')}</Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                                            <Button variant="ghost" className="w-full justify-center">{t('login')}</Button>
+                                        </Link>
+                                        <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                                            <Button className="w-full">{t('getStarted')}</Button>
+                                        </Link>
+                                    </>
+                                )
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             </motion.nav>
         </header>
     );

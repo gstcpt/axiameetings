@@ -12,6 +12,7 @@ import {
 import Link from 'next/link';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
+import { ListGridToggle } from '@/components/ui/ListGridToggle';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPicker } from '@/components/ui/UserPicker';
@@ -368,6 +369,11 @@ export default function MeetingsPage() {
                         {user?.role === 'DEVELOPER' && (m.status === 'CANCELLED' || m.status === 'FINISHED') && (
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600 hover:bg-red-50 rounded-lg" onClick={() => { setSelected(m); setModal('delete'); }} title={tc('delete')}><Trash2 size={14} /></Button>
                         )}
+                        {isAdminOrDev && m.status === 'FINISHED' && (
+                            <Link href={`/meetings/${m.id}`}>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-violet-600 hover:bg-violet-50 rounded-lg" title={t('aiSummary.title')}><Wand2 size={14} /></Button>
+                            </Link>
+                        )}
                         {(m.status === 'SCHEDULED' || m.status === 'STARTED') && (
                             <Link href={`/meetings/${m.id}/live`}>
                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-600 hover:bg-emerald-50 rounded-lg animate-pulse" title={m.status === 'STARTED' ? t('card.join') : tc('getStarted')}><Play size={14} /></Button>
@@ -400,27 +406,18 @@ export default function MeetingsPage() {
                                 <Typography variant="p" color="secondary" className="text-[11px] font-bold uppercase">
                                     {t('subtitle')}
                                 </Typography>
-                                {!loading && meetings.filter(m => m.status === 'CANCELLED').length > 0 && (
-                                    <>
-                                        <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                        <Badge variant="danger" className="h-4.5 px-2 text-[9px] uppercase font-black bg-red-50 text-red-600 border-red-100 shadow-sm">
-                                            {meetings.filter(m => m.status === 'CANCELLED').length} {t('card.status.CANCELLED')}
-                                        </Badge>
-                                    </>
-                                )}
                             </div>
                         </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                        <div className="flex bg-slate-50 p-0.5 rounded-lg border border-slate-100 w-full md:w-auto">
-                            <button onClick={() => setViewMode('grid')} className={cn("flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase", viewMode === 'grid' ? 'bg-white text-[#002B5B] shadow-sm' : 'text-slate-400 hover:text-slate-600')}>
-                                <LayoutGrid size={12} /> <span className="hidden md:inline">{t('header.viewGrid')}</span>
-                            </button>
-                            <button onClick={() => setViewMode('list')} className={cn("flex-1 md:flex-none flex items-center justify-center gap-2 h-8 px-3 rounded-md transition-all font-semibold text-[10px] uppercase", viewMode === 'list' ? 'bg-white text-[#002B5B] shadow-sm' : 'text-slate-400 hover:text-slate-600')}>
-                                <ListIcon size={12} /> <span className="hidden md:inline">{t('header.viewList')}</span>
-                            </button>
-                        </div>
+                        <ListGridToggle
+                            viewMode={viewMode}
+                            setViewMode={setViewMode}
+                            className="w-full md:w-auto"
+                            gridLabel={t('header.viewGrid')}
+                            listLabel={t('header.viewList')}
+                        />
                         {isAdminOrDev && (
                             <Button
                                 onClick={openAdd}
@@ -529,6 +526,14 @@ export default function MeetingsPage() {
                                                 {t('card.details')}
                                             </Button>
                                         </Link>
+                                        {isAdminOrDev && m.status === 'FINISHED' && (
+                                            <Link href={`/meetings/${m.id}`} className="flex-1">
+                                                <Button className="w-full h-8 rounded-lg shadow-md shadow-violet-900/10 bg-violet-600 hover:bg-violet-700 text-white text-[8px] font-bold uppercase">
+                                                    <Wand2 size={12} className="me-1" />
+                                                    {t('aiSummary.title')}
+                                                </Button>
+                                            </Link>
+                                        )}
                                         {(m.status === 'SCHEDULED' || m.status === 'STARTED') && (
                                             <Link href={`/meetings/${m.id}/live`} className="flex-1">
                                                 <Button className="w-full h-8 rounded-lg shadow-md shadow-blue-900/5 text-[8px] font-bold uppercase">

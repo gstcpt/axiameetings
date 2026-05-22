@@ -1,5 +1,6 @@
 'use client';
 
+import { UserAdminCard } from '@/components/UserAdminCard';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/context/AuthContext';
@@ -7,9 +8,10 @@ import { useRouter } from 'next/navigation';
 import { User, ApiResponse } from '@/lib/types';
 import { UserRole } from '@/lib/enums/users';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, RefreshCw, User as UserIcon, Building2, Phone, Mail, Hash, Shield, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, User as UserIcon, Building2, Phone, Mail, Hash, Shield, Users , LayoutGrid, List as ListIcon, FileUp } from 'lucide-react';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
+import { ListGridToggle } from '@/components/ui/ListGridToggle';
 import { useTranslations } from 'next-intl';
 
 import { Input } from '@/components/ui/inputs';
@@ -31,6 +33,7 @@ export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [modal, setModal] = useState<ModalType>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [selected, setSelected] = useState<User | null>(null);
     const [bulkSelected, setBulkSelected] = useState<User[]>([]);
     const [form, setForm] = useState(emptyForm);
@@ -211,12 +214,14 @@ export default function UsersPage() {
             header: tc('actions'),
             enableSorting: false,
             cell: ({ row: { original: u } }: { row: { original: User } }) => {
-                const canDelete = user?.role === UserRole.DEVELOPER || (user?.role === UserRole.ADMIN && u.role === 'PARTICIPANT');
+                const canModify = user?.role === UserRole.DEVELOPER || (user?.role === UserRole.ADMIN && u.role === 'PARTICIPANT');
                 return (
                     <div className="flex items-center gap-1 justify-end">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" onClick={() => openEdit(u)} title={tc('edit')}><Pencil size={14} /></Button>
-                        {canDelete && (
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" onClick={() => openDelete(u)} title={tc('delete')}><Trash2 size={14} /></Button>
+                        {canModify && (
+                            <>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" onClick={() => openEdit(u)} title={tc('edit')}><Pencil size={14} /></Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" onClick={() => openDelete(u)} title={tc('delete')}><Trash2 size={14} /></Button>
+                            </>
                         )}
                     </div>
                 );
@@ -272,22 +277,48 @@ export default function UsersPage() {
                             </div>
                         )}
                         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                            <Button variant="outline" size="icon" onClick={fetchUsers} className="h-10 w-10 shrink-0 border-slate-100">
+                                <RefreshCw size={18} className={cn("text-slate-500", isLoading && "animate-spin")} />
+                            </Button>
+
                             <Button variant="outline" className="w-full md:w-auto h-10 px-6 border border-slate-100 font-semibold text-sm" onClick={() => {
                                 if (user?.role === UserRole.DEVELOPER && !selectedCompanyFilter) { toast.error(t('importModal.errorNoCompany')); return; }
                                 setModal('import');
                             }}>
-                                <RefreshCw size={18} className="md:me-2" /> <span className="md:inline">{t('import')}</span>
+                                <FileUp size={18} className="me-2" /> <span>{t('import')}</span>
                             </Button>
-                            <Button className="w-full md:w-auto h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm" onClick={openAdd}>
-                                <Plus size={18} className="md:me-2 rtl:rotate-90" /> <span className="md:inline">{t('add')}</span>
+                            
+                            <ListGridToggle
+                                viewMode={viewMode}
+                                setViewMode={setViewMode}
+                                className="w-full md:w-auto mt-4 md:mt-0 ltr:mr-4 rtl:ml-4"
+                            />
+
+                            <Button className="flex-1 md:flex-none h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm" onClick={openAdd}>
+                                <Plus size={18} className="me-2 rtl:rotate-90" /> <span>{t('add')}</span>
                             </Button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <Card className="rounded-2xl border-slate-200 overflow-hidden">
-                <DataTable
+            {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                    {users?.map((u: any) => {
+                        const canModify = user?.role === UserRole.DEVELOPER || (user?.role === UserRole.ADMIN && u.role === 'PARTICIPANT');
+                        return (
+                            <UserAdminCard 
+                                key={u.id} 
+                                user={u} 
+                                onEdit={canModify ? () => openEdit(u) : undefined} 
+                                onDelete={canModify ? () => openDelete(u) : undefined} 
+                            />
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
+                    <DataTable
                     columns={columns}
                     data={users}
                     searchable
@@ -296,7 +327,8 @@ export default function UsersPage() {
                     emptyMessage={t('empty')}
                     pagesize={10}
                 />
-            </Card>
+                </div>
+            )}
 
             {/* Add / Edit Modal */}
             <Modal isOpen={modal === 'add' || modal === 'edit'} onClose={closeModal}

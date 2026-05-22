@@ -107,6 +107,8 @@
         "administration": "الإدارة",
         "developer": "المطور",
         "system": "النظام",
+        "configurations": "الإعدادات",
+        "logs": "السجلات",
         "select": "اختيار",
         "refresh": "تحديث",
         "mo": "شهر",
@@ -736,6 +738,9 @@
         }
     },
     "Meetings": {
+        "aiSummary": {
+            "title": "ملخص الذكاء الاصطناعي"
+        },
         "title": "إدارة الاجتماعات",
         "subtitle": "خطط وتتبع جلسات عملك.",
         "new": "اجتماع جديد",
@@ -1063,11 +1068,13 @@
             "success": "النجاح",
             "byFeature": "حسب الميزة",
             "status": "الحالة",
+            "label": "الحالة",
             "details": "التفاصيل",
             "actions": "الإجراءات"
         },
         "provider": {
-            "chatOrder": "دردشة #{order}",
+            "label": "المزود",
+            "chatOrder": "محادثة #{order}",
             "genOrder": "توليد #{order}",
             "expired": "منتهي",
             "noUsageToday": "لا يوجد استخدام اليوم",

@@ -81,7 +81,7 @@ export function RemoteDataTable<TData, TValue>({
                         placeholder={displaySearchPlaceholder}
                         value={searchValue}
                         onChange={(e) => setSearchValue(e.target.value)}
-                        className="pl-9 bg-white/50 dark:bg-zinc-900/50"
+                        className="pl-9 bg-white/50 "
                     />
                 </div>
                 <div className="flex items-center gap-2">
@@ -99,10 +99,10 @@ export function RemoteDataTable<TData, TValue>({
             </div>
 
             {/* Table Container */}
-            <div className="rounded-4xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 backdrop-blur-xl overflow-hidden shadow-sm">
+            <div className="rounded-4xl border border-zinc-200  bg-white  backdrop-blur-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-zinc-50/50 dark:bg-zinc-800/30 border-b border-zinc-200 dark:border-zinc-800">
+                        <thead className="bg-zinc-50/50  border-b border-zinc-200 ">
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <tr key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => (
@@ -113,10 +113,10 @@ export function RemoteDataTable<TData, TValue>({
                                 </tr>
                             ))}
                         </thead>
-                        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                        <tbody className="divide-y divide-zinc-200 ">
                             <AnimatePresence mode="wait">
                                 {isLoading ? (
-                                    <tr className="bg-white/5 dark:bg-transparent">
+                                    <tr className="bg-white/5 ">
                                         <td colSpan={columns.length} className="px-6 py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
                                                 <div className="relative">
@@ -143,7 +143,7 @@ export function RemoteDataTable<TData, TValue>({
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: idx * 0.03 }}
                                             className={clsx(
-                                                "hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors group",
+                                                "hover:bg-zinc-50 :bg-white/5 transition-colors group",
                                                 onRowClick && "cursor-pointer"
                                             )}
                                             onClick={() => onRowClick?.(item)}
@@ -177,7 +177,7 @@ export function RemoteDataTable<TData, TValue>({
                         <select
                             value={limit}
                             onChange={(e) => onParamsChange({ limit: Number(e.target.value), page: 1 })}
-                            className="bg-transparent border border-zinc-200 dark:border-zinc-800 rounded-lg py-1 px-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                            className="bg-transparent border border-zinc-200  rounded-lg py-1 px-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         >
                             {[10, 25, 50, 100].map(val => (
                                 <option key={val} value={val}>{val}</option>
@@ -194,7 +194,7 @@ export function RemoteDataTable<TData, TValue>({
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </Button>
-                        <div className="flex items-center px-4 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-sm font-bold">
+                        <div className="flex items-center px-4 py-1.5 rounded-xl bg-zinc-100  text-sm font-bold">
                             {t('pageInfo', { current: page, total: totalPages || 1 })}
                         </div>
                         <Button

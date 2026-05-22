@@ -13,6 +13,7 @@ import { Typography } from '@/components/ui/typographys';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badges';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/cards';
+import { StatsCard } from '@/components/ui/StatsCard';
 import AreaChartComponent from '@/components/ui/charts/areas';
 import BarChartComponent from '@/components/ui/charts/bars';
 import PieChartComponent from '@/components/ui/charts/pies';
@@ -191,7 +192,7 @@ export default function OverviewPage() {
                     <div className="flex items-center gap-4 w-full md:w-auto">
                         <Link href="/meetings" className="w-full">
                             <Button className="w-full md:w-auto h-10 px-6 shadow-lg shadow-blue-900/10 font-semibold text-sm">
-                                <Plus size={18} className="me-2" /> {t('stats.createMeeting')}
+                                <ArrowRight size={18} className="me-2" /> {ts('meetings')}
                             </Button>
                         </Link>
                     </div>
@@ -238,52 +239,36 @@ export default function OverviewPage() {
             {/* Analytics Landscape */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Main Trend Chart */}
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-8 group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
-                >
-                    <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#002B5B] flex items-center justify-center border border-blue-100">
-                                <TrendingUp size={14} />
-                            </div>
-                            <div>
-                                <Typography variant="h3" className="text-sm font-semibold">{t('charts.volumeTitle')}</Typography>
-                                <Typography variant="label" className="text-[9px] uppercase font-semibold text-slate-400">{t('charts.volumeSubtitle', { item: ts('meetings') })}</Typography>
-                            </div>
-                        </div>
+                <StatsCard
+                    title={t('charts.volumeTitle')}
+                    subtitle={t('charts.volumeSubtitle', { item: ts('meetings') })}
+                    icon={<TrendingUp size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                    iconWrapperClassName="bg-blue-50 text-[#002B5B] border-blue-100"
+                    className="lg:col-span-8"
+                    action={
                         <div className="flex gap-2">
                             <div className="h-2 w-2 rounded-full bg-[#002B5B]" />
                             <div className="h-2 w-2 rounded-full bg-slate-100" />
                         </div>
-                    </div>
+                    }
+                >
                     <BarChartComponent
                         data={stats?.trendData || []}
                         xKey="name"
                         series={[{ key: 'meetings', name: ts('meetings'), color: '#002B5B' }]}
                         height={400}
                     />
-                </motion.div>
+                </StatsCard>
 
                 {/* Status Distribution */}
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-4 flex flex-col group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
+                <StatsCard
+                    title={t('charts.statusMix')}
+                    subtitle={t('charts.statusMixSubtitle')}
+                    icon={<PieChartIcon size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                    iconWrapperClassName="bg-purple-50 text-purple-600 border-purple-100"
+                    className="lg:col-span-4"
                 >
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
-                            <PieChartIcon size={14} />
-                        </div>
-                        <div>
-                            <Typography variant="h3" className="text-sm font-semibold">{t('charts.statusMix')}</Typography>
-                            <Typography variant="label" className="text-[9px] uppercase font-semibold text-slate-400">{t('charts.statusMixSubtitle')}</Typography>
-                        </div>
-                    </div>
-                    <div className="grow flex items-center justify-center">
+                    <div className="grow flex items-center justify-center min-h-[300px]">
                         {statusData.length > 0 ? (
                             <PieChartComponent
                                 data={statusData}
@@ -298,60 +283,46 @@ export default function OverviewPage() {
                             </div>
                         )}
                     </div>
-                </motion.div>
+                </StatsCard>
 
                 {/* Secondary Metrics Row */}
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-4 group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
+                <StatsCard
+                    title={t('charts.roleComposition')}
+                    subtitle={t('charts.roleCompositionSubtitle')}
+                    icon={<Users size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                    iconWrapperClassName="bg-emerald-50 text-emerald-600 border-emerald-100"
+                    className="lg:col-span-4"
                 >
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-                            <Users size={14} />
-                        </div>
-                        <div>
-                            <Typography variant="h3" className="text-sm font-semibold">{t('charts.roleComposition')}</Typography>
-                            <Typography variant="label" className="text-[9px] uppercase font-semibold text-slate-400">{t('charts.roleCompositionSubtitle')}</Typography>
-                        </div>
+                    <div className="grow flex items-center justify-center min-h-[280px]">
+                        {usersRoleData.length > 0 ? (
+                            <PieChartComponent
+                                data={usersRoleData}
+                                donut
+                                colors={PIE_COLORS}
+                                height={280}
+                            />
+                        ) : (
+                            <div className="py-20 flex flex-col items-center justify-center text-slate-100">
+                                <Users size={48} />
+                            </div>
+                        )}
                     </div>
-                    {usersRoleData.length > 0 ? (
-                        <PieChartComponent
-                            data={usersRoleData}
-                            donut
-                            colors={PIE_COLORS}
-                            height={280}
-                        />
-                    ) : (
-                        <div className="py-20 flex flex-col items-center justify-center text-slate-100">
-                            <Users size={48} />
-                        </div>
-                    )}
-                </motion.div>
+                </StatsCard>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-8 group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
+                <StatsCard
+                    title={t('charts.systemActivity')}
+                    subtitle={t('charts.systemActivitySubtitle')}
+                    icon={<Activity size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                    iconWrapperClassName="bg-amber-50 text-amber-600 border-amber-100"
+                    className="lg:col-span-8"
                 >
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
-                            <Activity size={14} />
-                        </div>
-                        <div>
-                            <Typography variant="h3" className="text-sm font-semibold">{t('charts.systemActivity')}</Typography>
-                            <Typography variant="label" className="text-[9px] uppercase font-semibold text-slate-400">{t('charts.systemActivitySubtitle')}</Typography>
-                        </div>
-                    </div>
                     <AreaChartComponent
                         data={stats?.logsActivity || []}
                         xKey="name"
                         series={[{ key: 'activity', name: ts('logs'), color: '#f59e0b' }]}
                         height={350}
                     />
-                </motion.div>
+                </StatsCard>
             </div>
         </div>
     );

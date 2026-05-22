@@ -42,7 +42,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             have_notifications_service, notifications_service_endpoint_id,
             have_messages_service, messages_service_endpoint_id,
             have_sms_service, sms_service_endpoint_id,
-            ai_is_active, meeting_time_limit, users_number_limit,
+            have_mail_service, push_mails_endpoint_id,
+            ai_is_active, mail_is_active, meeting_time_limit, users_number_limit,
         } = body;
 
         // Build data object dynamically to support partial updates (e.g., just ai_is_active toggle)
@@ -59,7 +60,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (messages_service_endpoint_id !== undefined) data.messages_service_endpoint_id = messages_service_endpoint_id ? Number(messages_service_endpoint_id) : null;
         if (have_sms_service !== undefined) data.have_sms_service = !!have_sms_service;
         if (sms_service_endpoint_id !== undefined) data.sms_service_endpoint_id = sms_service_endpoint_id ? Number(sms_service_endpoint_id) : null;
+        if (have_mail_service !== undefined) data.have_mail_service = !!have_mail_service;
+        if (push_mails_endpoint_id !== undefined) data.push_mails_endpoint_id = push_mails_endpoint_id ? Number(push_mails_endpoint_id) : null;
         if (ai_is_active !== undefined) data.ai_is_active = !!ai_is_active;
+        if (mail_is_active !== undefined) data.mail_is_active = !!mail_is_active;
         if (meeting_time_limit !== undefined) data.meeting_time_limit = meeting_time_limit;
         if (users_number_limit !== undefined) data.users_number_limit = users_number_limit !== null ? Number(users_number_limit) : null;
 

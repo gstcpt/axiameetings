@@ -168,7 +168,7 @@ export default function MeetingDetailsPage() {
             const res = await fetch(`/api/meetings/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date: form.date, time: form.time, status: 'SCHEDULED' }),
+                body: JSON.stringify({ date: form.date, time: form.time, status: 'SCHEDULED', sendRescheduleNotification: true }),
             });
             const result: ApiResponse<any> = await res.json();
             if (result.status) {

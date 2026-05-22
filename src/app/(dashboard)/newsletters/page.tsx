@@ -1,5 +1,6 @@
 'use client';
 
+import { CustomCard } from '@/components/ui/custom-card';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -7,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { Newsletter, ApiResponse } from '@/lib/types';
 import { UserRole } from '@/lib/enums/users';
 import { toast } from 'sonner';
-import { Mail, Trash2, Download, Send } from 'lucide-react';
+import { Mail, Trash2, Download, Send , LayoutGrid, List as ListIcon} from 'lucide-react';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { ConfirmModal } from '@/components/ui/modals';
 
@@ -21,6 +22,7 @@ export default function NewslettersPage() {
     const t = useTranslations('Newsletters');
     const tc = useTranslations('Common');
     const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [isLoading, setIsLoading] = useState(true);
     const [selected, setSelected] = useState<Newsletter | null>(null);
     const [bulkSelected, setBulkSelected] = useState<Newsletter[]>([]);
@@ -152,8 +154,22 @@ export default function NewslettersPage() {
                 </div>
             </div>
 
-            <Card className="rounded-2xl border-slate-200 overflow-hidden">
-                <DataTable
+            {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                    {newsletters?.map((n: Newsletter) => (
+                        <CustomCard 
+                            key={n.id} 
+                            title={n.email} 
+                            subtitle={new Date(n.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })} 
+                            actionLabel={tc('delete')}
+                            onAction={() => { setSelected(n); setConfirmDelete(true); }}
+                            icon={<Mail size={20} />}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
+                    <DataTable
                     columns={columns}
                     data={newsletters}
                     searchable
@@ -162,7 +178,8 @@ export default function NewslettersPage() {
                     emptyMessage={t('emptyMessage')}
                     pagesize={10}
                 />
-            </Card>
+                </div>
+            )}
 
             <ConfirmModal
                 isOpen={confirmDelete}

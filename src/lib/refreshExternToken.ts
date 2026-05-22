@@ -51,17 +51,28 @@ export async function refreshExternToken(companyId: number): Promise<string | nu
 
         // Override with custom mappings if configured
         if (endpoint.formated_responses && endpoint.formated_responses.length > 0) {
-            const mapped: any = {};
-            for (const m of endpoint.formated_responses) {
-                const reqKey = (m.formated_response_key || '').toLowerCase();
-                const val = (reqKey.includes('user') || reqKey.includes('login') || reqKey.includes('email')) ? adminLogin.username :
-                            (reqKey.includes('pass') || reqKey.includes('pwd')) ? adminLogin.password : null;
+            const payloadMappings = endpoint.formated_responses.filter((m: any) => m.format_for === 'PAYLOAD');
+            if (payloadMappings.length > 0) {
+                const ourToTheir: Record<string, string> = {};
+                for (const m of payloadMappings) {
+                    ourToTheir[(m.formated_response_key || '').toLowerCase()] = m.response_key;
+                }
                 
-                if (val !== null) mapped[m.response_key] = val;
-            }
-            const method = endpoint.method || 'POST';
-            if (Object.keys(mapped).length > 0 && (method === 'POST' || method === 'PUT')) {
-                payload = mapped;
+                const method = endpoint.method || 'POST';
+                if (method === 'POST' || method === 'PUT') {
+                    // Start with empty payload, then apply mapped or standard keys
+                    const mappedPayload: any = {};
+                    
+                    // Look for username mapping variants
+                    const userKey = Object.keys(ourToTheir).find(k => k.includes('user') || k.includes('login') || k.includes('email'));
+                    mappedPayload[userKey ? ourToTheir[userKey] : 'username'] = adminLogin.username;
+                    
+                    // Look for password mapping variants
+                    const passKey = Object.keys(ourToTheir).find(k => k.includes('pass') || k.includes('pwd'));
+                    mappedPayload[passKey ? ourToTheir[passKey] : 'password'] = adminLogin.password;
+                    
+                    payload = mappedPayload;
+                }
             }
         }
 
@@ -95,7 +106,8 @@ export async function refreshExternToken(companyId: number): Promise<string | nu
         // Also respect formated_responses for parsing response if configured
         // Usually, the response format might be mapped. If so, response_key maps to internal 'token'
         if (endpoint.formated_responses && endpoint.formated_responses.length > 0) {
-            const tokenMapping = endpoint.formated_responses.find(m => 
+            const responseMappings = endpoint.formated_responses.filter((m: any) => m.format_for === 'RESPONSE');
+            const tokenMapping = responseMappings.find((m: any) => 
                 (m.formated_response_key || '').toLowerCase().includes('token')
             );
             if (tokenMapping && json[tokenMapping.response_key]) {

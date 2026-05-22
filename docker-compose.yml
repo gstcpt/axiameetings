@@ -15,7 +15,7 @@ services:
       PORT: 3002
       NODE_ENV: production
     ports:
-      - "3002:3002"
+      - "3002:3002" # localhost:3002  -->  container:3002
     volumes:
       - uploads_data:/app/public/uploads
     # Needed on Linux hosts where host.docker.internal is not available by default.
