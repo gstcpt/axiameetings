@@ -13,8 +13,13 @@ export function formatLogoUrl(logo: string | null | undefined): string {
     return "/AxiaMeetings.svg";
   }
   
-  // Data URL or absolute path starting with slash
-  if (/^(data:|https?:\/\/|\/)/i.test(trimmed)) {
+  // Explicit HTTP gets proxied to avoid mixed content errors
+  if (/^http:\/\//i.test(trimmed)) {
+    return `/api/proxy-image?url=${encodeURIComponent(trimmed)}`;
+  }
+  
+  // Data URL or absolute path starting with slash or https://
+  if (/^(data:|https:\/\/|\/)/i.test(trimmed)) {
     return trimmed;
   }
   

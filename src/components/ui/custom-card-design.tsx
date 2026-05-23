@@ -1,6 +1,6 @@
 import React from 'react';
 import { Row, flexRender } from '@tanstack/react-table';
-import { cn } from '@/lib/utils';
+import { cn, formatLogoUrl } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { MoreVertical } from 'lucide-react';
@@ -25,8 +25,8 @@ export function CustomCardDesign<TData>({ row }: CustomCardDesignProps<TData>) {
 
     // Dynamic Image Detection for generic rows (e.g. companies, references)
     const originalData = row.original as any;
-    const imageUrl = originalData?.logo_file_name || originalData?.logo_url || originalData?.image_url;
-    const formattedImg = imageUrl ? (imageUrl.startsWith('http') || imageUrl.startsWith('/') ? imageUrl : `/uploads/${imageUrl}`) : null;
+    const rawImageUrl = originalData?.logo_file_name || originalData?.logo_url || originalData?.image_url;
+    const formattedImg = formatLogoUrl(rawImageUrl);
 
     return (
         <motion.div

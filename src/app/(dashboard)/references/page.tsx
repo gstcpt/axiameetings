@@ -9,6 +9,7 @@ import { Reference, ApiResponse } from '@/lib/types';
 import { UserRole } from '@/lib/enums/users';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Globe, ExternalLink, Image as ImageIcon , LayoutGrid, List as ListIcon, RefreshCw } from 'lucide-react';
+import { formatLogoUrl } from '@/lib/utils';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
 import { ListGridToggle } from '@/components/ui/ListGridToggle';
@@ -105,7 +106,7 @@ export default function ReferencesPage() {
                 <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden border border-slate-100 shadow-sm">
                         {r.logo_file_name
-                            ? <img src={r.logo_file_name.startsWith('http') ? r.logo_file_name : `/uploads/${r.logo_file_name}`} alt={r.name} className="w-6 h-6 object-contain p-0.5" />
+                            ? <img src={formatLogoUrl(r.logo_file_name)} alt={r.name} className="w-6 h-6 object-contain p-0.5" />
                             : <ImageIcon size={14} className="text-slate-300" />}
                     </div>
                     <Typography variant="large" className="text-slate-900 font-bold text-xs">{r.name}</Typography>
@@ -196,7 +197,7 @@ export default function ReferencesPage() {
                             onAction={() => typeof openEdit !== 'undefined' ? openEdit(r) : {}}
                             icon={
                                 r.logo_file_name 
-                                    ? <img src={r.logo_file_name.startsWith('http') ? r.logo_file_name : `/uploads/${r.logo_file_name}`} alt={r.name} className="w-8 h-8 object-contain rounded-md" />
+                                    ? <img src={formatLogoUrl(r.logo_file_name)} alt={r.name} className="w-8 h-8 object-contain rounded-md" />
                                     : <Globe size={20} />
                             }
                         />

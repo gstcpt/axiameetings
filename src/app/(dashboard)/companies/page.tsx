@@ -8,6 +8,7 @@ import { MeetingDuration } from '@/lib/enums/meetings';
 import { UserRole } from '@/lib/enums/users';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Users as UsersIcon, Webhook, Building2, Settings2, CheckCircle2, XCircle, Sparkles, Info, Globe, Shield, Calendar, BarChart3, Database, Bell, MessageCircle, Mail , LayoutGrid, List as ListIcon, RefreshCw } from 'lucide-react';
+import { formatLogoUrl } from '@/lib/utils';
 import Link from 'next/link';
 import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Modal, ConfirmModal } from '@/components/ui/modals';
@@ -236,7 +237,7 @@ export default function CompaniesPage() {
             cell: ({ row: { original: c } }) => (
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 shadow-sm overflow-hidden p-1">
-                        {c.logo_url ? <img src={c.logo_url} alt={c.name} className="w-full h-full object-contain" /> : <Building2 size={14} className="text-[#002B5B]" />}
+                        {c.logo_url ? <img src={formatLogoUrl(c.logo_url)} alt={c.name} className="w-full h-full object-contain" /> : <Building2 size={14} className="text-[#002B5B]" />}
                     </div>
                     <div className="min-w-0">
                         <Typography variant="large" className="text-slate-900 font-bold text-xs leading-tight truncate">{c.name}</Typography>
