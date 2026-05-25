@@ -15,16 +15,37 @@ export async function sendPushMail(companyId: number, title: string, content: st
         if (mailer) {
             const { transporter, settings } = mailer;
             
+            // Fetch meeting details for email template
+            const meeting = await prisma.meetings.findUnique({
+                where: { id: meetingId },
+                select: { subject: true, date: true, time: true }
+            });
+            
             for (const email of participantsEmails) {
                 const joinUrl = joinUrlMap[email] || '#';
+                const meetingDetails = meeting ? `
+                    <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 24px;">
+                        <p style="margin: 0 0 8px 0; color: #64748b; font-size: 14px;"><strong>Subject:</strong> ${meeting.subject}</p>
+                        <p style="margin: 0 0 8px 0; color: #64748b; font-size: 14px;"><strong>Date:</strong> ${meeting.date}</p>
+                        <p style="margin: 0 0 8px 0; color: #64748b; font-size: 14px;"><strong>Time:</strong> ${meeting.time}</p>
+                    </div>
+                ` : '';
+                
                 const html = getEmailTemplate(`
-                    <p style="color:#64748b;font-size:15px;line-height:1.6;margin:0 0 24px;">
-                        ${content}
-                    </p>
-                    <div style="text-align:center;margin:24px 0;">
-                        <a href="${joinUrl}" style="display:inline-block;background:#002B5B;color:white;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:700;">
-                            Join Meeting / Accéder à la réunion
-                        </a>
+                    <div style="text-align: center; padding: 20px 0;">
+                        ${meetingDetails}
+                        <p style="color:#334155;font-size:16px;line-height:1.7;margin:0 0 24px;">
+                            ${content}
+                        </p>
+                        <div style="text-align:center;margin:30px 0;">
+                            <a href="${joinUrl}" style="display:inline-block;background:#002B5B;color:white;text-decoration:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:600;letter-spacing:0.5px;">
+                                Join Meeting / Accéder à la réunion
+                            </a>
+                        </div>
+                        <p style="color:#64748b;font-size:13px;line-height:1.6;margin:24px 0 0;">
+                            If the button above doesn't work, please copy and paste the link below into your browser:<br>
+                            <a href="${joinUrl}" style="color:#002B5B;text-decoration:underline;">${joinUrl}</a>
+                        </p>
                     </div>
                 `, title, company.name || 'Axia Meetings');
 
