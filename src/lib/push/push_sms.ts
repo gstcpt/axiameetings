@@ -1,6 +1,6 @@
 import { executeExternalApiAction } from '../externalApiEngine';
 
-export async function sendPushSMS(companyId: number, title: string, content: string, participantExternalIds: number[], participantPhones: string[], meetingId: number) {
+export async function sendPushSMS(companyId: number, title: string, content: string, participantExternalIds: number[], participantPhones: string[], meetingId: number, joinUrlMap: Record<number, string> = {}) {
     const promises = participantExternalIds.map((id, index) => 
         executeExternalApiAction({
             companyId,
@@ -10,7 +10,8 @@ export async function sendPushSMS(companyId: number, title: string, content: str
                 body: content,
                 identifiant_extern: id,
                 phones: participantPhones[index], // Send the specific phone number
-                meeting: meetingId
+                meeting: meetingId,
+                join_url: joinUrlMap[id] || ''
             }
         })
     );

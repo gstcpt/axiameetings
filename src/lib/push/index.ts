@@ -58,6 +58,15 @@ export async function dispatchMeetingPush(options: PushOptions) {
         validEmails.push(p.email);
         joinUrlMap[p.email] = `${siteUrl}/meetings/${meeting.id}/join?token=${p.token}&email=${encodeURIComponent(p.email)}`;
     }
+    
+    // Create a map of externalId to join URL for push notifications/messages/SMS
+    const externalIdJoinUrlMap: Record<number, string> = {};
+    for (const p of meeting.meetings_participants) {
+        const u = users.find(user => user.email === p.email);
+        if (u && u.identifiant_extern) {
+            externalIdJoinUrlMap[u.identifiant_extern] = `${siteUrl}/meetings/${meeting.id}/join?token=${p.token}&email=${encodeURIComponent(p.email)}`;
+        }
+    }
 
     if (participantExternalIds.length === 0 && validEmails.length === 0) {
         console.log(`[PushDispatcher] No valid participants with external IDs or emails to notify.`);
@@ -143,7 +152,7 @@ export async function dispatchMeetingPush(options: PushOptions) {
 
     const promises = [];
 
-    const joinText = locale === 'fr' ? 'Cliquez ici' : 'Click here';
+    const joinText = locale === 'en' ? 'Click here' : 'Click ici ici';
 
     // Push Notifications
     if (company.have_notifications_service && participantExternalIds.length > 0) {
@@ -151,13 +160,13 @@ export async function dispatchMeetingPush(options: PushOptions) {
         // We will pass the base meeting join URL, or let the user login to app. 
         // For simplicity, we just pass the content, the external API will route it.
         const pushContent = `${contentTemplate} <a href="${siteUrl}/meetings/${meeting.id}/join">${joinText}</a>`;
-        promises.push(sendPushNotification(companyId, title, pushContent, participantExternalIds, meeting.id));
+        promises.push(sendPushNotification(companyId, title, pushContent, participantExternalIds, meeting.id, externalIdJoinUrlMap));
     }
 
     // Push Messages
     if (company.have_messages_service && participantExternalIds.length > 0) {
         const pushContent = `${contentTemplate} <a href="${siteUrl}/meetings/${meeting.id}/join">${joinText}</a>`;
-        promises.push(sendPushMessage(companyId, title, pushContent, participantExternalIds, meeting.id));
+        promises.push(sendPushMessage(companyId, title, pushContent, participantExternalIds, meeting.id, externalIdJoinUrlMap));
     }
 
     // Push Mails
@@ -169,7 +178,7 @@ export async function dispatchMeetingPush(options: PushOptions) {
     // Push SMS
     if (company.have_sms_service && participantPhones.length > 0) {
         const pushContent = `${contentTemplate} <a href="${siteUrl}/meetings/${meeting.id}/join">${joinText}</a>`;
-        promises.push(sendPushSMS(companyId, title, pushContent, participantExternalIds, participantPhones, meeting.id));
+        promises.push(sendPushSMS(companyId, title, pushContent, participantExternalIds, participantPhones, meeting.id, externalIdJoinUrlMap));
     }
 
     await Promise.allSettled(promises);
