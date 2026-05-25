@@ -152,21 +152,28 @@ export async function dispatchMeetingPush(options: PushOptions) {
 
     const promises = [];
 
-    const joinText = locale === 'en' ? 'Click here' : 'Click ici ici';
-
     // Push Notifications
     if (company.have_notifications_service && participantExternalIds.length > 0) {
-        // We might want to pass joinUrl inside content, but external APIs might not support per-user payloads in bulk.
-        // We will pass the base meeting join URL, or let the user login to app. 
-        // For simplicity, we just pass the content, the external API will route it.
-        const pushContent = `${contentTemplate} <a href="${siteUrl}/meetings/${meeting.id}/join">${joinText}</a>`;
-        promises.push(sendPushNotification(companyId, title, pushContent, participantExternalIds, meeting.id, externalIdJoinUrlMap));
+        const notificationPromises = participantExternalIds.map((id, index) => {
+            const participantEmail = validEmails[index] || '';
+            const participantJoinUrl = externalIdJoinUrlMap[id] || `${siteUrl}/meetings/${meeting.id}/join`;
+            const joinText = locale === 'en' ? 'Click here' : 'Cliquez ici';
+            const pushContent = `${contentTemplate} <a href="${participantJoinUrl}">${joinText}</a>`;
+            return sendPushNotification(companyId, title, pushContent, [id], meeting.id, {});
+        });
+        promises.push(...notificationPromises);
     }
 
     // Push Messages
     if (company.have_messages_service && participantExternalIds.length > 0) {
-        const pushContent = `${contentTemplate} <a href="${siteUrl}/meetings/${meeting.id}/join">${joinText}</a>`;
-        promises.push(sendPushMessage(companyId, title, pushContent, participantExternalIds, meeting.id, externalIdJoinUrlMap));
+        const messagePromises = participantExternalIds.map((id, index) => {
+            const participantEmail = validEmails[index] || '';
+            const participantJoinUrl = externalIdJoinUrlMap[id] || `${siteUrl}/meetings/${meeting.id}/join`;
+            const joinText = locale === 'en' ? 'Click here' : 'Cliquez ici';
+            const pushContent = `${contentTemplate} <a href="${participantJoinUrl}">${joinText}</a>`;
+            return sendPushMessage(companyId, title, pushContent, [id], meeting.id, {});
+        });
+        promises.push(...messagePromises);
     }
 
     // Push Mails
@@ -177,8 +184,14 @@ export async function dispatchMeetingPush(options: PushOptions) {
 
     // Push SMS
     if (company.have_sms_service && participantPhones.length > 0) {
-        const pushContent = `${contentTemplate} <a href="${siteUrl}/meetings/${meeting.id}/join">${joinText}</a>`;
-        promises.push(sendPushSMS(companyId, title, pushContent, participantExternalIds, participantPhones, meeting.id, externalIdJoinUrlMap));
+        const smsPromises = participantExternalIds.map((id, index) => {
+            const participantEmail = validEmails[index] || '';
+            const participantJoinUrl = externalIdJoinUrlMap[id] || `${siteUrl}/meetings/${meeting.id}/join`;
+            const joinText = locale === 'en' ? 'Click here' : 'Cliquez ici';
+            const pushContent = `${contentTemplate} <a href="${participantJoinUrl}">${joinText}</a>`;
+            return sendPushSMS(companyId, title, pushContent, [id], [participantPhones[index]], meeting.id, {});
+        });
+        promises.push(...smsPromises);
     }
 
     await Promise.allSettled(promises);
