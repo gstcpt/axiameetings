@@ -448,7 +448,7 @@ export default function ChatSessionsPage() {
                                                                 {topic.count}x
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <Typography variant="large" className="text-[11px] text-slate-900 block font-bold">{topic.topic}</Typography>
+                                                                <Typography variant="large" className="text-[11px] text-white block font-bold">{topic.topic}</Typography>
                                                                 <Typography variant="p" className="text-[10px] mt-0.5 text-slate-500 line-clamp-1 leading-tight">{topic.insight}</Typography>
                                                             </div>
                                                         </div>

@@ -5,7 +5,6 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { AuthGuard } from '@/components/AuthGuard';
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 import { NotificationBridge } from '@/components/NotificationBridge';
 
@@ -27,16 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <Navbar onMenuClick={() => setSidebarOpen(true)} toggleCompact={() => setIsCompact(!isCompact)} />
                     
                     <main className="flex-1 p-4 md:p-6 lg:p-8">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.4, ease: [0.33, 1, 0.68, 1] }}
-                            >
-                                {children}
-                            </motion.div>
-                        </AnimatePresence>
+                        {children}
                     </main>
                 </div>
             </div>

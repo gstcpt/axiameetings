@@ -41,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const isRtl = locale === "ar";
 
     return (
-        <html lang={locale} dir={isRtl ? "rtl" : "ltr"} className={cn(isRtl ? alyamama.variable : elmsSans.variable)}>
+        <html lang={locale} dir={isRtl ? "rtl" : "ltr"} className={cn(isRtl ? alyamama.variable : elmsSans.variable)} suppressHydrationWarning>
             <head>
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
             </head>

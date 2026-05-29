@@ -77,6 +77,35 @@ NAVIGATION GUIDANCE:
 - Want to create a meeting? → Go to /meetings after logging in
 `;
 
+const TOOL_INSTRUCTIONS = `
+CRITICAL TOOL CALLING & OUTPUT SECURITY RULES:
+1. You have access to a tool/function called 'fetchApplicationData' that can query internal APIs.
+2. If the user asks about specific data (e.g. "who attended meeting 14", "how many participants in Réunion 3", "how many canceled meetings do I have", "show my users", "how many users are there", "what is the phone number of user X"), YOU MUST CALL THE 'fetchApplicationData' TOOL silently to get the actual data before responding.
+3. IMPORTANT: The lists in your context (like Recent meetings, Users) are only basic overviews. They do NOT contain sub-resources like participant lists, attendee lists, agenda points, or documents. If the user asks for details, counts, or lists of participants, agenda points, or documents for any meeting, you DO NOT have this data in your context and MUST call the 'fetchApplicationData' tool with the correct endpoint to get it.
+   AVAILABLE ENDPOINTS:
+   - Meeting participants list/count: /api/meetings/[id]/participants
+   - Meeting agenda points list/count: /api/meetings/[id]/points
+   - Meeting documents list/count: /api/meetings/[id]/documents
+   - Users list/count: /api/users
+   - Current company details: /api/companies/my
+4. To call this tool in a text-based format, you MUST output a single XML-like tag in your response:
+   <function=fetchApplicationData>{"endpoint": "/api/meetings/[id]/participants"}</function>
+   Replace "[id]" with the actual meeting ID.
+   For example, to get participants of meeting 14:
+   <function=fetchApplicationData>{"endpoint": "/api/meetings/14/participants"}</function>
+   To get agenda points of meeting 14:
+   <function=fetchApplicationData>{"endpoint": "/api/meetings/14/points"}</function>
+   To get documents of meeting 14:
+   <function=fetchApplicationData>{"endpoint": "/api/meetings/14/documents"}</function>
+5. When you need to call the tool, output ONLY the tool call tag and nothing else. Do not explain, do not translate, do not greet. Just output the tag.
+6. Once the system returns the data, you will receive it in the next message. You must then use that data to answer the user's question, without mentioning the tool or the API.
+7. NEVER assume, guess, or hallucinate numbers or names.
+8. CONFIDENTIALITY AND SECURITY ENFORCEMENT:
+   - NEVER mention the tool name 'fetchApplicationData', the endpoint paths, API routes, or that you are calling an API, function, database, or backend.
+   - NEVER output any JSON blocks, function signatures, database schema fields, or programming code to the user.
+   - Keep all tool execution completely silent from the user. Provide the final answers in natural language.
+`;
+
 // ─── Build role-based system prompt ────────────────────────────────────────
 async function buildSystemPrompt(
     role: string | null,
@@ -100,7 +129,6 @@ ${PLATFORM_KNOWLEDGE}`;
 
     // ── PUBLIC / unauthenticated ──────────────────────────────────────────
     if (!role || !userId) {
-        // Fetch contact info from app_settings to give to unauthenticated users
         let contactInfo = '';
         try {
             const settings = await prisma.app_settings.findFirst({
@@ -134,7 +162,9 @@ ${PLATFORM_KNOWLEDGE}`;
 CONTEXT: You are talking to a visitor who is not logged in.
 Help them understand what Axia Meetings is, its features, and how to get started.
 If they want to contact us or need support, provide the contact information below.
-Do not discuss internal data or user-specific information.${contactInfo}`;
+Do not discuss internal data or user-specific information.${contactInfo}
+
+${TOOL_INSTRUCTIONS}`;
     }
 
     // ── PARTICIPANT in a meeting ──────────────────────────────────────────
@@ -177,7 +207,9 @@ ${points}`;
 CONTEXT: You are talking to a meeting participant.
 ${meetingContext}
 Help them understand how to participate: how to vote, how to raise their hand, how to follow the agenda.
-Do not discuss other meetings or company data.`;
+Do not discuss other meetings or company data.
+
+${TOOL_INSTRUCTIONS}`;
     }
 
     // ── ADMIN ─────────────────────────────────────────────────────────────
@@ -199,7 +231,7 @@ Do not discuss other meetings or company data.`;
                 }),
                 prisma.users.findMany({
                     where: { company_id: companyId },
-                    select: { id: true, fullname: true, email: true, role: true },
+                    select: { id: true, fullname: true, email: true, role: true, phone: true, identifiant_extern: true },
                 }),
             ]);
 
@@ -208,7 +240,7 @@ Do not discuss other meetings or company data.`;
             ).join('\n');
 
             const usersSummary = users.map(u =>
-                `  - ${u.fullname || u.email} (${u.role})`
+                `  - ${u.fullname || u.email} (${u.role})${u.phone ? ` | Phone: ${u.phone}` : ''}${u.identifiant_extern ? ` | ExtID: ${u.identifiant_extern}` : ''}`
             ).join('\n');
 
             return `${base}
@@ -225,9 +257,15 @@ ${meetingsSummary || '  (none)'}
 Users (${users.length} total):
 ${usersSummary || '  (none)'}
 
-Help them manage their meetings, understand platform features, and use the system effectively.`;
+Help them manage their meetings, understand platform features, and use the system effectively.
+
+${TOOL_INSTRUCTIONS}`;
         } catch {
-            return `${base}\n\nCONTEXT: Admin user. Help them manage their meetings and use the platform.`;
+            return `${base}
+
+CONTEXT: Admin user. Help them manage their meetings and use the platform.
+
+${TOOL_INSTRUCTIONS}`;
         }
     }
 
@@ -269,9 +307,15 @@ Recent activity (last 10 logs):
 ${logsList || '  (none)'}
 
 You can answer questions about any company, meeting, user, or system configuration.
-Help them manage the platform, debug issues, and understand system behavior.`;
+Help them manage the platform, debug issues, and understand system behavior.
+
+${TOOL_INSTRUCTIONS}`;
         } catch {
-            return `${base}\n\nCONTEXT: Developer with full platform access.`;
+            return `${base}
+
+CONTEXT: Developer with full platform access.
+
+${TOOL_INSTRUCTIONS}`;
         }
     }
 
@@ -320,6 +364,43 @@ export async function PATCH(req: NextRequest) {
     }
 }
 
+// Helper function to extract endpoints from text-based tool calls (XML or raw JSON blocks)
+function extractEndpoints(text: string): string[] {
+    const endpoints: string[] = [];
+    if (!text) return endpoints;
+
+    // 1. Check standard XML-like tags: <function=fetchApplicationData>{"endpoint": "..."}</function>
+    const xmlRegex = /<function=fetchApplicationData>([\s\S]*?)<\/function>/g;
+    let match;
+    while ((match = xmlRegex.exec(text)) !== null) {
+        const innerText = match[1].trim();
+        try {
+            const args = JSON.parse(innerText);
+            if (args.endpoint) {
+                const ep = args.endpoint.trim();
+                if (!endpoints.includes(ep)) endpoints.push(ep);
+            }
+        } catch {
+            const epMatch = innerText.match(/['"]endpoint['"]\s*:\s*['"]([^'"]+)['"]/);
+            if (epMatch) {
+                const ep = epMatch[1].trim();
+                if (!endpoints.includes(ep)) endpoints.push(ep);
+            }
+        }
+    }
+
+    // 2. Check raw JSON blocks with endpoint key
+    const jsonRegex = /\{[^{}]*['"]endpoint['"]\s*:\s*['"]([^'"]+)['"][^{}]*\}/g;
+    while ((match = jsonRegex.exec(text)) !== null) {
+        const ep = match[1].trim();
+        if (!endpoints.includes(ep)) {
+            endpoints.push(ep);
+        }
+    }
+
+    return endpoints;
+}
+
 // ─── POST: Send a chat message ──────────────────────────────────────────────
 export async function POST(req: NextRequest) {
     try {
@@ -352,63 +433,386 @@ export async function POST(req: NextRequest) {
             meetingId ? Number(meetingId) : undefined
         );
 
-        // Call Groq with streaming (DB key with usage tracking)
-        // Falls back to generateWithRetry (Gemini/OpenRouter) if no Groq key available
+        // Tool definition
+        const tools = [
+            {
+                type: 'function',
+                function: {
+                    name: 'fetchApplicationData',
+                    description: 'Fetch data from the AxiaMeetings internal API to answer user questions about users, meetings, companies, participants, etc.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            endpoint: {
+                                type: 'string',
+                                description: 'The API endpoint to call, e.g., /api/meetings/14/participants, /api/users, /api/companies/my'
+                            }
+                        },
+                        required: ['endpoint']
+                    }
+                }
+            }
+        ];
+
+        // Execute tool function
+        async function executeToolCall(endpoint: string, req: NextRequest) {
+            try {
+                if (!endpoint.startsWith('/')) endpoint = '/' + endpoint;
+
+                // Normalize agenda endpoint calls to points
+                if (endpoint.includes('/agenda')) {
+                    endpoint = endpoint.replace('/agenda', '/points');
+                }
+
+                // Strip query parameters for regex pathname matching
+                const urlParts = endpoint.split('?');
+                const pathname = urlParts[0];
+
+                                // 1. Direct DB Query Resolution to bypass Next.js server-side fetch cookie-stripping/auth issues
+                const participantsMatch = pathname.match(/^\/?api\/meetings\/(\d+)\/participants\/?$/i) || pathname.match(/^\/?meetings\/(\d+)\/participants\/?$/i);
+                if (participantsMatch) {
+                    const meetingId = Number(participantsMatch[1]);
+                    const meeting = await prisma.meetings.findUnique({
+                        where: { id: meetingId },
+                        select: { company_id: true }
+                    });
+                    if (!meeting) return JSON.stringify({ error: 'Meeting not found' });
+                    if (role === 'ADMIN' && meeting.company_id !== companyId) {
+                        return JSON.stringify({ error: 'Forbidden' });
+                    }
+                    const participants = await prisma.meetings_participants.findMany({
+                        where: { meeting_id: meetingId },
+                        orderBy: { id: 'asc' }
+                    });
+                    return JSON.stringify({ status: true, data: participants });
+                }
+
+                const pointsMatch = pathname.match(/^\/?api\/meetings\/(\d+)\/points\/?$/i) || pathname.match(/^\/?meetings\/(\d+)\/points\/?$/i);
+                if (pointsMatch) {
+                    const meetingId = Number(pointsMatch[1]);
+                    const meeting = await prisma.meetings.findUnique({
+                        where: { id: meetingId },
+                        select: { company_id: true }
+                    });
+                    if (!meeting) return JSON.stringify({ error: 'Meeting not found' });
+                    if (role === 'ADMIN' && meeting.company_id !== companyId) {
+                        return JSON.stringify({ error: 'Forbidden' });
+                    }
+                    const points = await prisma.meetings_points.findMany({
+                        where: { meeting_id: meetingId, parent_id: null },
+                        include: { meetings_votes: true, meetings_points: true },
+                        orderBy: { id: 'asc' }
+                    });
+                    return JSON.stringify({ status: true, data: points });
+                }
+
+                const documentsMatch = pathname.match(/^\/?api\/meetings\/(\d+)\/documents\/?$/i) || pathname.match(/^\/?meetings\/(\d+)\/documents\/?$/i);
+                if (documentsMatch) {
+                    const meetingId = Number(documentsMatch[1]);
+                    const meeting = await prisma.meetings.findUnique({
+                        where: { id: meetingId },
+                        select: { company_id: true }
+                    });
+                    if (!meeting) return JSON.stringify({ error: 'Meeting not found' });
+                    if (role === 'ADMIN' && meeting.company_id !== companyId) {
+                        return JSON.stringify({ error: 'Forbidden' });
+                    }
+                    const documents = await prisma.meetings_documents.findMany({
+                        where: { meeting_id: meetingId },
+                        orderBy: { id: 'asc' }
+                    });
+                    return JSON.stringify({ status: true, data: documents });
+                }
+
+                const meetingMatch = pathname.match(/^\/?api\/meetings\/(\d+)\/?$/i) || pathname.match(/^\/?meetings\/(\d+)\/?$/i);
+                if (meetingMatch) {
+                    const meetingId = Number(meetingMatch[1]);
+                    const meeting = await prisma.meetings.findUnique({
+                        where: { id: meetingId },
+                        include: {
+                            meetings_points: {
+                                orderBy: { id: 'asc' },
+                                include: { meetings_votes: true }
+                            },
+                            meetings_participants: true,
+                            meetings_documents: true
+                        }
+                    });
+                    if (!meeting) return JSON.stringify({ error: 'Meeting not found' });
+                    if (role === 'ADMIN' && meeting.company_id !== companyId) {
+                        return JSON.stringify({ error: 'Forbidden' });
+                    }
+                    return JSON.stringify({ status: true, data: meeting });
+                }
+
+                if (pathname.match(/^\/?(api\/)?meetings\/?$/i)) {
+                    const meetings = await prisma.meetings.findMany({
+                        where: role === 'ADMIN' && companyId ? { company_id: companyId } : undefined,
+                        orderBy: { created_at: 'desc' }
+                    });
+                    return JSON.stringify({ status: true, data: meetings });
+                }
+
+                const userMatch = pathname.match(/^\/?api\/users\/(\d+)\/?$/i) || pathname.match(/^\/?users\/(\d+)\/?$/i);
+                if (userMatch) {
+                    const targetUserId = Number(userMatch[1]);
+                    const userData = await prisma.users.findUnique({
+                        where: { id: targetUserId },
+                        select: {
+                            id: true,
+                            fullname: true,
+                            email: true,
+                            username: true,
+                            role: true,
+                            phone: true,
+                            identifiant_extern: true,
+                            company_id: true,
+                            company: { select: { id: true, name: true } }
+                        }
+                    });
+                    if (!userData) return JSON.stringify({ error: 'User not found' });
+                    if (role === 'ADMIN' && userData.company_id !== companyId) {
+                        return JSON.stringify({ error: 'Forbidden' });
+                    }
+                    return JSON.stringify({ status: true, data: userData });
+                }
+
+                const searchParams = new URLSearchParams(urlParts[1] || '');
+                if (pathname.match(/^\/?(api\/)?users\/?$/i)) {
+                    let whereClause: any = {};
+                    if (role === 'ADMIN' && companyId) {
+                        whereClause.company_id = companyId;
+                    }
+                    const emailParam = searchParams.get('email');
+                    if (emailParam) {
+                        whereClause.email = emailParam;
+                    }
+                    const usernameParam = searchParams.get('username');
+                    if (usernameParam) {
+                        whereClause.username = usernameParam;
+                    }
+                    const users = await prisma.users.findMany({
+                        where: whereClause,
+                        select: {
+                            id: true,
+                            fullname: true,
+                            email: true,
+                            username: true,
+                            role: true,
+                            phone: true,
+                            identifiant_extern: true,
+                            company_id: true,
+                            company: { select: { id: true, name: true } }
+                        },
+                        orderBy: { id: 'asc' }
+                    });
+                    return JSON.stringify({ status: true, data: users });
+                }
+
+                if (pathname.match(/^\/?(api\/)?companies\/my\/?$/i)) {
+                    if (role === 'ADMIN' && companyId) {
+                        const company = await prisma.companies.findUnique({
+                            where: { id: companyId }
+                        });
+                        return JSON.stringify({ status: true, data: company });
+                    }
+                }
+
+                // 2. Fallback to HTTP Fetch if the endpoint was not directly handled
+                const baseUrl = new URL(req.url).origin;
+                const fullUrl = baseUrl + endpoint;
+                const cookieHeader = req.headers.get('cookie') || '';
+                const response = await fetch(fullUrl, {
+                    headers: { 'Cookie': cookieHeader }
+                });
+                if (!response.ok) {
+                    return JSON.stringify({ error: `API returned status ${response.status}` });
+                }
+                const data = await response.json();
+                return JSON.stringify(data).substring(0, 3002);
+            } catch (err: any) {
+                return JSON.stringify({ error: err.message });
+            }
+        }
+
         const groqSession = await getStreamingClient();
 
         let fullResponse = '';
         const encoder = new TextEncoder();
-        let readable: ReadableStream;
+        let readable: any = null;
+
+        let useFallback = !groqSession;
 
         if (groqSession) {
-            // ── Groq streaming path ──────────────────────────────────────
-            const { client: groqClient, tokenId: groqTokenId } = groqSession;
-            const stream = await groqClient.chat.completions.create({
-                model: 'llama-3.3-70b-versatile',
-                messages: [
+            try {
+                const { client: groqClient, tokenId: groqTokenId } = groqSession;
+                const groqMessages = [
                     { role: 'system', content: systemPrompt },
                     ...messages.slice(-10),
-                ],
-                stream: true,
-                max_tokens: 1024,
-                temperature: 0.7,
-            });
+                ];
 
-            readable = new ReadableStream({
-                async start(controller) {
-                    try {
-                        for await (const chunk of stream) {
-                            const text = chunk.choices[0]?.delta?.content || '';
-                            if (text) {
-                                fullResponse += text;
-                                controller.enqueue(encoder.encode(text));
+                if (groqMessages.length > 0) {
+                    const lastMsg = groqMessages[groqMessages.length - 1];
+                    if (lastMsg.role === 'user') {
+                        groqMessages[groqMessages.length - 1] = {
+                            ...lastMsg,
+                            content: `${lastMsg.content}\n\n(Reminder: If you need to check participants, users, or specific details to answer this, you MUST call the tool fetchApplicationData. Do NOT guess or hallucinate.)`
+                        };
+                    }
+                }
+
+                const response = await groqClient.chat.completions.create({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: groqMessages,
+                    tools: tools as any,
+                    tool_choice: 'auto',
+                    max_tokens: 1024,
+                    temperature: 0.7,
+                });
+
+                const choice = response.choices[0];
+                const toolCalls = choice?.message?.tool_calls;
+                const textContent = choice?.message?.content || '';
+                const extractedEndpoints = extractEndpoints(textContent);
+                const hasTextToolCall = extractedEndpoints.length > 0;
+
+                if ((toolCalls && toolCalls.length > 0) || hasTextToolCall) {
+                    const toolMessages: any[] = [
+                        { role: 'system', content: systemPrompt },
+                        ...messages.slice(-10),
+                    ];
+
+                    if (toolCalls && toolCalls.length > 0) {
+                        toolMessages.push(choice.message);
+                        for (const toolCall of toolCalls) {
+                            if (toolCall.function.name === 'fetchApplicationData') {
+                                const args = JSON.parse(toolCall.function.arguments);
+                                console.log(`[AI Chat] Executing native tool call fetchApplicationData for endpoint: ${args.endpoint}`);
+                                const result = await executeToolCall(args.endpoint, req);
+                                toolMessages.push({
+                                    role: 'tool',
+                                    tool_call_id: toolCall.id,
+                                    name: 'fetchApplicationData',
+                                    content: result,
+                                });
                             }
                         }
-                    } finally {
-                        controller.close();
-                        await trackUsage(groqTokenId, 'chat', true).catch(() => { });
-                        await saveChatSession();
                     }
-                },
-            });
-        } else {
-            // ── Non-streaming fallback: Gemini → Groq → OpenRouter ───────
+
+                    if (hasTextToolCall) {
+                        toolMessages.push({ role: 'assistant', content: textContent });
+                        for (const ep of extractedEndpoints) {
+                            try {
+                                console.log(`[AI Chat] Executing parsed text tool call fetchApplicationData for endpoint: ${ep}`);
+                                const result = await executeToolCall(ep, req);
+                                toolMessages.push({
+                                    role: 'user',
+                                    content: `[System Notification: The tool 'fetchApplicationData' returned the following data for endpoint "${ep}"]: ${result}`
+                                });
+                            } catch (e) {
+                                console.error('Failed to parse or execute text tool call:', e);
+                            }
+                        }
+                    }
+
+                    const stream = await groqClient.chat.completions.create({
+                        model: 'llama-3.3-70b-versatile',
+                        messages: toolMessages,
+                        stream: true,
+                        max_tokens: 1024,
+                        temperature: 0.7,
+                    });
+
+                    readable = new ReadableStream({
+                        async start(controller) {
+                            try {
+                                for await (const chunk of stream) {
+                                    let text = chunk.choices[0]?.delta?.content || '';
+                                    if (text) {
+                                        text = text.replace(/<\/?.+?>/g, '');
+                                        if (text) {
+                                            fullResponse += text;
+                                            controller.enqueue(encoder.encode(text));
+                                        }
+                                    }
+                                }
+                            } finally {
+                                controller.close();
+                                await trackUsage(groqTokenId, 'chat', true).catch(() => { });
+                                await saveChatSession();
+                            }
+                        },
+                    });
+                } else {
+                    const cleanedContent = textContent.replace(/<\/?.+?>/g, '')
+                                                     .replace(/\{[^{}]*['"]endpoint['"]\s*:\s*['"]([^'"]+)['"][^{}]*\}/gi, '')
+                                                     .replace(/fetchApplicationData/gi, '');
+                    fullResponse = cleanedContent;
+
+                    readable = new ReadableStream({
+                        async start(controller) {
+                            const words = cleanedContent.split(/(\s+)/);
+                            for (const word of words) {
+                                if (word) {
+                                    controller.enqueue(encoder.encode(word));
+                                    await new Promise(r => setTimeout(r, 10));
+                                }
+                            }
+                            controller.close();
+                            await trackUsage(groqTokenId, 'chat', true).catch(() => { });
+                            await saveChatSession();
+                        },
+                    });
+                }
+            } catch (groqErr: any) {
+                console.warn('[AI Chat] Groq streaming failed, falling back to Gemini/OpenRouter...', groqErr?.message || groqErr);
+                await trackUsage(groqSession.tokenId, 'chat', false).catch(() => { });
+                useFallback = true;
+            }
+        }
+
+        if (useFallback) {
             try {
-                const fullPrompt = `${systemPrompt}\n\n${messages.slice(-10).map((m: any) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')}\nAssistant:`;
+                const basePrompt = `${systemPrompt}\n\n${messages.slice(-10).map((m: any) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')}`;
+                const reminder = `\n\n[SYSTEM REMINDER]\n- If the user asks for specific data, lists, or counts (e.g. participants in a meeting, user list) that are not fully detailed in the context, you MUST call the tool by outputting: <function=fetchApplicationData>{"endpoint": "..."}</function>\n- Replace the endpoint with the correct API route (e.g. "/api/meetings/14/participants").\n- Output ONLY the tool call tag and nothing else. Do NOT write any greeting or introductory/concluding text when calling a tool.\n- Do NOT guess, assume, or hallucinate any numbers.\n- CONFIDENTIALITY: NEVER expose API routes, endpoints, function names (like fetchApplicationData), database tables/variables, or raw code to the user. Keep all backend queries completely invisible.`;
+                const fullPrompt = `${basePrompt}${reminder}\nAssistant:`;
                 fullResponse = await getChatResponse(fullPrompt, { maxOutputTokens: 1024 });
+
+                const fallbackEndpoints = extractEndpoints(fullResponse);
+                if (fallbackEndpoints.length > 0) {
+                    let toolResults = '';
+                    for (const ep of fallbackEndpoints) {
+                        try {
+                            console.log(`[AI Chat Fallback] Executing parsed text tool call for endpoint: ${ep}`);
+                            const result = await executeToolCall(ep, req);
+                            toolResults += `\n[Tool Result for ${ep}]: ${result}\n`;
+                        } catch (e) {
+                            console.error('Fallback text tool parse error:', e);
+                        }
+                    }
+
+                    const secondPrompt = `${basePrompt}\nAssistant: ${fullResponse}\nSystem: Here are the tool results for your query:\n${toolResults}\nAssistant:`;
+                    fullResponse = await getChatResponse(secondPrompt, { maxOutputTokens: 1024 });
+                }
+
+                // Clean up any remaining XML tags, JSON blocks, or endpoint paths
+                fullResponse = fullResponse.replace(/<\/?.+?>/g, '')
+                                           .replace(/\{[^{}]*['"]endpoint['"]\s*:\s*['"]([^'"]+)['"][^{}]*\}/gi, '')
+                                           .replace(/fetchApplicationData/gi, '');
             } catch (err: any) {
                 return new Response(
                     JSON.stringify({ error: 'No AI provider available. Add API keys in AI Tokens settings.' }),
                     { status: 503, headers: { 'Content-Type': 'application/json' } }
                 );
             }
-            // Stream the pre-generated response word by word for consistent UX
             readable = new ReadableStream({
                 async start(controller) {
-                    const words = fullResponse.split(' ');
+                    const words = fullResponse.split(/(\s+)/);
                     for (const word of words) {
-                        controller.enqueue(encoder.encode(word + ' '));
-                        await new Promise(r => setTimeout(r, 15));
+                        if (word) {
+                            controller.enqueue(encoder.encode(word));
+                            await new Promise(r => setTimeout(r, 10));
+                        }
                     }
                     controller.close();
                     await saveChatSession();
@@ -470,6 +874,7 @@ export async function POST(req: NextRequest) {
         );
     }
 }
+
 // ─── DELETE: Remove session(s) (DEVELOPER only) ─────────────────────────────
 export async function DELETE(req: NextRequest) {
     const authUser = await getAuthenticatedUser(req);

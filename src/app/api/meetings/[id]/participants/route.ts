@@ -4,6 +4,60 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { getMailTransporter, getEmailTemplate } from '@/lib/mail';
 import { createLog } from '@/lib/logger';
 
+// GET list of participants for a meeting
+/**
+ * @description AI Agent Documentation
+ * Endpoint: /api/meetings/[id]/participants
+ * Method: GET
+ * 
+ * PURPOSE:
+ * Use this endpoint to retrieve data for `/api/meetings/[id]/participants`.
+ * Before calling, map the user's request to the properties available in the Prisma schema for the models listed below.
+ * 
+ * PRISMA MODELS ACCESSED IN THIS ENDPOINT:
+ * - Model: `meetings_participants`
+ * - Model: `meetings`
+ * RELATIONS INCLUDED: 
+ * None
+ * 
+ * AI AGENT DATA ACCESS & ROLE RULES:
+ * 1. UNAUTHENTICATED: Only provide general AxiaMeetings info (total companies, users, references, guides).
+ * 2. ADMIN: Restrict all answers to data where companyId matches the admin's company. They can query specific meetings, users, etc., within their company.
+ * 3. PARTICIPANT (Token): Restrict all answers strictly to the single meeting associated with their token.
+ * 4. DEVELOPER: Full access to all data.
+ * 
+ * INSTRUCTIONS FOR AI:
+ * - Read `prisma/schema.prisma` first to understand the exact fields and relations available for the models listed above.
+ * - Call this GET endpoint to fetch the JSON data.
+ * - Parse the JSON, filter it according to the ROLE RULES above, and return the exact properties the user asked for.
+ */
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const user = await getAuthenticatedUser(req);
+    if (!user) return NextResponse.json({ status: false, message: 'Unauthorized' }, { status: 401 });
+    const { id } = await params;
+    try {
+        const meeting = await prisma.meetings.findUnique({
+            where: { id: Number(id) },
+            select: { company_id: true }
+        });
+        if (!meeting) return NextResponse.json({ status: false, message: 'Meeting not found' }, { status: 404 });
+        
+        if (user.role === 'ADMIN' && meeting.company_id !== user.companyId) {
+            return NextResponse.json({ status: false, message: 'Forbidden' }, { status: 403 });
+        }
+        
+        const participants = await prisma.meetings_participants.findMany({
+            where: { meeting_id: Number(id) },
+            orderBy: { id: 'asc' }
+        });
+        
+        return NextResponse.json({ status: true, data: participants });
+    } catch (error) {
+        console.error('Error fetching participants:', error);
+        return NextResponse.json({ status: false, message: 'Internal server error' }, { status: 500 });
+    }
+}
+
 // POST add participant(s) and send invitation
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getAuthenticatedUser(req);

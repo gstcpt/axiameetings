@@ -28,26 +28,26 @@ export async function POST(req: NextRequest) {
         };
 
         const prompt = `Tu es un expert en gouvernance d'entreprise et organisation de réunions de syndic. 
-Génère des points d'ordre du jour pertinents et professionnels pour cette réunion.
+        Génère des points d'ordre du jour pertinents et professionnels pour cette réunion.
 
-INFORMATIONS:
-- Sujet: ${subject}
-- Type de réunion: ${typeLabels[type] || type || 'Réunion'}
-- Description/Objectifs: ${description || 'Non spécifiée'}
+        INFORMATIONS:
+        - Sujet: ${subject}
+        - Type de réunion: ${typeLabels[type] || type || 'Réunion'}
+        - Description/Objectifs: ${description || 'Non spécifiée'}
 
-Génère entre 4 et 7 points d'ordre du jour pertinents. Certains doivent être de type VOTE (décisions importantes) et d'autres SIMPLE (informatifs).
+        Génère entre 4 et 7 points d'ordre du jour pertinents. Certains doivent être de type VOTE (décisions importantes) et d'autres SIMPLE (informatifs).
 
-Réponds UNIQUEMENT avec un JSON valide de cette structure exacte, sans texte supplémentaire:
-{
-  "points": [
-    { "point": "Texte du point", "type": "SIMPLE" },
-    { "point": "Texte du point à voter", "type": "VOTE" }
-  ]
-}
+        Réponds UNIQUEMENT avec un JSON valide de cette structure exacte, sans texte supplémentaire:
+        {
+        "points": [
+            { "point": "Texte du point", "type": "SIMPLE" },
+            { "point": "Texte du point à voter", "type": "VOTE" }
+        ]
+        }
 
-Les points VOTE doivent être des décisions concrètes qui nécessitent un vote formel. 
-Les points SIMPLE sont informatifs ou de discussion.
-Écris en français professionnel de syndicat.`;
+        Les points VOTE doivent être des décisions concrètes qui nécessitent un vote formel. 
+        Les points SIMPLE sont informatifs ou de discussion.
+        Écris en français professionnel de syndicat.`;
 
         const text = await generateWithRetry(prompt, { feature: 'suggest-agenda' });
         const parsed = parseJsonResponse(text);

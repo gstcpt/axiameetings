@@ -12,7 +12,8 @@ import {
     Loader2, 
     Minimize2, 
     Send,
-    Check
+    Check,
+    Download
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
@@ -70,6 +71,7 @@ export function CornerControls() {
     // --- Chat Logic ---
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [isChatMinimized, setIsChatMinimized] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -80,6 +82,15 @@ export function CornerControls() {
     );
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -149,6 +160,26 @@ export function CornerControls() {
         }
     }, [input, loading, messages, locale, tChat]);
 
+    const downloadChat = useCallback(() => {
+        if (messages.length === 0) return;
+        
+        let textContent = "Axia Meetings - Chat Export\n\n";
+        messages.forEach(msg => {
+            const role = msg.role === "user" 
+                ? (locale === 'fr' ? 'Vous' : locale === 'ar' ? 'أنت' : 'You') 
+                : tChat('title');
+            textContent += `[${role}]: \n${msg.content}\n\n`;
+        });
+        
+        const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `chat-export-${new Date().toISOString().slice(0,10)}.txt`;
+        link.click();
+        URL.revokeObjectURL(url);
+    }, [messages, locale, tChat]);
+
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -168,30 +199,56 @@ export function CornerControls() {
             <AnimatePresence>
                 {isChatOpen && (
                     <motion.div
-                        initial={{ opacity: 0, x: isRTL ? -20 : 20, scale: 0.95 }}
-                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: isRTL ? -20 : 20, scale: 0.95 }}
+                        initial={{ opacity: 0, x: isMobile ? 0 : (isRTL ? -20 : 20), y: isMobile ? 50 : 0, scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: isMobile ? 0 : (isRTL ? -20 : 20), y: isMobile ? 50 : 0, scale: 0.95 }}
                         className={cn(
-                            "absolute bottom-0 w-[calc(100vw-48px)] sm:w-[400px] bg-white rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden flex flex-col z-10",
-                            isRTL ? "left-20" : "right-20"
+                            "bg-white shadow-[0_30px_100px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden flex flex-col transition-all duration-300",
+                            isMobile
+                                ? "fixed inset-0 w-full z-[150] rounded-none border-none"
+                                : cn(
+                                    "absolute bottom-0 w-[400px] rounded-[2.5rem] z-10",
+                                    isRTL ? "left-20" : "right-20"
+                                  )
                         )}
-                        style={{ maxHeight: isChatMinimized ? '72px' : '650px', height: '80vh' }}
+                        style={{
+                            height: isChatMinimized 
+                                ? '72px' 
+                                : isMobile 
+                                ? '100dvh' 
+                                : '80vh',
+                            maxHeight: isChatMinimized 
+                                ? '72px' 
+                                : isMobile 
+                                ? '100dvh' 
+                                : '650px'
+                        }}
                     >
-                        <div className="flex items-center justify-between px-8 py-6 bg-[#002B5B] text-white shrink-0">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-[1.25rem] bg-white/10 flex items-center justify-center backdrop-blur-md">
-                                    <Bot className="w-6 h-6 text-blue-300" />
+                        <div className="flex items-center justify-between px-6 py-4 sm:px-8 sm:py-6 bg-[#002B5B] text-white shrink-0">
+                            <div className="flex items-center gap-3 sm:gap-4">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[1rem] sm:rounded-[1.25rem] bg-white/10 flex items-center justify-center backdrop-blur-md">
+                                    <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-blue-300" />
                                 </div>
                                 <div>
-                                    <p className="text-lg font-black uppercase tracking-widest">{tChat('title')}</p>
-                                    <p className="text-sm text-blue-200 font-black uppercase tracking-[0.2em] opacity-70">{tChat('subtitle')}</p>
+                                    <p className="text-base sm:text-lg font-black uppercase tracking-widest leading-tight">{tChat('title')}</p>
+                                    <p className="text-xs sm:text-sm text-blue-200 font-black uppercase tracking-[0.2em] opacity-70 mt-0.5">{tChat('subtitle')}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setIsChatMinimized(!isChatMinimized)} className="p-2.5 rounded-2xl hover:bg-white/10 transition-colors">
+                            <div className="flex items-center gap-1 sm:gap-2">
+                                {messages.length > 2 && (
+                                    <button 
+                                        onClick={downloadChat} 
+                                        className="p-2 sm:p-2.5 rounded-2xl hover:bg-white/10 transition-colors text-white" 
+                                        title={tChat('export')}
+                                        aria-label="Export Chat"
+                                    >
+                                        <Download className="w-5 h-5 text-blue-200" />
+                                    </button>
+                                )}
+                                <button onClick={() => setIsChatMinimized(!isChatMinimized)} className="p-2 sm:p-2.5 rounded-2xl hover:bg-white/10 transition-colors">
                                     <Minimize2 className="w-5 h-5" />
                                 </button>
-                                <button onClick={() => setIsChatOpen(false)} className="p-2.5 rounded-2xl hover:bg-white/10 transition-colors">
+                                <button onClick={() => setIsChatOpen(false)} className="p-2 sm:p-2.5 rounded-2xl hover:bg-white/10 transition-colors">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
@@ -199,17 +256,17 @@ export function CornerControls() {
 
                         {!isChatMinimized && (
                             <>
-                                <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/50 custom-scrollbar">
+                                <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-4 sm:space-y-6 bg-slate-50/50 custom-scrollbar">
                                     {messages.map((msg, i) => (
-                                        <div key={i} className={cn("flex gap-4", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}>
+                                        <div key={i} className={cn("flex gap-3 sm:gap-4", msg.role === 'user' ? "flex-row-reverse" : "flex-row")}>
                                             <div className={cn(
-                                                "w-10 h-10 rounded-[1rem] shrink-0 flex items-center justify-center text-white shadow-lg",
+                                                "w-8 h-8 sm:w-10 sm:h-10 rounded-[0.8rem] sm:rounded-[1rem] shrink-0 flex items-center justify-center text-white shadow-lg",
                                                 msg.role === 'assistant' ? "bg-[#002B5B]" : "bg-blue-600"
                                             )}>
-                                                {msg.role === 'assistant' ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
+                                                {msg.role === 'assistant' ? <Bot className="w-4 h-4 sm:w-5 sm:h-5" /> : <User className="w-4 h-4 sm:w-5 sm:h-5" />}
                                             </div>
                                             <div className={cn(
-                                                "max-w-[85%] rounded-[1.5rem] px-6 py-4 text-base font-bold leading-relaxed shadow-sm",
+                                                "max-w-[85%] rounded-[1.2rem] sm:rounded-[1.5rem] px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base font-bold leading-relaxed shadow-sm",
                                                 msg.role === 'assistant' ? "bg-white text-slate-700 border border-slate-100" : "bg-blue-600 text-white"
                                             )}>
                                                 {msg.content === '' && loading && i === messages.length - 1 ? (
@@ -226,8 +283,8 @@ export function CornerControls() {
                                     ))}
                                     <div ref={messagesEndRef} />
                                 </div>
-                                <div className="p-6 bg-white border-t border-slate-100">
-                                    <div className="flex gap-2 bg-slate-50 p-2 rounded-[2rem] border border-slate-100 focus-within:border-blue-400 focus-within:ring-8 focus-within:ring-blue-400/5 transition-all">
+                                <div className="p-4 sm:p-6 bg-white border-t border-slate-100">
+                                    <div className="flex gap-2 bg-slate-50 p-1.5 sm:p-2 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-100 focus-within:border-blue-400 focus-within:ring-8 focus-within:ring-blue-400/5 transition-all">
                                         <input
                                             ref={inputRef}
                                             type="text"
@@ -236,17 +293,17 @@ export function CornerControls() {
                                             onKeyDown={handleKeyDown}
                                             placeholder={tChat('placeholder')}
                                             disabled={loading}
-                                            className="flex-1 bg-transparent px-5 py-3 outline-none text-base font-bold text-[#002B5B] placeholder:text-slate-400"
+                                            className="flex-1 bg-transparent px-3 py-2 sm:px-5 sm:py-3 outline-none text-sm sm:text-base font-bold text-[#002B5B] placeholder:text-slate-400"
                                         />
                                         <button
                                             onClick={sendMessage}
                                             disabled={loading || !input.trim()}
-                                            className="w-12 h-12 rounded-full bg-[#002B5B] text-white flex items-center justify-center disabled:opacity-30 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-900/20"
+                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#002B5B] text-white flex items-center justify-center disabled:opacity-30 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-900/20"
                                         >
-                                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                                            {loading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Send className="w-4 h-4 sm:w-5 sm:h-5" />}
                                         </button>
                                     </div>
-                                    <p className="text-sm text-center font-black uppercase tracking-[0.2em] text-slate-300 mt-4">{tChat('poweredBy')}</p>
+                                    <p className="text-xs sm:text-sm text-center font-black uppercase tracking-[0.2em] text-slate-300 mt-3 sm:mt-4">{tChat('poweredBy')}</p>
                                 </div>
                             </>
                         )}

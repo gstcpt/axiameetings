@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Bot, User, Loader2, Minimize2 } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Loader2, Minimize2, Download } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
@@ -78,6 +78,26 @@ export function ChatWidget({ meetingId }: ChatWidgetProps) {
             ]);
         }
     }, [open]);
+
+    const downloadChat = useCallback(() => {
+        if (messages.length === 0) return;
+        
+        let textContent = "Axia Meetings - Chat Export\n\n";
+        messages.forEach(msg => {
+            const role = msg.role === "user" ? "You" : "Axia Support";
+            textContent += `[${role}]: \n${msg.content}\n\n`;
+        });
+        
+        const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `chat-export-${new Date().toISOString().slice(0,10)}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }, [messages]);
 
     const sendMessage = useCallback(async () => {
         const text = input.trim();
@@ -169,32 +189,17 @@ export function ChatWidget({ meetingId }: ChatWidgetProps) {
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-slate-50 to-white text-[#002B5B] flex-shrink-0 border-b border-slate-50">
                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
-                                    <Bot className="w-5 h-5" />
-                                </div>
+                                <div className="w-9 h-9 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600"><Bot className="w-5 h-5" /></div>
                                 <div>
-                                    <p className="text-sm font-bold leading-tight tracking-tight">{t("title")}</p>
+                                    <p className="text-sm font-bold leading-tight">{t("title")}</p>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t("subtitle")}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">{t("subtitle")}</p>
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => setMinimized((m) => !m)}
-                                    className="p-2 rounded-xl hover:bg-slate-50 text-slate-400 transition-colors"
-                                    aria-label="Minimize"
-                                >
-                                    <Minimize2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => setOpen(false)}
-                                    className="p-2 rounded-xl hover:bg-red-50 hover:text-red-500 text-slate-400 transition-colors"
-                                    aria-label="Close"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
+                                <button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-red-50 hover:text-red-500 text-slate-400 transition-colors" aria-label="Close"><X className="w-4 h-4" /></button>
                             </div>
                         </div>
 
@@ -203,16 +208,9 @@ export function ChatWidget({ meetingId }: ChatWidgetProps) {
                                 {/* Messages */}
                                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white min-h-[300px]">
                                     {messages.map((msg, i) => (
-                                        <div
-                                            key={i}
-                                            className={`flex gap-3 ${msg.role === "user" ? (isRTL ? "flex-row" : "flex-row-reverse") : "flex-row"}`}
-                                        >
+                                        <div key={i} className={`flex gap-3 ${msg.role === "user" ? (isRTL ? "flex-row" : "flex-row-reverse") : "flex-row"}`}>
                                             {/* Avatar */}
-                                            <div
-                                                className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-white shadow-sm ${
-                                                    msg.role === "assistant" ? "bg-blue-50 text-blue-600" : "bg-slate-100 text-slate-500"
-                                                }`}
-                                            >
+                                            <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-white shadow-sm ${msg.role === "assistant" ? "bg-blue-50 text-blue-600" : "bg-slate-100 text-slate-500"}`}>
                                                 {msg.role === "assistant" ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                                             </div>
 
@@ -221,29 +219,16 @@ export function ChatWidget({ meetingId }: ChatWidgetProps) {
                                                 className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed transition-all duration-300 ${
                                                     msg.role === "assistant"
                                                         ? `bg-slate-50 text-slate-700 font-medium ${isRTL ? "rounded-tr-none" : "rounded-tl-none"}`
-                                                        : `bg-[#002B5B] text-white font-semibold ${
-                                                              isRTL ? "rounded-tl-none" : "rounded-tr-none"
-                                                          } shadow-md shadow-blue-900/5`
+                                                        : `bg-[#002B5B] text-white font-semibold ${isRTL ? "rounded-tl-none" : "rounded-tr-none"} shadow-md shadow-blue-900/5`
                                                 }`}
                                             >
                                                 {msg.content === "" && loading && i === messages.length - 1 ? (
                                                     <span className="flex gap-1.5 items-center py-1">
-                                                        <span
-                                                            className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-bounce"
-                                                            style={{ animationDelay: "0ms" }}
-                                                        />
-                                                        <span
-                                                            className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-bounce"
-                                                            style={{ animationDelay: "150ms" }}
-                                                        />
-                                                        <span
-                                                            className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-bounce"
-                                                            style={{ animationDelay: "300ms" }}
-                                                        />
+                                                        <span className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                                                        <span className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                                                        <span className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                                                     </span>
-                                                ) : (
-                                                    <span className="whitespace-pre-wrap">{msg.content}</span>
-                                                )}
+                                                ) : (<span className="whitespace-pre-wrap">{msg.content}</span>)}
                                             </div>
                                         </div>
                                     ))}

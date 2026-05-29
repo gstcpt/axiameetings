@@ -1431,11 +1431,12 @@
     },
     "Chat": {
         "title": "Axia Support",
-        "subtitle": "Online — here to help",
+        "subtitle": "Online",
         "welcome": "👋 Hello! I'm Axia Support. How can I help you today?",
         "privacyNotice": "🔒 Your privacy is protected. Your conversations are end-to-end encrypted — not even our developers can read them in plain text. Once you close this window, this conversation is permanently deleted and never stored.",
         "placeholder": "Type your message...",
         "error": "Sorry, something went wrong. Please try again.",
+        "export": "Export conversation",
         "poweredBy": "Powered by Axia AI"
     },
     "MeetingDetails": {
