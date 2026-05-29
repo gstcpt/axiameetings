@@ -696,10 +696,41 @@ enum meetings_votes_response {
   NEUTRE
 }
 
-/// PURPOSE: Turn request status
 enum turn_request_status {
   PENDING
   ACCEPTED
   REJECTED
   FINISHED
+}
+
+/// PURPOSE: Contact messages sent by visitors or users
+/// ACCESS: DEVELOPER
+/// DOMAIN: Public communication
+model contact_messages {
+  id            Int       @id @default(autoincrement())
+  sender_name   String?
+  sender_email  String
+  subject       String
+  message       String
+  created_at    DateTime  @default(now())
+  reply_content String?
+  replied_at    DateTime?
+}
+
+/// PURPOSE: Signup and pack checkout requests
+/// ACCESS: DEVELOPER
+/// DOMAIN: Signup & Onboarding
+model signup_requests {
+  id                    Int       @id @default(autoincrement())
+  fullname              String
+  email                 String
+  password              String
+  company_name          String
+  company_url           String?
+  pack_id               Int
+  status                String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejection_reason      String?
+  reviewed_at           DateTime?
+  provisioned_company_id Int?
+  created_at            DateTime  @default(now())
 }

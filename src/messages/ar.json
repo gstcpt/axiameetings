@@ -142,6 +142,7 @@
         "features": "المميزات",
         "process": "آلية العمل",
         "pricing": "الأسعار",
+        "contact": "اتصل بنا",
         "returnHome": "العودة للرئيسية",
         "dashboard": "لوحة التحكم",
         "logout": "تسجيل الخروج",
@@ -181,7 +182,11 @@
             "noAccount": "ليس لديك حساب؟",
             "termsNote": "أقر وأقبل <terms>شروط الاستخدام</terms> و <privacy>سياسة الخصوصية</privacy>",
             "errorFields": "يرجى إدخال اسم المستخدم وكلمة المرور",
-            "errorAuth": "بيانات الاعتماد غير صالحة"
+            "errorAuth": "بيانات الاعتماد غير صالحة",
+            "tabLogin": "تسجيل الدخول",
+            "tabSignup": "إنشاء حساب",
+            "titleSub": "أدخل بيانات الاعتماد الخاصة بك أدناه للمتابعة",
+            "signupLink": "إنشاء حساب جديد"
         },
         "logout": {
             "title": "جاري تسجيل الخروج...",
@@ -419,7 +424,9 @@
             "references": "المراجع",
             "newsletters": "النشرات الإخبارية",
             "chatSessions": "جلسات الدردشة",
-            "aiTokens": "رموز الذكاء الاصطناعي"
+            "aiTokens": "رموز الذكاء الاصطناعي",
+            "contactMessages": "رسائل التواصل",
+            "signupRequests": "طلبات التسجيل"
         },
         "configurations": {
             "title": "إعدادات النظام",
@@ -1556,6 +1563,181 @@
                 "description": "قام AI بإنشاء وصف جديد لاجتماعك. هل ترغب في تطبيقه؟",
                 "confirm": "تطبيق"
             }
+        }
+    },
+    "Contact": {
+        "badge": "تواصل معنا",
+        "title": "اتصل بنا",
+        "subtitle": "هل لديك سؤال أو تحتاج إلى مساعدة؟ يسعدنا سماع منك.",
+        "info": {
+            "title": "لنتحدث",
+            "desc": "تواصل معنا عبر النموذج وسيرد عليك فريقنا قريباً.",
+            "phone": "الهاتف",
+            "email": "البريد الإلكتروني",
+            "address": "العنوان",
+            "responseTime": "وقت الرد",
+            "responseValue": "خلال 24 ساعة",
+            "responseDesc": "نهدف إلى الرد على جميع الاستفسارات خلال يوم عمل واحد."
+        },
+        "form": {
+            "title": "إرسال رسالة",
+            "subtitle": "املأ النموذج وسنرد عليك.",
+            "name": "اسمك",
+            "namePlaceholder": "مثال: فلان الفلاني",
+            "email": "عنوان البريد",
+            "emailPlaceholder": "مثال: user@example.com",
+            "subject": "الموضوع",
+            "subjectPlaceholder": "مثال: سؤال حول الأسعار",
+            "message": "الرسالة",
+            "messagePlaceholder": "أخبرنا كيف يمكننا مساعدتك...",
+            "submit": "إرسال الرسالة"
+        },
+        "success": {
+            "title": "تم إرسال الرسالة!",
+            "desc": "شكراً على تواصلك. سنرد عليك خلال 24 ساعة.",
+            "another": "إرسال رسالة أخرى"
+        },
+        "toast": {
+            "required": "البريد والموضوع والرسالة مطلوبة",
+            "success": "تم إرسال الرسالة بنجاح!",
+            "error": "فشل الإرسال. يرجى المحاولة مرة أخرى."
+        }
+    },
+    "Signup": {
+        "badge": "ابدأ الآن",
+        "title": "ابدأ رحلتك",
+        "subtitle": "اختر خطة وأنشئ مؤسستك على Axia Meetings.",
+        "step1": "اختر خطة",
+        "step2": "معلوماتك",
+        "free": "مجاني",
+        "noPacks": "لا توجد خطط متاحة",
+        "noPacksDesc": "يرجى التواصل معنا لمعلومات الأسعار.",
+        "skipPack": "المتابعة دون اختيار خطة",
+        "selectPack": "اختر هذه الخطة",
+        "selectedPlan": "الخطة المختارة",
+        "changePlan": "تغيير الخطة",
+        "whatsIncluded": "ما يتضمنها",
+        "feature1": "وصول كامل إلى لوحة التحكم",
+        "feature2": "أدوات اجتماعات بالذكاء الاصطناعي",
+        "feature3": "دعم مولوية",
+        "form": {
+            "title": "تفاصيل حسابك",
+            "subtitle": "أنشئ حساب المسؤول وملف الشركة.",
+            "personalInfo": "المعلومات الشخصية",
+            "companyInfo": "معلومات الشركة",
+            "fullname": "الاسم الكامل",
+            "fullnamePlaceholder": "مثال: فلان الفلاني",
+            "email": "عنوان البريد",
+            "emailPlaceholder": "مثال: user@example.com",
+            "password": "كلمة المرور",
+            "confirmPassword": "تأكيد كلمة المرور",
+            "companyName": "اسم الشركة",
+            "companyNamePlaceholder": "مثال: شركة أكمي",
+            "companyUrl": "رابط الموقع / التطبيق",
+            "companyUrlPlaceholder": "مثال: https://acme.com",
+            "submit": "إرسال الطلب",
+            "security": "بياناتك مؤمنة ومشفرة"
+        },
+        "success": {
+            "title": "تم تقديم الطلب!",
+            "desc": "طلب التسجيل قيد المراجعة. سيتم إخطارك بمجرد تفعيل حسابك.",
+            "note": "بانتظار موافقة المطور",
+            "login": "العودة إلى تسجيل الدخول"
+        },
+        "toast": {
+            "selectPack": "يرجى اختيار خطة أولاً",
+            "required": "يرجى ملء جميع الحقول المطلوبة",
+            "passwordMismatch": "كلمتا المرور غير متطابقتين",
+            "passwordLength": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+            "success": "تم تقديم طلب التسجيل بنجاح!",
+            "error": "فشل التقديم. يرجى المحاولة مرة أخرى."
+        }
+    },
+    "ContactMessages": {
+        "title": "رسائل التواصل",
+        "subtitle": "{total} رسائل — {replied} تمت الإجابة عليها",
+        "awaiting": "بانتظار",
+        "repliedLabel": "تمت الإجابة",
+        "replied": "تمت الإجابة",
+        "pending": "معلقة",
+        "searchPlaceholder": "بحث في الرسائل...",
+        "emptyMessage": "لم يتم العثور على رسائل تواصل.",
+        "table": {
+            "sender": "المرسل",
+            "subject": "الموضوع",
+            "date": "التاريخ",
+            "status": "الحالة",
+            "actions": "الإجراءات"
+        },
+        "detail": {
+            "subject": "الموضوع",
+            "message": "الرسالة",
+            "replied": "تم إرسال الرد",
+            "editReply": "تعديل الرد",
+            "writeReply": "كتابة رد",
+            "replyPlaceholder": "اكتب ردك هنا...",
+            "sendReply": "إرسال الرد"
+        },
+        "toast": {
+            "fetchError": "فشل تحميل الرسائل",
+            "replyRequired": "محتوى الرد لا يمكن أن يكون فارغاً",
+            "replySent": "تم حفظ الرد بنجاح!",
+            "replyError": "فشل إرسال الرد"
+        }
+    },
+    "SignupRequests": {
+        "title": "طلبات التسجيل",
+        "subtitle": "{total} طلب تسجيل إجمالياً",
+        "searchPlaceholder": "بحث في الطلبات...",
+        "emptyMessage": "لم يتم العثور على طلبات تسجيل.",
+        "status": {
+            "pending": "معلقة",
+            "approved": "موافق عليه",
+            "rejected": "مرفوضة"
+        },
+        "stats": {
+            "pending": "معلقة",
+            "approved": "موافق عليها",
+            "rejected": "مرفوضة"
+        },
+        "table": {
+            "requester": "مقدم الطلب",
+            "company": "الشركة",
+            "pack": "الباقة",
+            "date": "التاريخ",
+            "status": "الحالة"
+        },
+        "detail": {
+            "email": "البريد",
+            "company": "اسم الشركة",
+            "url": "الموقع الإلكتروني",
+            "pack": "الباقة المختارة",
+            "submitted": "تاريخ التقديم",
+            "reviewed": "تاريخ المراجعة",
+            "provisionedId": "تم التجهيز",
+            "provisioned": "تم تجهيز الحساب",
+            "provisionedDesc": "تم إنشاء حساب الشركة وحساب المسؤول بنجاح.",
+            "rejectionReason": "سبب الرفض",
+            "rejectionReasonLabel": "سبب الرفض (اختياري)",
+            "rejectionPlaceholder": "اشرح لماذا يتم رفض هذا الطلب..."
+        },
+        "actions": {
+            "approve": "موافقة وتجهيز",
+            "reject": "رفض"
+        },
+        "modal": {
+            "approveTitle": "موافقة وتجهيز الحساب",
+            "approveDesc": "سينشئء هذا حساب شركة لـ {company} وحساب مسؤول لـ {name}. لا يمكن التراجع عن هذا الإجراء.",
+            "approveConfirm": "موافقة وإنشاء الحساب",
+            "rejectTitle": "رفض الطلب",
+            "rejectDesc": "هل أنت متأكد من رفض طلب تسجيل {name}؟",
+            "rejectConfirm": "رفض الطلب"
+        },
+        "toast": {
+            "fetchError": "فشل تحميل طلبات التسجيل",
+            "approved": "تمت الموافقة على الطلب وتجهيز الحساب!",
+            "rejected": "تم رفض الطلب.",
+            "actionError": "فشل معالجة الطلب"
         }
     }
 }

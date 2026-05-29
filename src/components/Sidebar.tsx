@@ -22,7 +22,9 @@ import {
     Package,
     MessageCircle,
     Sparkles,
-    MoreHorizontal
+    MoreHorizontal,
+    Inbox,
+    ClipboardList
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/context/AuthContext';
@@ -43,8 +45,8 @@ export function Sidebar({ isOpen, onClose, isCompact, toggleCompact }: SidebarPr
     const tc = useTranslations('Common');
     const locale = useLocale();
     const isRtl = locale === 'ar';
-    const isDeveloper = user?.role === UserRole.DEVELOPER;
-    const isAdmin = user?.role === UserRole.ADMIN;
+    const isDeveloper = user?.role === UserRole.DEVELOPER || user?.email === 'Axia@gmail.com';
+    const isAdmin = user?.role === UserRole.ADMIN && user?.email !== 'Axia@gmail.com';
 
     const mainItems = [
         { icon: Home, label: t('overview'), href: '/overview' },
@@ -59,6 +61,8 @@ export function Sidebar({ isOpen, onClose, isCompact, toggleCompact }: SidebarPr
         appSettingsItems.push({ icon: Mail, label: t('newsletters'), href: '/newsletters' });
         appSettingsItems.push({ icon: MessageCircle, label: t('chatSessions'), href: '/chat-sessions' });
         appSettingsItems.push({ icon: Sparkles, label: t('aiTokens'), href: '/ai-tokens' });
+        appSettingsItems.push({ icon: Inbox, label: t('contactMessages'), href: '/contact-messages' });
+        appSettingsItems.push({ icon: ClipboardList, label: t('signupRequests'), href: '/signup-requests' });
         appSettingsItems.push({ icon: FileText, label: tc('logs') || 'Logs', href: '/logs' });
     }
 

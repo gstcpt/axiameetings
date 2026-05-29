@@ -5,17 +5,16 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/context/AuthContext';
-import { ArrowRight, Lock, Mail, ShieldCheck, CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
+import {
+    ArrowRight, Lock, Mail, ShieldCheck, CheckCircle2,
+    Sparkles, Loader2, LogIn, UserPlus, ArrowLeft
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PublicNavbar } from '@/components/public/PublicNavbar';
-import { PublicFooter } from '@/components/public/PublicFooter';
 import { useTranslations } from 'next-intl';
-
 import { Input } from '@/components/ui/inputs';
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typographys';
-import { Badge } from '@/components/ui/badges';
 import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
@@ -32,16 +31,12 @@ export default function LoginPage() {
         fetch('/api/public')
             .then(res => res.json())
             .then(res => {
-                if (res.status && res.data?.settings) {
-                    setSettings(res.data.settings);
-                }
+                if (res.status && res.data?.settings) setSettings(res.data.settings);
             });
     }, []);
 
     useEffect(() => {
-        if (!loading && isAuthenticated) {
-            router.replace('/overview');
-        }
+        if (!loading && isAuthenticated) router.replace('/overview');
     }, [isAuthenticated, loading, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -63,98 +58,179 @@ export default function LoginPage() {
 
     if (loading) return null;
 
+    const logoSrc = settings.logo_file_name === 'AxiaMeetings.svg'
+        ? '/AxiaMeetings.svg'
+        : (settings.logo_file_name ? `/uploads/${settings.logo_file_name}` : '/AxiaMeetings.svg');
+
     return (
-        <div className="flex flex-col min-h-screen bg-[#FDFDFD]">
-            <PublicNavbar settings={settings} />
+        <div className="min-h-screen flex bg-[#FDFDFD]">
+            {/* ── Left Hero Panel ───────────────────────────────────────── */}
+            <div className="hidden lg:flex lg:w-[45%] xl:w-[42%] bg-[#002B5B] flex-col relative overflow-hidden">
+                {/* Decorative blobs */}
+                <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2" />
+                <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2" />
+                <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.04] pointer-events-none" />
 
-            <main className="flex-grow flex items-center justify-center pt-48 pb-24 px-6 relative overflow-hidden">
-                {/* Advanced Background Decorative Gradients */}
-                <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-linear-to-br from-blue-100/40 to-transparent rounded-full blur-[140px] -translate-y-1/2 translate-x-1/3 -z-10"></div>
-                <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-linear-to-tr from-indigo-50/60 to-transparent rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4 -z-10"></div>
+                {/* Animated grid lines */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {[...Array(6)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            className="absolute w-px bg-white/5"
+                            style={{ left: `${(i + 1) * 16.66}%`, top: 0, bottom: 0 }}
+                            initial={{ scaleY: 0 }}
+                            animate={{ scaleY: 1 }}
+                            transition={{ duration: 1.4, delay: i * 0.1, ease: [0.33, 1, 0.68, 1] }}
+                        />
+                    ))}
+                </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
-                    className="w-full max-w-xl relative z-10"
-                >
-                    <div className="bg-white rounded-[2rem] md:rounded-[4rem] shadow-[0_80px_160px_-40px_rgba(0,43,91,0.15)] border border-slate-100 overflow-hidden">
-                        <div className="bg-[#002B5B] px-8 md:px-16 pt-16 md:pt-24 pb-12 md:pb-20 text-center flex flex-col items-center relative overflow-hidden">
-                            {/* Animated Background Pattern */}
-                            <motion.div 
-                                animate={{ opacity: [0.05, 0.1, 0.05] }}
-                                transition={{ duration: 5, repeat: Infinity }}
-                                className="absolute inset-0 bg-radial-white"
-                            ></motion.div>
-                            <div className="absolute top-0 left-0 w-full h-full bg-linear-to-b from-black/20 to-transparent pointer-events-none"></div>
+                <div className="relative z-10 flex flex-col h-full px-12 py-14">
+                    {/* Logo */}
+                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+                        <Link href="/">
+                            <Image src={logoSrc} alt="Axia Meetings" width={200} height={60} className="h-10 w-auto filter-white cursor-pointer" priority />
+                        </Link>
+                    </motion.div>
 
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="relative z-10"
-                            >
-                                <Image
-                                    src={settings.logo_file_name === "AxiaMeetings.svg" ? "/AxiaMeetings.svg" : (settings.logo_file_name ? `/uploads/${settings.logo_file_name}` : "/AxiaMeetings.svg")}
-                                    alt="Axia Meetings"
-                                    width={320}
-                                    height={100}
-                                    className="h-12 md:h-20 w-auto filter-white"
-                                    priority
-                                />
-                            </motion.div>
-                            
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 }}
-                                className="mt-10 relative z-10 space-y-4"
-                            >
-                                <Badge variant="primary" className="bg-white/10 text-white border-white/20 h-7 px-4 text-[9px] uppercase font-black tracking-widest backdrop-blur-md">
-                                    Secure Gateway
-                                </Badge>
-                                <Typography variant="p" className="text-blue-200/90 text-base md:text-lg font-medium italic">
-                                    {t('subtitle')}
-                                </Typography>
-                            </motion.div>
+                    {/* Main copy */}
+                    <motion.div
+                        className="flex-1 flex flex-col justify-center"
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                    >
+                        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8 w-fit">
+                            <Sparkles size={12} className="text-blue-300" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">Secure Gateway</span>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="px-8 md:px-16 py-12 md:py-20 space-y-8 md:space-y-10">
-                            <div className="space-y-6">
-                                <Input 
-                                    label={t('email')}
-                                    id="username"
-                                    type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    placeholder={t('emailPlaceholder')}
-                                    icon={Mail}
-                                    required
-                                    autoComplete="username"
-                                />
+                        <h1 className="text-4xl xl:text-5xl font-black text-white leading-[1.1] mb-6">
+                            Welcome<br />
+                            <span className="text-blue-300">back.</span>
+                        </h1>
+                        <p className="text-blue-200/70 text-lg font-medium leading-relaxed max-w-xs">
+                            {t('subtitle')}
+                        </p>
 
-                                <Input 
-                                    label={t('password')}
-                                    id="password"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    icon={Lock}
-                                    required
-                                    autoComplete="current-password"
-                                />
+                        {/* Trust badges */}
+                        <div className="mt-12 space-y-3">
+                            {[
+                                { icon: ShieldCheck, label: 'End-to-End Encrypted' },
+                                { icon: CheckCircle2, label: 'ISO 27001 Compliant' },
+                                { icon: Sparkles, label: 'AI-Powered Platform' },
+                            ].map(({ icon: Icon, label }) => (
+                                <div key={label} className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                                        <Icon size={14} className="text-blue-300" />
+                                    </div>
+                                    <span className="text-sm text-blue-200/60 font-medium">{label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+
+                    {/* Footer quote */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.9 }}
+                        className="border-t border-white/10 pt-6"
+                    >
+                        <p className="text-blue-200/40 text-xs font-medium">
+                            © {new Date().getFullYear()} Axia Meetings. All rights reserved.
+                        </p>
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* ── Right Form Panel ──────────────────────────────────────── */}
+            <div className="flex-1 flex flex-col justify-between">
+                {/* Sleek Top Navigation Bar */}
+                <div className="w-full flex items-center justify-between px-6 md:px-12 pt-8 pb-4 shrink-0">
+                    <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
+                        <ArrowLeft size={14} /> Back to website
+                    </Link>
+                    <div className="flex gap-4 text-xs font-semibold text-slate-400">
+                        <Link href="/terms-of-use" className="hover:text-slate-600 transition-colors">Terms of Use</Link>
+                        <Link href="/privacy-policy" className="hover:text-slate-600 transition-colors">Privacy Policy</Link>
+                    </div>
+                </div>
+
+                {/* Mobile logo */}
+                <div className="lg:hidden flex items-center justify-center pt-10 pb-2 bg-[#002B5B]">
+                    <Link href="/">
+                        <Image src={logoSrc} alt="Axia Meetings" width={160} height={50} className="h-9 w-auto filter-white cursor-pointer" priority />
+                    </Link>
+                </div>
+
+                <div className="flex-1 flex items-center justify-center px-6 py-12 relative overflow-hidden">
+                    {/* Subtle bg glow */}
+                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-50/60 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
+                        className="w-full max-w-md relative z-10"
+                    >
+                        {/* Mode toggle */}
+                        <div className="flex bg-slate-100 rounded-2xl p-1 mb-10">
+                            <div className="flex-1 flex items-center justify-center gap-2 bg-white rounded-xl py-3 shadow-sm text-[#002B5B] font-bold text-sm">
+                                <LogIn size={15} />
+                                {t('tabLogin') || 'Sign In'}
                             </div>
+                            <Link href="/auth/signup" className="flex-1 flex items-center justify-center gap-2 py-3 text-slate-400 hover:text-slate-600 font-semibold text-sm transition-colors">
+                                <UserPlus size={15} />
+                                {t('tabSignup') || 'Sign Up'}
+                            </Link>
+                        </div>
 
-                            <motion.label 
-                                whileHover={{ scale: 1.01 }}
-                                whileTap={{ scale: 0.99 }}
+                        {/* Heading */}
+                        <div className="mb-8">
+                            <Typography variant="h2" className="text-[#002B5B] font-black text-3xl mb-1">
+                                {t('title') || 'Sign in to your account'}
+                            </Typography>
+                            <Typography variant="muted" className="text-slate-400 text-sm">
+                                {t('titleSub') || 'Enter your credentials below to continue'}
+                            </Typography>
+                        </div>
+
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <Input
+                                label={t('email')}
+                                id="username"
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder={t('emailPlaceholder')}
+                                icon={Mail}
+                                required
+                                autoComplete="username"
+                            />
+                            <Input
+                                label={t('password')}
+                                id="password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                icon={Lock}
+                                required
+                                autoComplete="current-password"
+                            />
+
+                            {/* Terms checkbox */}
+                            <motion.label
+                                whileHover={{ scale: 1.005 }}
+                                whileTap={{ scale: 0.995 }}
                                 className={cn(
-                                    "flex items-start gap-4 md:gap-6 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border transition-all duration-300 cursor-pointer group",
-                                    acceptedTerms ? "bg-blue-50/50 border-blue-200" : "bg-slate-50/50 border-slate-100 hover:bg-slate-50"
+                                    'flex items-start gap-4 p-5 rounded-2xl border transition-all duration-300 cursor-pointer',
+                                    acceptedTerms ? 'bg-blue-50/50 border-blue-200' : 'bg-slate-50/50 border-slate-100 hover:bg-slate-50'
                                 )}
                             >
-                                <div className="relative mt-1">
+                                <div className="relative mt-0.5">
                                     <input
                                         id="terms"
                                         type="checkbox"
@@ -163,22 +239,22 @@ export default function LoginPage() {
                                         className="sr-only"
                                     />
                                     <div className={cn(
-                                        "w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all duration-300",
-                                        acceptedTerms ? "bg-[#002B5B] border-[#002B5B] shadow-lg shadow-blue-900/20" : "bg-white border-slate-300"
+                                        'w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all duration-300',
+                                        acceptedTerms ? 'bg-[#002B5B] border-[#002B5B] shadow-lg shadow-blue-900/20' : 'bg-white border-slate-300'
                                     )}>
                                         <AnimatePresence>
                                             {acceptedTerms && (
                                                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                                                    <CheckCircle2 className="w-5 h-5 text-white" />
+                                                    <CheckCircle2 className="w-4 h-4 text-white" />
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
                                     </div>
                                 </div>
-                                <Typography variant="muted" className="leading-relaxed group-hover:text-slate-600 transition-colors text-sm">
+                                <Typography variant="muted" className="text-sm leading-relaxed">
                                     {t.rich('termsNote', {
-                                        terms: (chunks) => <Link href="/terms-of-use" target="_blank" className="text-[#002B5B] hover:text-blue-700 font-black decoration-[#002B5B]/30 decoration-2 underline-offset-4">{chunks}</Link>,
-                                        privacy: (chunks) => <Link href="/privacy-policy" target="_blank" className="text-[#002B5B] hover:text-blue-700 font-black decoration-[#002B5B]/30 decoration-2 underline-offset-4">{chunks}</Link>
+                                        terms: (chunks) => <Link href="/terms-of-use" target="_blank" className="text-[#002B5B] font-black underline underline-offset-2">{chunks}</Link>,
+                                        privacy: (chunks) => <Link href="/privacy-policy" target="_blank" className="text-[#002B5B] font-black underline underline-offset-2">{chunks}</Link>,
                                     })}
                                 </Typography>
                             </motion.label>
@@ -186,31 +262,37 @@ export default function LoginPage() {
                             <Button
                                 type="submit"
                                 disabled={isLoading || !acceptedTerms}
-                                className="w-full h-16 md:h-20 text-lg md:text-xl shadow-2xl shadow-blue-900/30 rounded-2xl md:rounded-3xl uppercase font-black tracking-widest relative group overflow-hidden"
+                                className="w-full h-14 text-base font-bold shadow-xl shadow-blue-900/25 rounded-2xl group relative overflow-hidden"
                             >
-                                <div className="absolute inset-0 bg-linear-to-r from-blue-600 to-[#002B5B] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                                <span className="relative z-10 flex items-center justify-center gap-3">
+                                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-[#002B5B] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                <span className="relative z-10 flex items-center justify-center gap-2">
                                     {isLoading ? (
-                                        <Loader2 className="w-7 h-7 animate-spin" />
+                                        <Loader2 className="w-5 h-5 animate-spin" />
                                     ) : (
                                         <>
                                             {t('submit')}
-                                            <ArrowRight className="w-6 h-6 group-hover:translate-x-3 transition-transform duration-500" />
+                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                                         </>
                                     )}
                                 </span>
                             </Button>
-
-                            <div className="flex items-center justify-center gap-4 text-slate-300 pt-4">
-                                <ShieldCheck size={18} />
-                                <Typography variant="muted" className="text-[10px] uppercase font-black tracking-[0.2em]">End-to-End Encryption Enabled</Typography>
-                            </div>
                         </form>
-                    </div>
-                </motion.div>
-            </main>
 
-            <PublicFooter settings={settings} />
+                        {/* Footer note */}
+                        <div className="mt-8 flex items-center justify-center gap-2 text-slate-300">
+                            <ShieldCheck size={14} />
+                            <span className="text-[10px] uppercase font-black tracking-[0.18em]">End-to-End Encryption Enabled</span>
+                        </div>
+
+                        <p className="text-center text-sm text-slate-400 mt-6">
+                            {t('noAccount') || "Don't have an account?"}{' '}
+                            <Link href="/auth/signup" className="text-[#002B5B] font-bold hover:underline underline-offset-2 transition-colors">
+                                {t('signupLink') || 'Create one'}
+                            </Link>
+                        </p>
+                    </motion.div>
+                </div>
+            </div>
         </div>
     );
 }

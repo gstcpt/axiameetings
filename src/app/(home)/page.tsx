@@ -367,7 +367,7 @@ export default function HomePage() {
                                                     ))}
                                                 </ul>
                                             </div>
-                                            <Link href="/auth/login" className="w-full block relative z-20">
+                                            <Link href="/auth/signup" className="w-full block relative z-20">
                                                 <Button size="lg" className={`w-full mt-12 h-14 md:h-16 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95 ${isPopular ? 'bg-white text-[#002B5B] hover:bg-blue-50' : 'bg-[#002B5B] text-white hover:bg-[#003d80]'}`}>
                                                     {t('pricing.cta')}
                                                 </Button>
@@ -393,12 +393,12 @@ export default function HomePage() {
                             <p className="text-base md:text-xl text-blue-100/70 font-medium leading-relaxed tracking-tight max-w-2xl mx-auto">{t('cta.subtitle')}</p>
 
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
-                                <Link href="/auth/login" className="w-full sm:w-auto">
+                                <Link href="/auth/signup" className="w-full sm:w-auto">
                                     <Button size="lg" className="w-full sm:w-auto h-16 md:h-20 px-8 md:px-12 text-lg font-black rounded-2xl bg-white text-[#002B5B] hover:scale-105 active:scale-95 transition-all shadow-xl">
                                         {t('cta.primary')}
                                     </Button>
                                 </Link>
-                                <Link href="/auth/login" className="w-full sm:w-auto">
+                                <Link href="/contact" className="w-full sm:w-auto">
                                     <Button variant="outline" size="lg" className="w-full sm:w-auto h-16 md:h-20 px-8 md:px-12 text-lg font-black rounded-2xl border-white text-white hover:bg-white/10 transition-all">
                                         {t('cta.secondary')}
                                     </Button>

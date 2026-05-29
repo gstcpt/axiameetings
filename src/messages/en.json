@@ -142,6 +142,7 @@
         "features": "Features",
         "process": "Process",
         "pricing": "Pricing",
+        "contact": "Contact",
         "returnHome": "Back to Home",
         "dashboard": "Dashboard",
         "logout": "Logout",
@@ -181,7 +182,11 @@
             "noAccount": "Don't have an account?",
             "termsNote": "I acknowledge and accept the <terms>Terms of Use</terms> and the <privacy>Privacy Policy</privacy>",
             "errorFields": "Please enter your username and password",
-            "errorAuth": "Invalid credentials"
+            "errorAuth": "Invalid credentials",
+            "tabLogin": "Sign In",
+            "tabSignup": "Sign Up",
+            "titleSub": "Enter your credentials below to continue",
+            "signupLink": "Create one"
         },
         "logout": {
             "title": "Logging out...",
@@ -419,7 +424,9 @@
             "references": "References",
             "newsletters": "Newsletters",
             "chatSessions": "Chat Sessions",
-            "aiTokens": "AI Tokens"
+            "aiTokens": "AI Tokens",
+            "contactMessages": "Contact Messages",
+            "signupRequests": "Signup Requests"
         },
         "configurations": {
             "title": "System Settings",
@@ -1556,6 +1563,181 @@
                 "description": "The AI has generated a new description for your meeting. Would you like to apply it?",
                 "confirm": "Change"
             }
+        }
+    },
+    "Contact": {
+        "badge": "Get In Touch",
+        "title": "Contact Us",
+        "subtitle": "Have a question or need support? We'd love to hear from you.",
+        "info": {
+            "title": "Let's Talk",
+            "desc": "Reach out through the form and our team will get back to you shortly.",
+            "phone": "Phone",
+            "email": "Email",
+            "address": "Address",
+            "responseTime": "Response Time",
+            "responseValue": "Within 24 Hours",
+            "responseDesc": "We aim to respond to all inquiries within one business day."
+        },
+        "form": {
+            "title": "Send a Message",
+            "subtitle": "Fill in the form and we'll get back to you.",
+            "name": "Your Name",
+            "namePlaceholder": "e.g. John Doe",
+            "email": "Email Address",
+            "emailPlaceholder": "e.g. john@example.com",
+            "subject": "Subject",
+            "subjectPlaceholder": "e.g. Question about pricing",
+            "message": "Message",
+            "messagePlaceholder": "Tell us how we can help you...",
+            "submit": "Send Message"
+        },
+        "success": {
+            "title": "Message Sent!",
+            "desc": "Thank you for reaching out. We'll get back to you within 24 hours.",
+            "another": "Send another message"
+        },
+        "toast": {
+            "required": "Email, subject, and message are required",
+            "success": "Message sent successfully!",
+            "error": "Failed to send message. Please try again."
+        }
+    },
+    "Signup": {
+        "badge": "Get Started",
+        "title": "Start Your Journey",
+        "subtitle": "Choose a plan and set up your organization on Axia Meetings.",
+        "step1": "Choose Plan",
+        "step2": "Your Details",
+        "free": "Free",
+        "noPacks": "No plans available",
+        "noPacksDesc": "Please contact us for pricing information.",
+        "skipPack": "Continue without selecting a plan",
+        "selectPack": "Select This Plan",
+        "selectedPlan": "Selected Plan",
+        "changePlan": "Change plan",
+        "whatsIncluded": "What's included",
+        "feature1": "Full admin dashboard access",
+        "feature2": "AI-powered meeting tools",
+        "feature3": "Priority support",
+        "form": {
+            "title": "Your Account Details",
+            "subtitle": "Create your admin account and company profile.",
+            "personalInfo": "Personal Information",
+            "companyInfo": "Company Information",
+            "fullname": "Full Name",
+            "fullnamePlaceholder": "e.g. John Doe",
+            "email": "Email Address",
+            "emailPlaceholder": "e.g. john@example.com",
+            "password": "Password",
+            "confirmPassword": "Confirm Password",
+            "companyName": "Company Name",
+            "companyNamePlaceholder": "e.g. Acme Corp",
+            "companyUrl": "Website / App URL",
+            "companyUrlPlaceholder": "e.g. https://acme.com",
+            "submit": "Submit Request",
+            "security": "Your data is securely encrypted"
+        },
+        "success": {
+            "title": "Request Submitted!",
+            "desc": "Your signup request is under review. You'll be notified once your account is activated.",
+            "note": "Pending developer approval",
+            "login": "Back to Login"
+        },
+        "toast": {
+            "selectPack": "Please select a plan first",
+            "required": "Please fill in all required fields",
+            "passwordMismatch": "Passwords do not match",
+            "passwordLength": "Password must be at least 8 characters",
+            "success": "Signup request submitted successfully!",
+            "error": "Failed to submit request. Please try again."
+        }
+    },
+    "ContactMessages": {
+        "title": "Contact Messages",
+        "subtitle": "{total} messages — {replied} replied",
+        "awaiting": "Awaiting",
+        "repliedLabel": "Replied",
+        "replied": "Replied",
+        "pending": "Pending",
+        "searchPlaceholder": "Search messages...",
+        "emptyMessage": "No contact messages found.",
+        "table": {
+            "sender": "Sender",
+            "subject": "Subject",
+            "date": "Date",
+            "status": "Status",
+            "actions": "Actions"
+        },
+        "detail": {
+            "subject": "Subject",
+            "message": "Message",
+            "replied": "Reply Sent",
+            "editReply": "Update Reply",
+            "writeReply": "Write a Reply",
+            "replyPlaceholder": "Type your reply here...",
+            "sendReply": "Send Reply"
+        },
+        "toast": {
+            "fetchError": "Failed to load messages",
+            "replyRequired": "Reply content cannot be empty",
+            "replySent": "Reply saved successfully!",
+            "replyError": "Failed to send reply"
+        }
+    },
+    "SignupRequests": {
+        "title": "Signup Requests",
+        "subtitle": "{total} total signup requests",
+        "searchPlaceholder": "Search requests...",
+        "emptyMessage": "No signup requests found.",
+        "status": {
+            "pending": "Pending",
+            "approved": "Approved",
+            "rejected": "Rejected"
+        },
+        "stats": {
+            "pending": "Pending",
+            "approved": "Approved",
+            "rejected": "Rejected"
+        },
+        "table": {
+            "requester": "Requester",
+            "company": "Company",
+            "pack": "Pack",
+            "date": "Date",
+            "status": "Status"
+        },
+        "detail": {
+            "email": "Email",
+            "company": "Company Name",
+            "url": "Website",
+            "pack": "Selected Pack",
+            "submitted": "Submitted At",
+            "reviewed": "Reviewed At",
+            "provisionedId": "Provisioned",
+            "provisioned": "Account Provisioned",
+            "provisionedDesc": "The company and admin account have been created successfully.",
+            "rejectionReason": "Rejection Reason",
+            "rejectionReasonLabel": "Rejection Reason (optional)",
+            "rejectionPlaceholder": "Explain why this request is being rejected..."
+        },
+        "actions": {
+            "approve": "Approve & Provision",
+            "reject": "Reject"
+        },
+        "modal": {
+            "approveTitle": "Approve & Provision Account",
+            "approveDesc": "This will create a company account for {company} and an admin user for {name}. This action cannot be undone.",
+            "approveConfirm": "Approve & Create Account",
+            "rejectTitle": "Reject Request",
+            "rejectDesc": "Are you sure you want to reject {name}'s signup request?",
+            "rejectConfirm": "Reject Request"
+        },
+        "toast": {
+            "fetchError": "Failed to load signup requests",
+            "approved": "Request approved and account provisioned!",
+            "rejected": "Request rejected.",
+            "actionError": "Failed to process request"
         }
     }
 }

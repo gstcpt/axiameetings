@@ -66,11 +66,8 @@ export function PublicNavbar({ settings }: { settings: PublicSettings }) {
                                 <Link href="/#pricing" className="group">
                                     <Typography variant="label" className="text-slate-500 group-hover:text-[#002B5B] transition-colors">{t('pricing')}</Typography>
                                 </Link>
-                                <Link href="/privacy-policy" className="group">
-                                    <Typography variant="label" className="text-slate-500 group-hover:text-[#002B5B] transition-colors">Privacy</Typography>
-                                </Link>
-                                <Link href="/terms-of-use" className="group">
-                                    <Typography variant="label" className="text-slate-500 group-hover:text-[#002B5B] transition-colors">Terms</Typography>
+                                <Link href="/contact" className="group">
+                                    <Typography variant="label" className="text-slate-500 group-hover:text-[#002B5B] transition-colors">{t('contact')}</Typography>
                                 </Link>
                             </motion.div>
                         ) : (
@@ -144,8 +141,7 @@ export function PublicNavbar({ settings }: { settings: PublicSettings }) {
                                     <Link href="/#features" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">{t('features')}</Link>
                                     <Link href="/#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">{t('process')}</Link>
                                     <Link href="/#pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">{t('pricing')}</Link>
-                                    <Link href="/privacy-policy" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">Privacy Policy</Link>
-                                    <Link href="/terms-of-use" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">Terms of Use</Link>
+                                    <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">{t('contact')}</Link>
                                 </>
                             ) : (
                                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-slate-600 font-medium py-2 px-4 hover:bg-slate-50 rounded-lg">

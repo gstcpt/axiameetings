@@ -142,6 +142,7 @@
         "features": "Fonctionnalités",
         "process": "Processus",
         "pricing": "Tarification",
+        "contact": "Contact",
         "returnHome": "Retour à l'accueil",
         "dashboard": "Tableau de bord",
         "logout": "Déconnexion",
@@ -181,7 +182,11 @@
             "noAccount": "Pas encore de compte ?",
             "termsNote": "Je reconnais et j'accepte les <terms>Conditions d'Utilisation</terms> et la <privacy>Politique de Confidentialité</privacy>",
             "errorFields": "Veuillez entrer votre nom d'utilisateur et votre nom de passe",
-            "errorAuth": "Identifiants invalides"
+            "errorAuth": "Identifiants invalides",
+            "tabLogin": "Se connecter",
+            "tabSignup": "S'inscrire",
+            "titleSub": "Entrez vos identifiants ci-dessous pour continuer",
+            "signupLink": "Créer un compte"
         },
         "logout": {
             "title": "Déconnexion...",
@@ -419,7 +424,9 @@
             "references": "Références",
             "newsletters": "Newsletters",
             "chatSessions": "Sessions de Chat",
-            "aiTokens": "Jetons IA"
+            "aiTokens": "Jetons IA",
+            "contactMessages": "Messages Contact",
+            "signupRequests": "Demandes d'Inscription"
         },
         "configurations": {
             "title": "Paramètres Système",
@@ -1556,6 +1563,181 @@
                 "description": "L'AI a généré une nouvelle description pour votre réunion. Souhaitez-vous l'appliquer ?",
                 "confirm": "Appliquer"
             }
+        }
+    },
+    "Contact": {
+        "badge": "Contactez-Nous",
+        "title": "Nous Contacter",
+        "subtitle": "Une question ou besoin de support ? Nous serions ravis de vous entendre.",
+        "info": {
+            "title": "Parlons-en",
+            "desc": "Contactez-nous via le formulaire et notre équipe vous répondra rapidement.",
+            "phone": "Téléphone",
+            "email": "Email",
+            "address": "Adresse",
+            "responseTime": "Délai de Réponse",
+            "responseValue": "Sous 24 Heures",
+            "responseDesc": "Nous répondons à toutes les demandes dans un délai d'un jour ouvrable."
+        },
+        "form": {
+            "title": "Envoyer un Message",
+            "subtitle": "Remplissez le formulaire et nous vous répondrons.",
+            "name": "Votre Nom",
+            "namePlaceholder": "ex: Jean Dupont",
+            "email": "Adresse Email",
+            "emailPlaceholder": "ex: jean@exemple.com",
+            "subject": "Sujet",
+            "subjectPlaceholder": "ex: Question sur la tarification",
+            "message": "Message",
+            "messagePlaceholder": "Dites-nous comment nous pouvons vous aider...",
+            "submit": "Envoyer le Message"
+        },
+        "success": {
+            "title": "Message Envoyé !",
+            "desc": "Merci de nous avoir contactés. Nous vous répondrons dans les 24 heures.",
+            "another": "Envoyer un autre message"
+        },
+        "toast": {
+            "required": "L'email, le sujet et le message sont obligatoires",
+            "success": "Message envoyé avec succès !",
+            "error": "Échec de l'envoi. Veuillez réessayer."
+        }
+    },
+    "Signup": {
+        "badge": "Commencer",
+        "title": "Démarrez votre Aventure",
+        "subtitle": "Choisissez un plan et configurez votre organisation sur Axia Meetings.",
+        "step1": "Choisir un Plan",
+        "step2": "Vos Informations",
+        "free": "Gratuit",
+        "noPacks": "Aucun plan disponible",
+        "noPacksDesc": "Veuillez nous contacter pour les informations tarifaires.",
+        "skipPack": "Continuer sans sélectionner un plan",
+        "selectPack": "Sélectionner ce Plan",
+        "selectedPlan": "Plan Sélectionné",
+        "changePlan": "Changer de plan",
+        "whatsIncluded": "Ce qui est inclus",
+        "feature1": "Accès complet au tableau de bord admin",
+        "feature2": "Outils de réunion alimentés par IA",
+        "feature3": "Support prioritaire",
+        "form": {
+            "title": "Vos Informations de Compte",
+            "subtitle": "Créez votre compte administrateur et profil d'entreprise.",
+            "personalInfo": "Informations Personnelles",
+            "companyInfo": "Informations sur l'Entreprise",
+            "fullname": "Nom Complet",
+            "fullnamePlaceholder": "ex: Jean Dupont",
+            "email": "Adresse Email",
+            "emailPlaceholder": "ex: jean@exemple.com",
+            "password": "Mot de passe",
+            "confirmPassword": "Confirmer le mot de passe",
+            "companyName": "Nom de l'Entreprise",
+            "companyNamePlaceholder": "ex: Acme Corp",
+            "companyUrl": "Site Web / URL de l'App",
+            "companyUrlPlaceholder": "ex: https://acme.com",
+            "submit": "Soumettre la Demande",
+            "security": "Vos données sont sécurisées et chiffrées"
+        },
+        "success": {
+            "title": "Demande Soumise !",
+            "desc": "Votre demande d'inscription est en cours d'examen. Vous serez notifié une fois votre compte activé.",
+            "note": "En attente d'approbation développeur",
+            "login": "Retour à la Connexion"
+        },
+        "toast": {
+            "selectPack": "Veuillez d'abord sélectionner un plan",
+            "required": "Veuillez remplir tous les champs obligatoires",
+            "passwordMismatch": "Les mots de passe ne correspondent pas",
+            "passwordLength": "Le mot de passe doit contenir au moins 8 caractères",
+            "success": "Demande d'inscription soumise avec succès !",
+            "error": "Échec de la soumission. Veuillez réessayer."
+        }
+    },
+    "ContactMessages": {
+        "title": "Messages de Contact",
+        "subtitle": "{total} messages — {replied} répondus",
+        "awaiting": "En attente",
+        "repliedLabel": "Répondus",
+        "replied": "Répondu",
+        "pending": "En attente",
+        "searchPlaceholder": "Rechercher les messages...",
+        "emptyMessage": "Aucun message de contact trouvé.",
+        "table": {
+            "sender": "Expéditeur",
+            "subject": "Sujet",
+            "date": "Date",
+            "status": "Statut",
+            "actions": "Actions"
+        },
+        "detail": {
+            "subject": "Sujet",
+            "message": "Message",
+            "replied": "Réponse Envoyée",
+            "editReply": "Modifier la Réponse",
+            "writeReply": "Écrire une Réponse",
+            "replyPlaceholder": "Tapez votre réponse ici...",
+            "sendReply": "Envoyer la Réponse"
+        },
+        "toast": {
+            "fetchError": "Échec du chargement des messages",
+            "replyRequired": "Le contenu de la réponse ne peut pas être vide",
+            "replySent": "Réponse enregistrée avec succès !",
+            "replyError": "Échec de l'envoi de la réponse"
+        }
+    },
+    "SignupRequests": {
+        "title": "Demandes d'Inscription",
+        "subtitle": "{total} demandes d'inscription au total",
+        "searchPlaceholder": "Rechercher les demandes...",
+        "emptyMessage": "Aucune demande d'inscription trouvée.",
+        "status": {
+            "pending": "En attente",
+            "approved": "Approuvé",
+            "rejected": "Rejeté"
+        },
+        "stats": {
+            "pending": "En attente",
+            "approved": "Approuvés",
+            "rejected": "Rejetés"
+        },
+        "table": {
+            "requester": "Demandeur",
+            "company": "Entreprise",
+            "pack": "Pack",
+            "date": "Date",
+            "status": "Statut"
+        },
+        "detail": {
+            "email": "Email",
+            "company": "Nom de l'Entreprise",
+            "url": "Site Web",
+            "pack": "Pack Sélectionné",
+            "submitted": "Soumis le",
+            "reviewed": "Examiné le",
+            "provisionedId": "Provisionné",
+            "provisioned": "Compte Provisionné",
+            "provisionedDesc": "L'entreprise et le compte administrateur ont été créés avec succès.",
+            "rejectionReason": "Motif du Rejet",
+            "rejectionReasonLabel": "Motif du Rejet (optionnel)",
+            "rejectionPlaceholder": "Expliquez pourquoi cette demande est rejetée..."
+        },
+        "actions": {
+            "approve": "Approuver & Provisionner",
+            "reject": "Rejeter"
+        },
+        "modal": {
+            "approveTitle": "Approuver & Provisionner le Compte",
+            "approveDesc": "Cela créera un compte entreprise pour {company} et un utilisateur administrateur pour {name}. Cette action est irréversible.",
+            "approveConfirm": "Approuver & Créer le Compte",
+            "rejectTitle": "Rejeter la Demande",
+            "rejectDesc": "Êtes-vous sûr de vouloir rejeter la demande d'inscription de {name} ?",
+            "rejectConfirm": "Rejeter la Demande"
+        },
+        "toast": {
+            "fetchError": "Échec du chargement des demandes d'inscription",
+            "approved": "Demande approuvée et compte provisionné !",
+            "rejected": "Demande rejetée.",
+            "actionError": "Échec du traitement de la demande"
         }
     }
 }
