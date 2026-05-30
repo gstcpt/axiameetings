@@ -95,3 +95,40 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ status: false, message: 'Internal server error' }, { status: 500 });
     }
 }
+
+export async function DELETE(req: NextRequest) {
+    const user = await getAuthenticatedUser(req);
+    if (!user || (user.role !== 'DEVELOPER' && user.email !== 'Axia@gmail.com')) {
+        return NextResponse.json({ status: false, message: 'Forbidden' }, { status: 403 });
+    }
+    try {
+        const body = await req.json().catch(() => ({}));
+        const { id, ids } = body;
+        
+        if (id) {
+            await prisma.contact_messages.delete({ where: { id: Number(id) } });
+            await createLog({
+                userId: user.userId,
+                companyId: user.companyId,
+                message: `Deleted contact message ID ${id}`,
+                payload: { id }
+            });
+        } else if (ids && Array.isArray(ids)) {
+            const numericIds = ids.map(Number);
+            await prisma.contact_messages.deleteMany({ where: { id: { in: numericIds } } });
+            await createLog({
+                userId: user.userId,
+                companyId: user.companyId,
+                message: `Bulk deleted contact messages: ${numericIds.join(', ')}`,
+                payload: { ids: numericIds }
+            });
+        } else {
+            return NextResponse.json({ status: false, message: 'ID or IDs required' }, { status: 400 });
+        }
+        return NextResponse.json({ status: true });
+    } catch (error) {
+        console.error('Error deleting contact messages:', error);
+        return NextResponse.json({ status: false, message: 'Internal server error' }, { status: 500 });
+    }
+}
+

@@ -53,7 +53,8 @@ export async function notifyParticipants(options: NotifierOptions) {
         const mailer = await getMailTransporter();
         if (mailer) {
             const { transporter, settings } = mailer;
-            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3002';
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+            if (!siteUrl) { console.error('[Notifier] NEXT_PUBLIC_SITE_URL is not configured'); return { expired, pushMessage }; }
             
             for (const participant of participants) {
                 const joinUrl = `${siteUrl}/meetings/${meeting.id}/join?token=${participant.token}&email=${encodeURIComponent(participant.email)}`;

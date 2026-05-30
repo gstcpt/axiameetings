@@ -10,11 +10,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     UserPlus, Building2, Globe, Package, Clock,
     CheckCircle2, XCircle, Loader2, ChevronRight,
-    User, Mail, ShieldCheck, X, Sparkles, AlertTriangle
+    User, Mail, ShieldCheck, X, Sparkles, AlertTriangle, Trash2
 } from 'lucide-react';
 import { Typography } from '@/components/ui/typographys';
 import { Button } from '@/components/ui/button';
-import { DataTable, Column } from '@/components/ui/data-tables';
+import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Badge } from '@/components/ui/badges';
 import { ConfirmModal } from '@/components/ui/modals';
 
@@ -45,6 +45,13 @@ export default function SignupRequestsPage() {
     const [confirmApprove, setConfirmApprove] = useState(false);
     const [confirmReject, setConfirmReject] = useState(false);
     const [isActing, setIsActing] = useState(false);
+
+    // Deletion states
+    const [confirmDelete, setConfirmDelete] = useState(false);
+    const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+    const [selectedToDelete, setSelectedToDelete] = useState<SignupRequest | null>(null);
+    const [bulkSelected, setBulkSelected] = useState<SignupRequest[]>([]);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (!authLoading && user?.role !== UserRole.DEVELOPER && user?.email !== 'Axia@gmail.com') router.replace('/overview');
@@ -91,6 +98,67 @@ export default function SignupRequestsPage() {
             setIsActing(false);
             setConfirmApprove(false);
             setConfirmReject(false);
+        }
+    };
+
+    const openDelete = (r: SignupRequest) => {
+        setSelectedToDelete(r);
+        setConfirmDelete(true);
+    };
+
+    const handleDelete = async () => {
+        if (!selectedToDelete) return;
+        setSaving(true);
+        try {
+            const res = await fetch('/api/signup-requests', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: selectedToDelete.id }),
+            });
+            const result = await res.json();
+            if (result.status) {
+                toast.success(t('toast.deleted') || 'Demande supprimée');
+                fetchRequests();
+                if (selected?.id === selectedToDelete.id) {
+                    setSelected(null);
+                }
+                setConfirmDelete(false);
+                setSelectedToDelete(null);
+            } else {
+                toast.error(result.message || tc('toast.error'));
+            }
+        } catch {
+            toast.error(tc('toast.error'));
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (bulkSelected.length === 0) return;
+        setSaving(true);
+        try {
+            const res = await fetch('/api/signup-requests', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: bulkSelected.map(r => r.id) }),
+            });
+            const result = await res.json();
+            if (result.status) {
+                toast.success(t('toast.bulkDeleted') || `${bulkSelected.length} demandes supprimées`);
+                fetchRequests();
+                if (selected && bulkSelected.some(r => r.id === selected.id)) {
+                    setSelected(null);
+                }
+                setConfirmBulkDelete(false);
+                setBulkSelected([]);
+            } else {
+                toast.error(result.message || tc('toast.error'));
+            }
+        } catch {
+            toast.error(tc('toast.error'));
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -170,20 +238,40 @@ export default function SignupRequestsPage() {
         },
         {
             id: 'actions',
-            header: tc('actions'),
+            header: tc('actions') || 'Actions',
             enableSorting: false,
             cell: ({ row }) => (
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => { setSelected(row.original); setRejectionReason(''); }}
-                    className="h-7 w-7 text-[#002B5B] hover:bg-blue-50 rounded-lg"
-                >
-                    <ChevronRight size={14} />
-                </Button>
+                <div className="flex items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setSelected(row.original); setRejectionReason(''); }}
+                        className="h-7 w-7 text-[#002B5B] hover:bg-blue-50 rounded-lg"
+                    >
+                        <ChevronRight size={14} />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDelete(row.original);
+                        }}
+                        className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                        <Trash2 size={14} />
+                    </Button>
+                </div>
             ),
         },
     ];
+
+    const bulkActions: BulkAction<SignupRequest>[] = [{
+        label: tc('delete') || 'Supprimer',
+        icon: <Trash2 size={14} />,
+        variant: 'danger',
+        onClick: (rows) => { setBulkSelected(rows); setConfirmBulkDelete(true); },
+    }];
 
     if (authLoading || isLoading) return (
         <div className="flex flex-col items-center justify-center py-32 gap-4">
@@ -236,6 +324,7 @@ export default function SignupRequestsPage() {
                         data={requests}
                         searchable
                         searchPlaceholder={t('searchPlaceholder')}
+                        bulkActions={bulkActions}
                         emptyMessage={t('emptyMessage')}
                         pagesize={10}
                     />
@@ -368,6 +457,32 @@ export default function SignupRequestsPage() {
                 confirmVariant="danger"
                 loading={isActing}
                 icon={<AlertTriangle size={24} className="text-red-500" />}
+            />
+
+            {/* Confirm Delete */}
+            <ConfirmModal
+                isOpen={confirmDelete}
+                onClose={() => setConfirmDelete(false)}
+                onConfirm={handleDelete}
+                title={t('delete.title') || 'Supprimer la demande'}
+                description={t('delete.description') || `Êtes-vous sûr de vouloir supprimer la demande d'inscription de ${selectedToDelete?.fullname} (${selectedToDelete?.company_name}) ?`}
+                confirmLabel={tc('delete') || 'Supprimer'}
+                confirmVariant="danger"
+                loading={saving}
+                icon={<Trash2 size={24} className="text-red-500" />}
+            />
+
+            {/* Confirm Bulk Delete */}
+            <ConfirmModal
+                isOpen={confirmBulkDelete}
+                onClose={() => setConfirmBulkDelete(false)}
+                onConfirm={handleBulkDelete}
+                title={t('delete.bulkTitle') || 'Supprimer plusieurs demandes'}
+                description={t('delete.bulkDescription', { count: bulkSelected.length })}
+                confirmLabel={tc('delete') || 'Supprimer'}
+                confirmVariant="danger"
+                loading={saving}
+                icon={<Trash2 size={24} className="text-red-500" />}
             />
         </div>
     );

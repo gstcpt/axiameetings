@@ -312,7 +312,8 @@ async function sendUpdateEmails(meeting: any) {
         const mailer = await getMailTransporter();
         if (mailer) {
             const { transporter, settings } = mailer;
-            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3002';
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+            if (!siteUrl) return NextResponse.json({ status: false, message: 'Error find domain url.' });
             const companyName = (meeting.company as any)?.name || 'Axia Meetings';
             const participantsList = meeting.meetings_participants || [];
 

@@ -9,12 +9,13 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Mail, Send, Clock, Reply, CheckCircle2, Loader2,
-    ChevronRight, User, ArrowLeft, Inbox, X
+    ChevronRight, User, ArrowLeft, Inbox, X, Trash2
 } from 'lucide-react';
 import { Typography } from '@/components/ui/typographys';
 import { Button } from '@/components/ui/button';
-import { DataTable, Column } from '@/components/ui/data-tables';
+import { DataTable, Column, BulkAction } from '@/components/ui/data-tables';
 import { Badge } from '@/components/ui/badges';
+import { ConfirmModal } from '@/components/ui/modals';
 
 interface ContactMessage {
     id: number;
@@ -38,6 +39,12 @@ export default function ContactMessagesPage() {
     const [selected, setSelected] = useState<ContactMessage | null>(null);
     const [replyContent, setReplyContent] = useState('');
     const [isReplying, setIsReplying] = useState(false);
+
+    // Deletion states
+    const [modal, setModal] = useState<'delete' | 'bulk-delete' | null>(null);
+    const [selectedToDelete, setSelectedToDelete] = useState<ContactMessage | null>(null);
+    const [bulkSelected, setBulkSelected] = useState<ContactMessage[]>([]);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (!authLoading && user?.role !== UserRole.DEVELOPER && user?.email !== 'Axia@gmail.com') router.replace('/overview');
@@ -76,6 +83,71 @@ export default function ContactMessagesPage() {
             }
         } catch { toast.error(t('toast.replyError')); }
         finally { setIsReplying(false); }
+    };
+
+    const openDelete = (m: ContactMessage) => {
+        setSelectedToDelete(m);
+        setModal('delete');
+    };
+
+    const closeModal = () => {
+        setModal(null);
+        setSelectedToDelete(null);
+    };
+
+    const handleDelete = async () => {
+        if (!selectedToDelete) return;
+        setSaving(true);
+        try {
+            const res = await fetch('/api/contact-messages', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: selectedToDelete.id }),
+            });
+            const result = await res.json();
+            if (result.status) {
+                toast.success(t('toast.deleted') || 'Message supprimé');
+                fetchMessages();
+                if (selected?.id === selectedToDelete.id) {
+                    setSelected(null);
+                }
+                closeModal();
+            } else {
+                toast.error(result.message || tc('toast.error'));
+            }
+        } catch {
+            toast.error(tc('toast.error'));
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (bulkSelected.length === 0) return;
+        setSaving(true);
+        try {
+            const res = await fetch('/api/contact-messages', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: bulkSelected.map(m => m.id) }),
+            });
+            const result = await res.json();
+            if (result.status) {
+                toast.success(t('toast.bulkDeleted') || `${bulkSelected.length} messages supprimés`);
+                fetchMessages();
+                if (selected && bulkSelected.some(m => m.id === selected.id)) {
+                    setSelected(null);
+                }
+                setModal(null);
+                setBulkSelected([]);
+            } else {
+                toast.error(result.message || tc('toast.error'));
+            }
+        } catch {
+            toast.error(tc('toast.error'));
+        } finally {
+            setSaving(false);
+        }
     };
 
     const repliedCount = messages.filter(m => m.reply_content).length;
@@ -131,20 +203,40 @@ export default function ContactMessagesPage() {
         },
         {
             id: 'actions',
-            header: t('table.actions'),
+            header: tc('actions') || 'Actions',
             enableSorting: false,
             cell: ({ row }) => (
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => { setSelected(row.original); setReplyContent(''); }}
-                    className="h-7 w-7 text-[#002B5B] hover:bg-blue-50 rounded-lg"
-                >
-                    <ChevronRight size={14} />
-                </Button>
+                <div className="flex items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setSelected(row.original); setReplyContent(''); }}
+                        className="h-7 w-7 text-[#002B5B] hover:bg-blue-50 rounded-lg"
+                    >
+                        <ChevronRight size={14} />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDelete(row.original);
+                        }}
+                        className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                        <Trash2 size={14} />
+                    </Button>
+                </div>
             ),
         },
     ];
+
+    const bulkActions: BulkAction<ContactMessage>[] = [{
+        label: tc('delete') || 'Supprimer',
+        icon: <Trash2 size={14} />,
+        variant: 'danger',
+        onClick: (rows) => { setBulkSelected(rows); setModal('bulk-delete'); },
+    }];
 
     if (authLoading || isLoading) return (
         <div className="flex flex-col items-center justify-center py-32 gap-4">
@@ -193,6 +285,7 @@ export default function ContactMessagesPage() {
                         data={messages}
                         searchable
                         searchPlaceholder={t('searchPlaceholder')}
+                        bulkActions={bulkActions}
                         emptyMessage={t('emptyMessage')}
                         pagesize={10}
                     />
@@ -281,6 +374,32 @@ export default function ContactMessagesPage() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Confirm Delete Modal */}
+            <ConfirmModal
+                isOpen={modal === 'delete'}
+                onClose={closeModal}
+                onConfirm={handleDelete}
+                title={t('delete.title') || 'Supprimer le message'}
+                description={t('delete.description') || `Êtes-vous sûr de vouloir supprimer le message de ${selectedToDelete?.sender_name || selectedToDelete?.sender_email} ?`}
+                confirmLabel={tc('delete') || 'Supprimer'}
+                confirmVariant="danger"
+                loading={saving}
+                icon={<Trash2 size={24} className="text-red-500" />}
+            />
+
+            {/* Confirm Bulk Delete Modal */}
+            <ConfirmModal
+                isOpen={modal === 'bulk-delete'}
+                onClose={closeModal}
+                onConfirm={handleBulkDelete}
+                title={t('delete.bulkTitle') || 'Supprimer plusieurs messages'}
+                description={t('delete.bulkDescription', { count: bulkSelected.length })}
+                confirmLabel={tc('delete') || 'Supprimer'}
+                confirmVariant="danger"
+                loading={saving}
+                icon={<Trash2 size={24} className="text-red-500" />}
+            />
         </div>
     );
 }

@@ -45,7 +45,8 @@ export async function dispatchMeetingPush(options: PushOptions) {
     const validEmails: string[] = [];
     const joinUrlMap: Record<string, string> = {};
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3002';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+    if (!siteUrl) { console.error('[PushDispatcher] NEXT_PUBLIC_SITE_URL is not configured'); return; }
 
     for (const p of meeting.meetings_participants) {
         const u = users.find(user => user.email === p.email);

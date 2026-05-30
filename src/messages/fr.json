@@ -194,6 +194,53 @@
         },
         "guard": {
             "checking": "Vérification de l'authentification..."
+        },
+        "forgotPassword": {
+            "title": "Mot de passe oublié ?",
+            "subtitle": "Entrez votre email et nous vous enverrons un lien de réinitialisation sécurisé.",
+            "heroSubtitle": "Ne vous inquiétez pas — cela arrive à tout le monde. Nous allons vous aider.",
+            "emailLabel": "Adresse email",
+            "emailPlaceholder": "nom@entreprise.com",
+            "submit": "Envoyer le lien",
+            "backToLogin": "Retour à la connexion",
+            "rememberPassword": "Vous vous souvenez de votre mot de passe ?",
+            "signIn": "Se connecter",
+            "successTitle": "Vérifiez votre boîte mail !",
+            "successDesc": "Nous avons envoyé un lien de réinitialisation à",
+            "noEmail": "Vous n'avez rien reçu ?",
+            "tryAgain": "Réessayer",
+            "errorEmail": "Veuillez entrer votre adresse email",
+            "errorGeneral": "Une erreur est survenue. Veuillez réessayer."
+        },
+        "resetPassword": {
+            "title": "Définir un nouveau mot de passe",
+            "subtitle": "Votre nouveau mot de passe doit contenir au moins 8 caractères.",
+            "heroSubtitle": "Créez un mot de passe fort et unique pour sécuriser votre compte.",
+            "passwordLabel": "Nouveau mot de passe",
+            "confirmLabel": "Confirmer le nouveau mot de passe",
+            "showPassword": "Afficher le mot de passe",
+            "hidePassword": "Masquer le mot de passe",
+            "submit": "Mettre à jour le mot de passe",
+            "backToLogin": "Retour à la connexion",
+            "signIn": "Se connecter maintenant",
+            "successTitle": "Mot de passe mis à jour !",
+            "successDesc": "Votre mot de passe a été modifié avec succès. Vous pouvez maintenant vous connecter.",
+            "invalidTitle": "Lien expiré ou invalide",
+            "invalidDesc": "Ce lien de réinitialisation a expiré ou a déjà été utilisé. Veuillez en demander un nouveau.",
+            "requestNewLink": "Demander un nouveau lien",
+            "strength": "Force",
+            "strengthWeak": "Faible",
+            "strengthFair": "Passable",
+            "strengthGood": "Bon",
+            "strengthStrong": "Fort",
+            "tipLength": "Au moins 8 caractères",
+            "tipUppercase": "Une lettre majuscule",
+            "tipNumber": "Un chiffre",
+            "tipSpecial": "Un caractère spécial",
+            "errorFields": "Veuillez remplir tous les champs",
+            "errorLength": "Le mot de passe doit contenir au moins 8 caractères",
+            "errorMatch": "Les mots de passe ne correspondent pas",
+            "errorGeneral": "Une erreur est survenue. Veuillez réessayer."
         }
     },
     "Home": {
@@ -1682,7 +1729,15 @@
             "fetchError": "Échec du chargement des messages",
             "replyRequired": "Le contenu de la réponse ne peut pas être vide",
             "replySent": "Réponse enregistrée avec succès !",
-            "replyError": "Échec de l'envoi de la réponse"
+            "replyError": "Échec de l'envoi de la réponse",
+            "deleted": "Message supprimé avec succès",
+            "bulkDeleted": "Messages sélectionnés supprimés avec succès"
+        },
+        "delete": {
+            "title": "Supprimer le message",
+            "description": "Êtes-vous sûr de vouloir supprimer ce message ? Cette action est irréversible.",
+            "bulkTitle": "Supprimer plusieurs messages",
+            "bulkDescription": "Êtes-vous sûr de vouloir supprimer ces {count} messages ? Cette action est irréversible."
         }
     },
     "SignupRequests": {
@@ -1737,7 +1792,15 @@
             "fetchError": "Échec du chargement des demandes d'inscription",
             "approved": "Demande approuvée et compte provisionné !",
             "rejected": "Demande rejetée.",
+            "deleted": "Demande d'inscription supprimée avec succès",
+            "bulkDeleted": "Demandes sélectionnées supprimées avec succès",
             "actionError": "Échec du traitement de la demande"
+        },
+        "delete": {
+            "title": "Supprimer la demande",
+            "description": "Êtes-vous sûr de vouloir supprimer cette demande d'inscription ? Cette action est irréversible.",
+            "bulkTitle": "Supprimer plusieurs demandes",
+            "bulkDescription": "Êtes-vous sûr de vouloir supprimer ces {count} demandes d'inscription ? Cette action est irréversible."
         }
     }
 }

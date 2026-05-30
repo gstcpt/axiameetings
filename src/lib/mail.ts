@@ -1,6 +1,41 @@
 import nodemailer from 'nodemailer';
 import { prisma } from './prisma';
 
+// Simple send helper used by new code (forgot-password, etc.)
+export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+    try {
+        const settings = await prisma.app_settings.findFirst();
+        if (!settings || !settings.host) {
+            console.error('SMTP settings not configured');
+            return false;
+        }
+
+        const transporter = nodemailer.createTransport({
+            host: settings.host,
+            port: Number(settings.port) || 587,
+            secure: settings.ssl ?? false,
+            auth: {
+                user: settings.email || '',
+                pass: settings.email_password || '',
+            },
+        });
+
+        const info = await transporter.sendMail({
+            from: `"${settings.from_name || 'AxiaMeetings'}" <${settings.from_email || settings.email}>`,
+            to,
+            subject,
+            html,
+        });
+
+        console.log('Message sent: %s', info.messageId);
+        return true;
+    } catch (error) {
+        console.error('Error sending email: ', error);
+        return false;
+    }
+}
+
+// Legacy helpers used across the existing codebase
 export async function getMailTransporter() {
     const settings = await prisma.app_settings.findFirst();
     if (!settings) {
@@ -25,17 +60,13 @@ export async function getMailTransporter() {
         },
         tls: {
             // Do not fail on invalid certs
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
         },
-        // Helpful for debugging
         debug: true,
-        logger: true
+        logger: true,
     } as any);
 
-    return {
-        transporter,
-        settings
-    };
+    return { transporter, settings };
 }
 
 export function getEmailTemplate(content: string, title: string, companyName: string) {

@@ -209,17 +209,27 @@ export default function LoginPage() {
                                 required
                                 autoComplete="username"
                             />
-                            <Input
-                                label={t('password')}
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                icon={Lock}
-                                required
-                                autoComplete="current-password"
-                            />
+                            <div>
+                                <Input
+                                    label={t('password')}
+                                    id="password"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    icon={Lock}
+                                    required
+                                    autoComplete="current-password"
+                                />
+                                <div className="flex justify-end mt-1.5">
+                                    <Link
+                                        href="/auth/forgot-password"
+                                        className="text-[11px] font-bold text-[#002B5B]/60 hover:text-[#002B5B] transition-colors underline-offset-2 hover:underline"
+                                    >
+                                        {t('forgotPassword')}
+                                    </Link>
+                                </div>
+                            </div>
 
                             {/* Terms checkbox */}
                             <motion.label

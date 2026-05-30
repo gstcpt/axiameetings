@@ -99,7 +99,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
                 const mailer = await getMailTransporter();
                 if (mailer) {
                     const { transporter, settings } = mailer;
-                    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3002';
+                    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+                    if (!siteUrl) return NextResponse.json({ status: false, message: 'Error find domain url.' });
                     const companyName = 'Axia Meetings'; // Could fetch from DB if needed
 
                     for (const participant of created) {

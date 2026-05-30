@@ -194,6 +194,53 @@
         },
         "guard": {
             "checking": "Checking authentication..."
+        },
+        "forgotPassword": {
+            "title": "Forgot your password?",
+            "subtitle": "Enter your email and we'll send you a secure reset link.",
+            "heroSubtitle": "Don't worry — it happens to everyone. We'll have you back in no time.",
+            "emailLabel": "Email address",
+            "emailPlaceholder": "name@company.com",
+            "submit": "Send Reset Link",
+            "backToLogin": "Back to Sign In",
+            "rememberPassword": "Remembered your password?",
+            "signIn": "Sign In",
+            "successTitle": "Check your inbox!",
+            "successDesc": "We've sent a password reset link to",
+            "noEmail": "Didn't receive it?",
+            "tryAgain": "Try again",
+            "errorEmail": "Please enter your email address",
+            "errorGeneral": "Something went wrong. Please try again."
+        },
+        "resetPassword": {
+            "title": "Set a new password",
+            "subtitle": "Your new password must be at least 8 characters long.",
+            "heroSubtitle": "Create a strong, unique password to secure your account.",
+            "passwordLabel": "New password",
+            "confirmLabel": "Confirm new password",
+            "showPassword": "Show password",
+            "hidePassword": "Hide password",
+            "submit": "Update Password",
+            "backToLogin": "Back to Sign In",
+            "signIn": "Sign In Now",
+            "successTitle": "Password updated!",
+            "successDesc": "Your password has been changed successfully. You can now sign in with your new password.",
+            "invalidTitle": "Link expired or invalid",
+            "invalidDesc": "This password reset link has expired or has already been used. Please request a new one.",
+            "requestNewLink": "Request new link",
+            "strength": "Strength",
+            "strengthWeak": "Weak",
+            "strengthFair": "Fair",
+            "strengthGood": "Good",
+            "strengthStrong": "Strong",
+            "tipLength": "At least 8 characters",
+            "tipUppercase": "One uppercase letter",
+            "tipNumber": "One number",
+            "tipSpecial": "One special character",
+            "errorFields": "Please fill in all fields",
+            "errorLength": "Password must be at least 8 characters",
+            "errorMatch": "Passwords do not match",
+            "errorGeneral": "Something went wrong. Please try again."
         }
     },
     "Home": {
@@ -1682,7 +1729,15 @@
             "fetchError": "Failed to load messages",
             "replyRequired": "Reply content cannot be empty",
             "replySent": "Reply saved successfully!",
-            "replyError": "Failed to send reply"
+            "replyError": "Failed to send reply",
+            "deleted": "Message deleted successfully",
+            "bulkDeleted": "Selected messages deleted successfully"
+        },
+        "delete": {
+            "title": "Delete Message",
+            "description": "Are you sure you want to delete this message? This action cannot be undone.",
+            "bulkTitle": "Delete Multiple Messages",
+            "bulkDescription": "Are you sure you want to delete these {count} messages? This action cannot be undone."
         }
     },
     "SignupRequests": {
@@ -1737,7 +1792,15 @@
             "fetchError": "Failed to load signup requests",
             "approved": "Request approved and account provisioned!",
             "rejected": "Request rejected.",
-            "actionError": "Failed to process request"
+            "actionError": "Failed to process request",
+            "deleted": "Signup request deleted successfully",
+            "bulkDeleted": "Selected signup requests deleted successfully"
+        },
+        "delete": {
+            "title": "Delete Request",
+            "description": "Are you sure you want to delete this signup request? This action cannot be undone.",
+            "bulkTitle": "Delete Multiple Requests",
+            "bulkDescription": "Are you sure you want to delete these {count} signup requests? This action cannot be undone."
         }
     }
 }

@@ -27,7 +27,8 @@ export async function sendPushNotification(companyId: number, data: Notification
 
         // Get the admin token for authentication with the external API
         const adminLink = await prisma.companies_admins_login.findFirst({ where: { company_id: companyId }, select: { token_id: true } });
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3002';
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+        if (!siteUrl) { console.error('[Notifications] NEXT_PUBLIC_SITE_URL is not configured'); return; }
         let currentToken = adminLink?.token_id;
 
         let hasError = false;
