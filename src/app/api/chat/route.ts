@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getStreamingClients, trackUsage, generateWithRetry, getChatResponse } from '@/lib/ai-provider';
 import { createLog } from '@/lib/logger';
+import { rateLimit, getIp } from '@/lib/rate-limit';
 
 // ─── Platform knowledge base ───────────────────────────────────────────────
 const PLATFORM_KNOWLEDGE = `
@@ -453,6 +454,13 @@ function extractEndpoints(text: string): string[] {
 
 // ─── POST: Send a chat message ──────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+    const ip = getIp(req);
+    if (!rateLimit(ip, 30, 60000)) {
+        return new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), { 
+            status: 429, 
+            headers: { 'Content-Type': 'application/json' } 
+        });
+    }
     try {
         const body = await req.json();
 

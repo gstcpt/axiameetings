@@ -3,8 +3,14 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { signJwt } from '@/lib/auth';
 import { createLog } from '@/lib/logger';
+import { rateLimit, getIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+    const ip = getIp(req);
+    if (!rateLimit(ip, 10, 60000)) {
+        return NextResponse.json({ status: false, message: 'Too many login attempts. Please try again later.' }, { status: 429 });
+    }
+
     const body = await req.json();
     const { username, password } = body;
 

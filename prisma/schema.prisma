@@ -371,6 +371,8 @@ model meetings {
   meetings_points        meetings_points[]        @relation("meeting_id_in_meetings_points")
   /// Speaking turn requests
   meetings_turn_requests meetings_turn_requests[] @relation("meeting_id_in_turn_requests")
+
+  @@index([company_id])
 }
 
 /// PURPOSE: Agenda point inside a meeting, optionally nested
@@ -471,6 +473,8 @@ model users {
   logs                   logs[]                   @relation("user_id_in_logs")
   /// Owning company relation
   company                companies?               @relation("company_id_in_users", fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@index([company_id])
 }
 
 
@@ -554,6 +558,9 @@ model logs {
   company    companies? @relation("company_id_in_logs", fields: [company_id], references: [id], onDelete: Cascade)
   /// Owning user relation
   user       users?     @relation("user_id_in_logs", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([company_id])
 }
 
 /// PURPOSE: Company admin login and authentication bridge
@@ -622,6 +629,8 @@ model chat_sessions {
   is_closed  Boolean  @default(false)
   /// Public unique session identifier
   session_id String?  @unique
+
+  @@index([user_id])
 }
 
 /// PURPOSE: User roles

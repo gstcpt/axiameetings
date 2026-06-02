@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getMailTransporter, getEmailTemplate } from '@/lib/mail';
 import crypto from 'crypto';
+import { rateLimit, getIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+    const ip = getIp(req);
+    if (!rateLimit(ip, 5, 60000)) {
+        return NextResponse.json({ status: false, message: 'Too many reset requests. Please try again later.' }, { status: 429 });
+    }
     try {
         const { email } = await req.json();
         if (!email) {

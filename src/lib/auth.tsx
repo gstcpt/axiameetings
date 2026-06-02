@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret';
+const JWT_SECRET = process.env.JWT_SECRET as string;
+if (!JWT_SECRET) {
+    throw new Error("CRITICAL SECURITY ERROR: JWT_SECRET environment variable is not defined!");
+}
 
 export interface AxiaJwtPayload {
     userId: number;
@@ -18,7 +21,7 @@ export function signJwt(payload: object) {
 
 export function verifyJwt(token: string): AxiaJwtPayload | null {
     try {
-        return jwt.verify(token, JWT_SECRET) as AxiaJwtPayload;
+        return jwt.verify(token, JWT_SECRET) as unknown as AxiaJwtPayload;
     } catch {
         return null;
     }
