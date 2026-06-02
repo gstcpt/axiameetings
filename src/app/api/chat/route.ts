@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { getStreamingClient, trackUsage, generateWithRetry, getChatResponse } from '@/lib/ai-provider';
+import { getStreamingClients, trackUsage, generateWithRetry, getChatResponse } from '@/lib/ai-provider';
 import { createLog } from '@/lib/logger';
 
 // ─── Platform knowledge base ───────────────────────────────────────────────
@@ -104,6 +104,7 @@ CRITICAL TOOL CALLING & OUTPUT SECURITY RULES:
    - NEVER mention the tool name 'fetchApplicationData', the endpoint paths, API routes, or that you are calling an API, function, database, or backend.
    - NEVER output any JSON blocks, function signatures, database schema fields, or programming code to the user.
    - Keep all tool execution completely silent from the user. Provide the final answers in natural language.
+9. NEVER output database or internal IDs (such as 'ID:10', 'ID:13', 'ID:14', 'meeting 14', 'user 2', etc.) in the text of your response to the user. Keep these IDs completely hidden. Always refer to meetings, documents, and users by their actual names, subjects, titles, values, or dates (e.g. refer to 'meeting 14' as 'Réunion 3' or 'the meeting scheduled on 2026-05-25').
 `;
 
 // ─── Build role-based system prompt ────────────────────────────────────────
@@ -119,13 +120,6 @@ async function buildSystemPrompt(
         : locale === 'fr'
             ? 'Always respond in French.'
             : 'Always respond in English.';
-
-    const base = `You are Axia Support, the helpful assistant for the Axia Meetings platform.
-${langInstruction}
-Be concise, friendly, and professional. Use bullet points for lists.
-Never make up data — only report what you actually have.
-
-${PLATFORM_KNOWLEDGE}`;
 
     // ── PUBLIC / unauthenticated ──────────────────────────────────────────
     if (!role || !userId) {
@@ -152,20 +146,35 @@ ${PLATFORM_KNOWLEDGE}`;
                 if (settings.linkedin) lines.push(`LinkedIn: ${settings.linkedin}`);
                 if (settings.tiktok) lines.push(`TikTok: ${settings.tiktok}`);
                 if (lines.length > 0) {
-                    contactInfo = `\n\nCONTACT INFORMATION (share this when users ask how to reach us):\n${lines.join('\n')}`;
+                    contactInfo = `\n\nCONTACT INFORMATION:\n${lines.join('\n')}`;
                 }
             }
         } catch { /* ignore */ }
 
-        return `${base}
+        return `You are Axia Support, the helpful, warm, and friendly assistant for the Axia Meetings platform.
+${langInstruction}
+Be concise, friendly, and professional.
 
-CONTEXT: You are talking to a visitor who is not logged in.
-Help them understand what Axia Meetings is, its features, and how to get started.
-If they want to contact us or need support, provide the contact information below.
-Do not discuss internal data or user-specific information.${contactInfo}
+CONTEXT: You are talking to a public visitor who is not logged in.
+- Your primary goal is to help them understand what Axia Meetings is, its features, options, and how to get started.
+- Be warm and welcoming. If they greet you (e.g., "hi", "hello", "bonjour", "salut"), respond with a friendly, natural greeting and ask how you can help them learn about Axia Meetings today.
+- NEVER start your response with access-denied warnings or dry messages like "Désolé, mais il semble que vous n'ayez pas accès..." for simple greetings or general questions.
+- If they ask about private workspace records (like specific meetings, users, or settings that require login), politely explain that this information requires authentication, and guide them to the login page (/auth/login).
+- Do not mention databases, backend APIs, or tools.
 
-${TOOL_INSTRUCTIONS}`;
+${PLATFORM_KNOWLEDGE}
+${contactInfo}`;
     }
+
+    const base = `You are Axia Support, the helpful assistant for the Axia Meetings platform.
+${langInstruction}
+Be concise, friendly, and professional. Use bullet points for lists.
+Never make up data — only report what you actually have.
+
+- If the user says "stop", "good", "thanks", "bye", or other short/conversational remarks, acknowledge them politely and briefly (e.g. "Alright, let me know if you need anything else.", "Understood.", "You're welcome!").
+- Do NOT output lists, statistics, or database summaries on these conversational turns unless the user explicitly asks for them again.
+
+${PLATFORM_KNOWLEDGE}`;
 
     // ── PARTICIPANT in a meeting ──────────────────────────────────────────
     if (role === 'PARTICIPANT') {
@@ -322,28 +331,52 @@ ${TOOL_INSTRUCTIONS}`;
     return base;
 }
 
-// ─── GET: Fetch chat sessions (DEVELOPER only) ─────────────────────────────
+// ─── GET: Fetch chat sessions ─────────────────────────────────────────────
 export async function GET(req: NextRequest) {
     const authUser = await getAuthenticatedUser(req);
-    if (!authUser || authUser.role !== 'DEVELOPER') {
-        return Response.json({ status: false, message: 'Forbidden' }, { status: 403 });
+    if (!authUser) {
+        return Response.json({ status: false, message: 'Unauthorized' }, { status: 401 });
     }
     try {
         const { searchParams } = new URL(req.url);
-        const page = Number(searchParams.get('page') || 1);
-        const limit = Number(searchParams.get('limit') || 20);
-        const skip = (page - 1) * limit;
+        const mySessionsParam = searchParams.get('mySessions') === 'true';
 
-        const [sessions, total] = await Promise.all([
-            prisma.chat_sessions.findMany({
-                orderBy: { id: 'desc' },
-                skip,
-                take: limit,
-            }),
-            prisma.chat_sessions.count(),
-        ]);
+        if (authUser.role === 'DEVELOPER' && !mySessionsParam) {
+            const page = Number(searchParams.get('page') || 1);
+            const limit = Number(searchParams.get('limit') || 20);
+            const skip = (page - 1) * limit;
 
-        return Response.json({ status: true, data: sessions, total, page, limit });
+            const [sessions, total] = await Promise.all([
+                prisma.chat_sessions.findMany({
+                    orderBy: { id: 'desc' },
+                    skip,
+                    take: limit,
+                }),
+                prisma.chat_sessions.count(),
+            ]);
+
+            const userIds = Array.from(new Set(sessions.map(s => s.user_id).filter(id => id !== null) as number[]));
+            const users = await prisma.users.findMany({
+                where: { id: { in: userIds } },
+                select: { id: true, fullname: true, email: true }
+            });
+            const userMap = new Map(users.map(u => [u.id, u]));
+
+            const dataWithUsers = sessions.map(s => ({
+                ...s,
+                user: s.user_id ? userMap.get(s.user_id) || null : null
+            }));
+
+            return Response.json({ status: true, data: dataWithUsers, total, page, limit });
+        } else {
+            // Fetch logged-in user's own sessions
+            const sessions = await prisma.chat_sessions.findMany({
+                where: { user_id: authUser.userId },
+                orderBy: { updated_at: 'desc' },
+                take: 50,
+            });
+            return Response.json({ status: true, data: sessions });
+        }
     } catch (error: any) {
         return Response.json({ status: false, message: 'Internal server error' }, { status: 500 });
     }
@@ -398,6 +431,23 @@ function extractEndpoints(text: string): string[] {
         }
     }
 
+    // 3. Fallback: Detect raw API paths matching the platform's supported data endpoints
+    const pathRegex = /(\/|api\/)(meetings\/\d+\/(participants|points|documents)|meetings\/\d+|meetings|users\/\d+|users|companies\/my)/gi;
+    let pathMatch;
+    while ((pathMatch = pathRegex.exec(text)) !== null) {
+        let ep = pathMatch[0].trim();
+        if (!ep.startsWith('/')) ep = '/' + ep;
+        // Normalize endpoints to start with /api/
+        if (!ep.startsWith('/api/')) {
+            ep = '/api' + ep;
+        }
+        // Strip trailing punctuation
+        ep = ep.replace(/[.,\/]$/, '');
+        if (!endpoints.includes(ep)) {
+            endpoints.push(ep);
+        }
+    }
+
     return endpoints;
 }
 
@@ -433,8 +483,22 @@ export async function POST(req: NextRequest) {
             meetingId ? Number(meetingId) : undefined
         );
 
+        const isPublic = !role || !userId;
+
+        // Check if the user's latest message asks for data-related queries
+        let latestUserMessage = '';
+        if (messages && messages.length > 0) {
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg.role === 'user' && typeof lastMsg.content === 'string') {
+                latestUserMessage = lastMsg.content;
+            }
+        }
+        const contentLower = latestUserMessage.toLowerCase();
+        const queryKeywords = ['show', 'list', 'count', 'who', 'how many', 'detail', 'participant', 'meeting', 'user', 'company', 'find', 'search', 'réunion', 'membre', 'nombre', 'combien', 'liste', 'afficher', 'détail', 'statistique', 'info', 'donnée', 'data', 'stat', 'developer', 'admin'];
+        const needsData = queryKeywords.some(keyword => contentLower.includes(keyword));
+
         // Tool definition
-        const tools = [
+        const tools = (isPublic || !needsData) ? undefined : [
             {
                 type: 'function',
                 function: {
@@ -457,6 +521,9 @@ export async function POST(req: NextRequest) {
         // Execute tool function
         async function executeToolCall(endpoint: string, req: NextRequest) {
             try {
+                if (!role || !userId) {
+                    return JSON.stringify({ error: 'Forbidden' });
+                }
                 if (!endpoint.startsWith('/')) endpoint = '/' + endpoint;
 
                 // Normalize agenda endpoint calls to points
@@ -635,23 +702,24 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const groqSession = await getStreamingClient();
+        const groqSessions = await getStreamingClients();
 
         let fullResponse = '';
         const encoder = new TextEncoder();
         let readable: any = null;
 
-        let useFallback = !groqSession;
+        let useFallback = true;
 
-        if (groqSession) {
+        for (const groqSession of groqSessions) {
             try {
                 const { client: groqClient, tokenId: groqTokenId } = groqSession;
+                console.log(`[AI Chat] trying groq key#${groqTokenId} (streaming)`);
                 const groqMessages = [
                     { role: 'system', content: systemPrompt },
                     ...messages.slice(-10),
                 ];
 
-                if (groqMessages.length > 0) {
+                if (!isPublic && needsData && groqMessages.length > 0) {
                     const lastMsg = groqMessages[groqMessages.length - 1];
                     if (lastMsg.role === 'user') {
                         groqMessages[groqMessages.length - 1] = {
@@ -664,8 +732,7 @@ export async function POST(req: NextRequest) {
                 const response = await groqClient.chat.completions.create({
                     model: 'llama-3.3-70b-versatile',
                     messages: groqMessages,
-                    tools: tools as any,
-                    tool_choice: 'auto',
+                    ...(tools ? { tools: tools as any, tool_choice: 'auto' } : {}),
                     max_tokens: 1024,
                     temperature: 0.7,
                 });
@@ -679,11 +746,25 @@ export async function POST(req: NextRequest) {
                 if ((toolCalls && toolCalls.length > 0) || hasTextToolCall) {
                     const toolMessages: any[] = [
                         { role: 'system', content: systemPrompt },
-                        ...messages.slice(-10),
+                        ...messages.slice(-10).map((m: any) => ({
+                            role: m.role,
+                            content: m.content
+                        })),
                     ];
 
                     if (toolCalls && toolCalls.length > 0) {
-                        toolMessages.push(choice.message);
+                        toolMessages.push({
+                            role: 'assistant',
+                            content: choice.message.content || null,
+                            tool_calls: toolCalls.map(tc => ({
+                                id: tc.id,
+                                type: 'function',
+                                function: {
+                                    name: tc.function.name,
+                                    arguments: tc.function.arguments,
+                                }
+                            }))
+                        });
                         for (const toolCall of toolCalls) {
                             if (toolCall.function.name === 'fetchApplicationData') {
                                 const args = JSON.parse(toolCall.function.arguments);
@@ -725,20 +806,55 @@ export async function POST(req: NextRequest) {
 
                     readable = new ReadableStream({
                         async start(controller) {
+                            let inTag = false;
+                            let inBrace = false;
+                            let braceCount = 0;
                             try {
                                 for await (const chunk of stream) {
                                     let text = chunk.choices[0]?.delta?.content || '';
                                     if (text) {
-                                        text = text.replace(/<\/?.+?>/g, '');
-                                        if (text) {
-                                            fullResponse += text;
-                                            controller.enqueue(encoder.encode(text));
+                                        text = text.replace(/fetchApplicationData/gi, 'database');
+                                        let filteredText = '';
+                                        for (let i = 0; i < text.length; i++) {
+                                            const char = text[i];
+                                            if (char === '<') {
+                                                inTag = true;
+                                                continue;
+                                            }
+                                            if (char === '>') {
+                                                inTag = false;
+                                                continue;
+                                            }
+                                            if (char === '{') {
+                                                inBrace = true;
+                                                braceCount++;
+                                                continue;
+                                            }
+                                            if (char === '}') {
+                                                braceCount--;
+                                                if (braceCount <= 0) {
+                                                    inBrace = false;
+                                                    braceCount = 0;
+                                                }
+                                                continue;
+                                            }
+                                            if (!inTag && !inBrace) {
+                                                filteredText += char;
+                                            }
+                                        }
+                                        filteredText = filteredText.replace(/\/api\/(meetings|users|companies)\S*/gi, '');
+                                        if (filteredText) {
+                                            fullResponse += filteredText;
+                                            controller.enqueue(encoder.encode(filteredText));
                                         }
                                     }
                                 }
+                            } catch (streamErr: any) {
+                                console.error('[AI Chat Stream Error]:', streamErr?.message || streamErr);
                             } finally {
                                 controller.close();
-                                await trackUsage(groqTokenId, 'chat', true).catch(() => { });
+                                console.log(`[AI Chat] groq key#${groqTokenId} (streaming) SUCCEEDED`);
+                                await trackUsage(groqTokenId, 'chat', true, 1).catch(() => { });
                                 await saveChatSession();
                             }
                         },
@@ -746,7 +862,8 @@ export async function POST(req: NextRequest) {
                 } else {
                     const cleanedContent = textContent.replace(/<\/?.+?>/g, '')
                                                      .replace(/\{[^{}]*['"]endpoint['"]\s*:\s*['"]([^'"]+)['"][^{}]*\}/gi, '')
-                                                     .replace(/fetchApplicationData/gi, '');
+                                                     .replace(/\/api\/(meetings|users|companies)\S*/gi, '')
+                                                     .replace(/fetchApplicationData/gi, 'database');
                     fullResponse = cleanedContent;
 
                     readable = new ReadableStream({
@@ -759,22 +876,24 @@ export async function POST(req: NextRequest) {
                                 }
                             }
                             controller.close();
-                            await trackUsage(groqTokenId, 'chat', true).catch(() => { });
+                            console.log(`[AI Chat] groq key#${groqTokenId} (streaming) SUCCEEDED`);
+                            await trackUsage(groqTokenId, 'chat', true, 1).catch(() => { });
                             await saveChatSession();
                         },
                     });
                 }
+                useFallback = false;
+                break;
             } catch (groqErr: any) {
-                console.warn('[AI Chat] Groq streaming failed, falling back to Gemini/OpenRouter...', groqErr?.message || groqErr);
-                await trackUsage(groqSession.tokenId, 'chat', false).catch(() => { });
-                useFallback = true;
+                console.error(`[AI Chat] groq key#${groqSession.tokenId} (streaming) FAILED:`, groqErr?.message || groqErr);
+                await trackUsage(groqSession.tokenId, 'chat', false, 1).catch(() => { });
             }
         }
 
         if (useFallback) {
             try {
                 const basePrompt = `${systemPrompt}\n\n${messages.slice(-10).map((m: any) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')}`;
-                const reminder = `\n\n[SYSTEM REMINDER]\n- If the user asks for specific data, lists, or counts (e.g. participants in a meeting, user list) that are not fully detailed in the context, you MUST call the tool by outputting: <function=fetchApplicationData>{"endpoint": "..."}</function>\n- Replace the endpoint with the correct API route (e.g. "/api/meetings/14/participants").\n- Output ONLY the tool call tag and nothing else. Do NOT write any greeting or introductory/concluding text when calling a tool.\n- Do NOT guess, assume, or hallucinate any numbers.\n- CONFIDENTIALITY: NEVER expose API routes, endpoints, function names (like fetchApplicationData), database tables/variables, or raw code to the user. Keep all backend queries completely invisible.`;
+                const reminder = isPublic ? '' : `\n\n[SYSTEM REMINDER]\n- If the user asks for specific data, lists, or counts (e.g. participants in a meeting, user list) that are not fully detailed in the context, you MUST call the tool by outputting: <function=fetchApplicationData>{"endpoint": "..."}</function>\n- Replace the endpoint with the correct API route (e.g. "/api/meetings/14/participants").\n- Output ONLY the tool call tag and nothing else. Do NOT write any greeting or introductory/concluding text when calling a tool.\n- Do NOT guess, assume, or hallucinate any numbers.\n- CONFIDENTIALITY: NEVER expose API routes, endpoints, function names (like fetchApplicationData), database tables/variables, or raw code to the user. Keep all backend queries completely invisible.`;
                 const fullPrompt = `${basePrompt}${reminder}\nAssistant:`;
                 fullResponse = await getChatResponse(fullPrompt, { maxOutputTokens: 1024 });
 
@@ -798,7 +917,8 @@ export async function POST(req: NextRequest) {
                 // Clean up any remaining XML tags, JSON blocks, or endpoint paths
                 fullResponse = fullResponse.replace(/<\/?.+?>/g, '')
                                            .replace(/\{[^{}]*['"]endpoint['"]\s*:\s*['"]([^'"]+)['"][^{}]*\}/gi, '')
-                                           .replace(/fetchApplicationData/gi, '');
+                                           .replace(/\/api\/(meetings|users|companies)\S*/gi, '')
+                                           .replace(/fetchApplicationData/gi, 'database');
             } catch (err: any) {
                 return new Response(
                     JSON.stringify({ error: 'No AI provider available. Add API keys in AI Tokens settings.' }),

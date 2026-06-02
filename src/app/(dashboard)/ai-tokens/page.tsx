@@ -70,7 +70,7 @@ const emptyForm = {
 const PROVIDERS = [
     { value: 'gemini', label: 'Gemini', color: 'bg-blue-100 text-blue-700', chatOrder: 1, genOrder: 2 },
     { value: 'groq', label: 'Groq', color: 'bg-orange-100 text-orange-700', chatOrder: 2, genOrder: 1 },
-    { value: 'openrouter', label: 'OpenRouter', color: 'bg-purple-100 text-purple-700', chatOrder: 3, genOrder: 3 },
+    { value: 'openrouter', label: 'OpenRouter', color: 'bg-green-100 text-green-700', chatOrder: 3, genOrder: 3 },
 ];
 
 export default function AITokensPage() {
@@ -204,8 +204,10 @@ export default function AITokensPage() {
         } catch { toast.error(t('toast.toggleError')); }
     };
 
-    const providerInfo = (p: string | null) =>
-        PROVIDERS.find(x => x.value === p) || { value: p || '?', label: p || 'Unknown', color: 'bg-slate-100 text-slate-600', chatOrder: 99, genOrder: 99 };
+    const providerInfo = (p: string | null) => {
+        const clean = p?.toLowerCase().replace(/\s+/g, '');
+        return PROVIDERS.find(x => x.value === clean) || { value: p || '?', label: p || 'Unknown', color: 'bg-slate-100 text-slate-600', chatOrder: 99, genOrder: 99 };
+    };
 
     const maskKey = (key: string) =>
         key.length > 10 ? `${key.slice(0, 6)}${'•'.repeat(Math.min(key.length - 10, 16))}${key.slice(-4)}` : '••••••••';
@@ -226,19 +228,30 @@ export default function AITokensPage() {
     const columns: Column<AIToken>[] = [
         {
             id: 'provider',
-            header: t('table.providerName'),
-            accessorKey: 'provider',
+            header: t('table.provider'),
+            accessorFn: (row) => row.provider?.toLowerCase().trim().replace(/\s+/g, '') ?? '',
             cell: ({ row: { original: token } }) => {
                 const pInfo = providerInfo(token.provider);
+                return (
+                    <Badge variant="outline" className={cn("h-4.5 px-1.5 text-[9px] font-bold uppercase border-transparent shadow-xs", pInfo.color)}>
+                        {pInfo.label}
+                    </Badge>
+                );
+            }
+        },
+        {
+            id: 'name',
+            header: t('table.name'),
+            accessorKey: 'name',
+            cell: ({ row: { original: token } }) => {
                 const isExpired = token.expiration && new Date(token.expiration) < new Date();
                 return (
                     <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                            <Badge variant={token.provider === 'gemini' ? 'primary' : token.provider === 'groq' ? 'warning' : 'default'} className="h-4.5 px-1.5 text-[9px] font-bold uppercase">
-                                {pInfo.label}
-                            </Badge>
-                            {token.name && <Typography variant="large" className="text-slate-900 font-semibold text-xs">{token.name}</Typography>}
-                        </div>
+                        {token.name ? (
+                            <Typography variant="large" className="text-slate-900 font-semibold text-xs">{token.name}</Typography>
+                        ) : (
+                            <Typography variant="p" color="secondary" className="text-slate-300">—</Typography>
+                        )}
                         <div className="flex items-center gap-2">
                             {isExpired ? (
                                 <Badge variant="destructive" size="sm" className="h-3.5 px-1.5 gap-1 text-[8px] uppercase font-bold">
@@ -258,6 +271,7 @@ export default function AITokensPage() {
         {
             id: 'apiKey',
             header: t('table.apiKey'),
+            accessorKey: 'api_key',
             cell: ({ row: { original: token } }) => (
                 <div className="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 w-fit">
                     <Typography variant="small" className="font-mono text-slate-500 text-[10px]">
@@ -273,6 +287,7 @@ export default function AITokensPage() {
         {
             id: 'todayUsed',
             header: t('table.todayUsed'),
+            accessorFn: (row) => row.stats.todayTotal,
             cell: ({ row: { original: token } }) => {
                 const { todayTotal, creditLimit, isExhausted } = token.stats;
                 const usedPct = creditLimit && creditLimit > 0 ? Math.min(100, Math.round((todayTotal / creditLimit) * 100)) : null;
@@ -300,6 +315,7 @@ export default function AITokensPage() {
         {
             id: 'remaining',
             header: t('table.remaining'),
+            accessorFn: (row) => row.stats.remaining ?? -1,
             cell: ({ row: { original: token } }) => {
                 const { remaining, creditLimit, isExhausted } = token.stats;
                 return remaining !== null ? (

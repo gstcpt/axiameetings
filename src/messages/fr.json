@@ -1115,6 +1115,8 @@
             "subtitle": "Ajoutez votre première clé API pour activer les fonctionnalités IA"
         },
         "table": {
+            "provider": "Fournisseur",
+            "name": "Nom",
             "providerName": "Fournisseur / Nom",
             "apiKey": "Clé API",
             "todayUsed": "Utilisé Aujourd'hui",
@@ -1487,7 +1489,6 @@
         "title": "Support Axia",
         "subtitle": "En ligne",
         "welcome": "👋 Bonjour ! Je suis le Support Axia. Comment puis-je vous aider aujourd'hui ?",
-        "privacyNotice": "🔒 Votre vie privée est protégée. Vos conversations sont cryptées de bout en bout — même nos développeurs ne peuvent pas les lire en texte clair. Une fois que vous fermez cette fenêtre, cette conversation est définitivement supprimée et n'est jamais stockée.",
         "placeholder": "Tapez votre message...",
         "error": "Désolé, une erreur s'est produite. Veuillez réessayer.",
         "export": "Exporter la discussion",

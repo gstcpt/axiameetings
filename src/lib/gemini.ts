@@ -55,6 +55,32 @@ async function loadGroqKey(): Promise<DbKey | null> {
 async function trackUsage(tokenId: number, feature: string, success: boolean): Promise<void> {
     if (tokenId < 0) return; // .env fallback keys — don't track
     try {
+        const token = await prisma.ia_tokens_keys.findUnique({
+            where: { id: tokenId },
+            select: { provider: true },
+        });
+
+        if (token && token.provider) {
+            const activeKeys = await prisma.ia_tokens_keys.findMany({
+                where: {
+                    is_active: true,
+                    provider: { equals: token.provider, mode: 'insensitive' },
+                },
+                select: { id: true },
+            });
+
+            if (activeKeys.length > 0) {
+                await Promise.all(
+                    activeKeys.map(k =>
+                        prisma.ia_token_usage.create({
+                            data: { token_id: k.id, feature, success },
+                        })
+                    )
+                );
+                return;
+            }
+        }
+
         await prisma.ia_token_usage.create({
             data: { token_id: tokenId, feature, success },
         });
@@ -99,24 +125,12 @@ async function tryGeminiModel(
         model: modelName,
         ...(maxOutputTokens ? { generationConfig: { maxOutputTokens } } : {}),
     });
-    for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-            const result = await model.generateContent(prompt);
-            return result.response.text().trim();
-        } catch (err: any) {
-            const msg: string = err?.message || '';
-            if (isModelUnavailable(msg)) throw err;
-            if (!isQuotaExhausted(msg) && !isServiceUnavailable(msg)) throw err;
-            if (attempt === 0 && !isServiceUnavailable(msg)) {
-                const delay = parseRetryDelay(msg);
-                console.warn(`[Gemini:${modelName}] Rate limited — waiting ${Math.round(delay / 1000)}s…`);
-                await new Promise(r => setTimeout(r, delay));
-            } else {
-                throw err;
-            }
-        }
+    try {
+        const result = await model.generateContent(prompt);
+        return result.response.text().trim();
+    } catch (err: any) {
+        throw err;
     }
-    throw new Error('unreachable');
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────

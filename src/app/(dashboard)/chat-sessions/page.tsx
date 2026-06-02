@@ -35,6 +35,10 @@ interface ChatSession {
     is_closed: boolean;
     created_at: string;
     updated_at: string;
+    user?: {
+        fullname: string | null;
+        email: string | null;
+    } | null;
 }
 
 interface AIReport {
@@ -177,7 +181,7 @@ export default function ChatSessionsPage() {
     const columns: Column<ChatSession>[] = React.useMemo(() => [
         {
             id: 'user',
-            accessorFn: (row) => `${row.role || 'PUBLIC'} ${row.locale}`,
+            accessorFn: (row) => `${row.user?.fullname || ''} ${row.user?.email || ''} ${row.role || 'PUBLIC'} ${row.locale}`,
             header: t('session.user'),
             cell: ({ row: { original: session } }) => {
                 const isActive = !session.is_closed;
@@ -195,6 +199,16 @@ export default function ChatSessionsPage() {
                             )}
                         </div>
                         <div>
+                            {session.user ? (
+                                <div className="flex flex-col mb-1.5">
+                                    <span className="text-xs font-bold text-slate-800 leading-tight">
+                                        {session.user.fullname || 'No Name'}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 font-medium leading-none">
+                                        {session.user.email}
+                                    </span>
+                                </div>
+                            ) : null}
                             <Badge variant={roleVariant(session.role)} className="h-4 px-1.5 text-[8px] uppercase font-bold mb-0.5">
                                 {t(`roles.${session.role || 'PUBLIC'}`)}
                             </Badge>
@@ -575,7 +589,7 @@ export default function ChatSessionsPage() {
                                                 ? "bg-white text-slate-800 border-slate-100 rounded-ss-sm"
                                                 : "bg-[#002B5B] text-white border-[#002B5B] rounded-se-sm shadow-blue-900/10"
                                         )}>
-                                            <Typography variant="p" className="text-xs font-medium leading-relaxed whitespace-pre-wrap">{msg.content}</Typography>
+                                            <Typography variant="p" color={msg.role === 'assistant' ? 'default' : 'white'} className="text-xs font-medium leading-relaxed whitespace-pre-wrap">{msg.content}</Typography>
                                         </div>
                                     </div>
                                 ))

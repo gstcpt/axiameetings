@@ -25,7 +25,14 @@ export async function POST(req: NextRequest) {
             data: { reset_token: token, reset_token_expiry: expiry },
         });
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+        let baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+        if (!baseUrl) {
+            const protocol = req.headers.get('x-forwarded-proto') || 'http';
+            const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
+            if (host) {
+                baseUrl = `${protocol}://${host}`;
+            }
+        }
         if (!baseUrl) return NextResponse.json({ status: false, message: 'Error find domain url.' });
         const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 

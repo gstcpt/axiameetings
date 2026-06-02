@@ -46,11 +46,16 @@ async function loadActiveKeys(provider: string): Promise<DbKey[]> {
 }
 
 // ─── Usage tracking ───────────────────────────────────────────────────────────
-export async function trackUsage(tokenId: number, feature: string, success: boolean): Promise<void> {
+export async function trackUsage(tokenId: number, feature: string, success: boolean, count: number = 1): Promise<void> {
     if (tokenId < 0) return;
     try {
-        await prisma.ia_token_usage.create({
-            data: { token_id: tokenId, feature, success },
+        const records = Array.from({ length: count }, () => ({
+            token_id: tokenId,
+            feature,
+            success,
+        }));
+        await prisma.ia_token_usage.createMany({
+            data: records,
         });
     } catch { /* non-critical */ }
 }
@@ -85,20 +90,13 @@ async function tryGeminiKey(dbKey: DbKey, prompt: string, maxOutputTokens?: numb
             model: modelName,
             ...(maxOutputTokens ? { generationConfig: { maxOutputTokens } } : {}),
         });
-        for (let attempt = 0; attempt < 2; attempt++) {
-            try {
-                const result = await model.generateContent(prompt);
-                return result.response.text().trim();
-            } catch (err: any) {
-                const msg: string = err?.message || '';
-                if (isModelUnavailable(msg)) break;
-                if (!isRetryable(msg)) throw err;
-                if (attempt === 0 && !isServiceUnavailable(msg)) {
-                    const delay = parseRetryDelay(msg);
-                    console.warn(`[Gemini:${modelName}] Rate limited — waiting ${Math.round(delay / 1000)}s`);
-                    await new Promise(r => setTimeout(r, delay));
-                } else throw err;
-            }
+        try {
+            const result = await model.generateContent(prompt);
+            return result.response.text().trim();
+        } catch (err: any) {
+            const msg: string = err?.message || '';
+            if (isModelUnavailable(msg)) break;
+            throw err;
         }
     }
     throw new Error('GEMINI_ALL_MODELS_FAILED');
@@ -198,11 +196,13 @@ async function runProviders(
             try {
                 console.log(`[AI:${feature}] trying ${provider} key#${dbKey.id}`);
                 const result = await tryProvider(dbKey, prompt, feature, maxOutputTokens);
-                await trackUsage(dbKey.id, feature, true);
+                console.log(`[AI:${feature}] ${provider} key#${dbKey.id} SUCCEEDED`);
+                await trackUsage(dbKey.id, feature, true, 1);
                 return result;
             } catch (err: any) {
                 lastErr = err;
-                await trackUsage(dbKey.id, feature, false);
+                console.error(`[AI:${feature}] ${provider} key#${dbKey.id} FAILED:`, err.message || err);
+                await trackUsage(dbKey.id, feature, false, 1);
                 const msg: string = err?.message || '';
                 if (isRetryable(msg) || msg.includes('_ALL_MODELS_FAILED')) {
                     console.warn(`[AI:${feature}] ${provider} key#${dbKey.id} exhausted — rotating`);
@@ -230,27 +230,27 @@ export async function generateWithRetry(
 }
 
 // ─── getChatResponse — chat fallback (non-streaming) ─────────────────────────
-// Priority: Gemini → Groq → OpenRouter
+// Priority: Groq → Gemini → OpenRouter
 export async function getChatResponse(
     prompt: string,
     options?: { maxOutputTokens?: number },
 ): Promise<string> {
     return runProviders(
-        ['gemini', 'groq', 'openrouter', 'open router'],
+        ['groq', 'gemini', 'openrouter', 'open router'],
         prompt,
         'chat',
         options?.maxOutputTokens,
     );
 }
 
-// ─── getStreamingClient — Groq streaming for chat ────────────────────────────
-// Returns first active Groq key; null means use getChatResponse fallback
-export async function getStreamingClient(): Promise<{ client: Groq; tokenId: number } | null> {
+// ─── getStreamingClients — Groq streaming for chat ───────────────────────────
+// Returns all active Groq keys in order
+export async function getStreamingClients(): Promise<{ client: Groq; tokenId: number }[]> {
     const keys = await loadActiveKeys('groq');
-    if (keys.length > 0) {
-        return { client: new Groq({ apiKey: keys[0].key }), tokenId: keys[0].id };
-    }
-    return null;
+    return keys.map(k => ({
+        client: new Groq({ apiKey: k.key }),
+        tokenId: k.id
+    }));
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────

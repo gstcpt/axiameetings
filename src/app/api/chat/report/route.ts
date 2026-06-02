@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { getStreamingClient, trackUsage, generateWithRetry } from '@/lib/ai-provider';
+import { getStreamingClients, trackUsage, generateWithRetry } from '@/lib/ai-provider';
 
 export async function POST(req: NextRequest) {
     const authUser = await getAuthenticatedUser(req);
@@ -50,19 +50,29 @@ Generate a JSON report with EXACTLY this structure:
 
 Respond ONLY with valid JSON, no extra text.`;
 
-        const groqSession = await getStreamingClient();
-        let text: string;
-        if (groqSession) {
-            const { client: groqClient, tokenId } = groqSession;
-            const completion = await groqClient.chat.completions.create({
-                model: 'llama-3.3-70b-versatile',
-                messages: [{ role: 'user', content: prompt }],
-                max_tokens: 2048,
-                temperature: 0.3,
-            });
-            await trackUsage(tokenId, 'chat-report', true).catch(() => { });
-            text = completion.choices[0]?.message?.content || '';
-        } else {
+        const groqSessions = await getStreamingClients();
+        let text = '';
+        let success = false;
+        for (const groqSession of groqSessions) {
+            try {
+                const { client: groqClient, tokenId } = groqSession;
+                console.log(`[Chat Report] trying groq key#${tokenId}`);
+                const completion = await groqClient.chat.completions.create({
+                    model: 'llama-3.3-70b-versatile',
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 2048,
+                    temperature: 0.3,
+                });
+                await trackUsage(tokenId, 'chat-report', true, 1).catch(() => { });
+                text = completion.choices[0]?.message?.content || '';
+                success = true;
+                break;
+            } catch (err: any) {
+                console.error(`[Chat Report] groq key#${groqSession.tokenId} FAILED:`, err?.message);
+                await trackUsage(groqSession.tokenId, 'chat-report', false, 1).catch(() => { });
+            }
+        }
+        if (!success) {
             // Fallback: Groq → Gemini → OpenRouter
             text = await generateWithRetry(prompt, { maxOutputTokens: 2048, feature: 'chat-report' });
         }
