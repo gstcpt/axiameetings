@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { createLog } from '@/lib/logger';
+import { redis } from '@/lib/redis';
 
 /**
  * @description AI Agent Documentation
@@ -55,6 +56,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             data: { name, logo_file_name, website },
         });
 
+        // Invalidate cache
+        if (redis) {
+            await redis.del('references:all').catch(() => {});
+        }
+
         await createLog({
             userId: user.userId,
             companyId: user.companyId,
@@ -80,6 +86,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         if (!existing) return NextResponse.json({ status: false, message: 'Not found' }, { status: 404 });
 
         await prisma.references.delete({ where: { id: Number(id) } });
+
+        // Invalidate cache
+        if (redis) {
+            await redis.del('references:all').catch(() => {});
+        }
 
         await createLog({
             userId: user.userId,

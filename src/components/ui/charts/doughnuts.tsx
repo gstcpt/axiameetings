@@ -15,6 +15,7 @@ interface DoughnutChartProps {
   colors?: string[];
   height?: number | string;
   totalLabel?: string;
+  hideLegend?: boolean;
 }
 
 const DEFAULT_COLORS = ["#002B5B", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444"];
@@ -24,7 +25,9 @@ export default function DoughnutChartComponent({
   colors = DEFAULT_COLORS,
   height = 300,
   totalLabel = "Total",
+  hideLegend = false,
 }: DoughnutChartProps) {
+  const [hovered, setHovered] = React.useState<{ name: string; value: number } | null>(null);
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
@@ -39,9 +42,15 @@ export default function DoughnutChartComponent({
             outerRadius={80}
             paddingAngle={4}
             dataKey="value"
+            nameKey="name"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+              <Cell 
+                key={`cell-${index}`} 
+                fill={colors[index % colors.length]} 
+                onMouseEnter={() => setHovered({ name: entry.name, value: entry.value })}
+                onMouseLeave={() => setHovered(null)}
+              />
             ))}
           </Pie>
           <Tooltip
@@ -51,38 +60,41 @@ export default function DoughnutChartComponent({
               boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
               padding: "12px",
             }}
+            labelStyle={{ display: "none" }}
           />
-          <Legend
-            verticalAlign="bottom"
-            align="center"
-            iconType="circle"
-            wrapperStyle={{
-              fontSize: "11px",
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              paddingTop: "15px",
-              color: "#64748b",
-            }}
-          />
+          {!hideLegend && (
+            <Legend
+              verticalAlign="bottom"
+              align="center"
+              iconType="circle"
+              wrapperStyle={{
+                fontSize: "11px",
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                paddingTop: "15px",
+                color: "#64748b",
+              }}
+            />
+          )}
         </PieChart>
       </ResponsiveContainer>
       
       <div 
         style={{
           position: "absolute",
-          top: "40%",
+          top: hideLegend ? "50%" : "40%",
           left: "50%",
           transform: "translate(-50%, -50%)",
           textAlign: "center",
           pointerEvents: "none"
         }}
-        className="flex flex-col items-center justify-center"
+        className="flex flex-col items-center justify-center max-w-[100px]"
       >
-        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-          {totalLabel}
+        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider truncate w-full text-center">
+          {hovered ? hovered.name : totalLabel}
         </span>
-        <span className="text-xl font-bold text-slate-800 leading-none">
-          {total.toLocaleString()}
+        <span className="text-xl font-bold text-slate-800 leading-none mt-0.5">
+          {(hovered ? hovered.value : total).toLocaleString()}
         </span>
       </div>
     </div>

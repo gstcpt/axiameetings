@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { createLog } from '@/lib/logger';
+import { getOrSetCache, redis } from '@/lib/redis';
 
 /**
  * @description AI Agent Documentation
@@ -28,7 +29,9 @@ import { createLog } from '@/lib/logger';
  */
 export async function GET(req: NextRequest) {
     try {
-        const references = await prisma.references.findMany({ orderBy: { name: 'asc' } });
+        const references = await getOrSetCache('references:all', 3600, async () => {
+            return prisma.references.findMany({ orderBy: { name: 'asc' } });
+        });
         return NextResponse.json({ status: true, data: references });
     } catch {
         return NextResponse.json({ status: false, message: 'Internal server error' }, { status: 500 });
@@ -47,6 +50,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ status: false, message: 'All fields are required' }, { status: 400 });
         }
         const ref = await prisma.references.create({ data: { name, logo_file_name, website } });
+
+        // Invalidate cache
+        if (redis) {
+            await redis.del('references:all').catch(() => {});
+        }
 
         await createLog({
             userId: user.userId,

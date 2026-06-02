@@ -33,7 +33,7 @@ export default function HorizontalBarChartComponent({
         <BarChart
           layout="vertical"
           data={data}
-          margin={{ top: 10, right: 30, left: 40, bottom: 10 }}
+          margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
         >
           <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
           <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
@@ -43,7 +43,7 @@ export default function HorizontalBarChartComponent({
             axisLine={false}
             tickLine={false}
             tick={{ fill: "#64748b", fontSize: 11, fontWeight: 500 }}
-            width={100}
+            width={50}
           />
           <Tooltip
             contentStyle={{

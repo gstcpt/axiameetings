@@ -1,41 +1,537 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
+import { getOrSetCache } from '@/lib/redis';
 
-/**
- * @description AI Agent Documentation
- * Endpoint: /api/overview
- * Method: GET
- * 
- * PURPOSE:
- * Use this endpoint to retrieve data for `/api/overview`.
- * Before calling, map the user's request to the properties available in the Prisma schema for the models listed below.
- * 
- * PRISMA MODELS ACCESSED IN THIS ENDPOINT:
- * - Model: `companies`
- * - Model: `meetings`
- * - Model: `users`
- * - Model: `companies_apis`
- * - Model: `logs`
- * RELATIONS INCLUDED: 
- * _count: { select: { users: true } }
- * 
- * AI AGENT DATA ACCESS & ROLE RULES:
- * 1. UNAUTHENTICATED: Only provide general AxiaMeetings info (total companies, users, references, guides).
- * 2. ADMIN: Restrict all answers to data where companyId matches the admin's company. They can query specific meetings, users, etc., within their company.
- * 3. PARTICIPANT (Token): Restrict all answers strictly to the single meeting associated with their token.
- * 4. DEVELOPER: Full access to all data.
- */
+// Helper function to aggregate meetings count by period
+function aggregateMeetings(
+    period: 'day' | 'days' | 'week' | 'month' | '3months' | 'year' | 'all',
+    meetings: any[],
+    today: Date
+): { name: string; meetings: number }[] {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const todayStr = today.toISOString().split('T')[0];
+    
+    if (period === 'day') {
+        const hourlyMap = new Map<string, number>();
+        for (let h = 0; h < 24; h++) {
+            const label = `${String(h).padStart(2, '0')}:00`;
+            hourlyMap.set(label, 0);
+        }
+        meetings.forEach(m => {
+            if (m.date === todayStr && m.time) {
+                const hour = m.time.split(':')[0] || '00';
+                const label = `${String(parseInt(hour)).padStart(2, '0')}:00`;
+                if (hourlyMap.has(label)) {
+                    hourlyMap.set(label, hourlyMap.get(label)! + 1);
+                }
+            }
+        });
+        return Array.from(hourlyMap.entries()).map(([name, val]) => ({ name, meetings: val }));
+    }
+    
+    if (period === 'days') {
+        const daysMap = new Map<string, { name: string; meetings: number }>();
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            daysMap.set(dateStr, { name: label, meetings: 0 });
+        }
+        meetings.forEach(m => {
+            if (m.date && daysMap.has(m.date)) {
+                daysMap.get(m.date)!.meetings++;
+            }
+        });
+        return Array.from(daysMap.values());
+    }
+    
+    if (period === 'week') {
+        const weeklyData = [];
+        for (let w = 3; w >= 0; w--) {
+            const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7) - 6);
+            const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7));
+            
+            const startLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const endLabel = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const label = `${startLabel} - ${endLabel}`;
+            
+            let count = 0;
+            meetings.forEach(m => {
+                if (m.date) {
+                    const [y, mm, dd] = m.date.split('-');
+                    const mDate = new Date(parseInt(y), parseInt(mm) - 1, parseInt(dd), 0, 0, 0, 0);
+                    start.setHours(0, 0, 0, 0);
+                    end.setHours(23, 59, 59, 999);
+                    if (mDate >= start && mDate <= end) {
+                        count++;
+                    }
+                }
+            });
+            weeklyData.push({ name: label, meetings: count });
+        }
+        return weeklyData;
+    }
+    
+    if (period === 'month') {
+        const daysMap = new Map<string, { name: string; meetings: number }>();
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            daysMap.set(dateStr, { name: label, meetings: 0 });
+        }
+        meetings.forEach(m => {
+            if (m.date && daysMap.has(m.date)) {
+                daysMap.get(m.date)!.meetings++;
+            }
+        });
+        return Array.from(daysMap.values());
+    }
+    
+    if (period === '3months') {
+        const weeklyData = [];
+        for (let w = 11; w >= 0; w--) {
+            const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7) - 6);
+            const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7));
+            
+            const startLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const endLabel = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const label = `${startLabel} - ${endLabel}`;
+            
+            let count = 0;
+            meetings.forEach(m => {
+                if (m.date) {
+                    const [y, mm, dd] = m.date.split('-');
+                    const mDate = new Date(parseInt(y), parseInt(mm) - 1, parseInt(dd), 0, 0, 0, 0);
+                    start.setHours(0, 0, 0, 0);
+                    end.setHours(23, 59, 59, 999);
+                    if (mDate >= start && mDate <= end) {
+                        count++;
+                    }
+                }
+            });
+            weeklyData.push({ name: label, meetings: count });
+        }
+        return weeklyData;
+    }
+    
+    if (period === 'year') {
+        const monthlyData = [];
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const yr = d.getFullYear();
+            const mon = d.getMonth();
+            const label = `${months[mon]} ${yr}`;
+            
+            let count = 0;
+            meetings.forEach(m => {
+                if (m.date) {
+                    const [my, mm] = m.date.split('-');
+                    if (parseInt(my) === yr && parseInt(mm) - 1 === mon) {
+                        count++;
+                    }
+                }
+            });
+            monthlyData.push({ name: label, meetings: count });
+        }
+        return monthlyData;
+    }
+    
+    if (period === 'all') {
+        const yearsMap = new Map<string, number>();
+        let minYear = today.getFullYear() - 4;
+        
+        meetings.forEach(m => {
+            if (m.date) {
+                const yr = m.date.split('-')[0];
+                if (yr) {
+                    const y = parseInt(yr);
+                    if (y < minYear) minYear = y;
+                }
+            }
+        });
+        
+        for (let y = minYear; y <= today.getFullYear(); y++) {
+            yearsMap.set(String(y), 0);
+        }
+        
+        meetings.forEach(m => {
+            if (m.date) {
+                const yr = m.date.split('-')[0];
+                if (yr && yearsMap.has(yr)) {
+                    yearsMap.set(yr, yearsMap.get(yr)! + 1);
+                }
+            }
+        });
+        return Array.from(yearsMap.entries()).map(([name, val]) => ({ name, meetings: val }));
+    }
+    
+    return [];
+}
+
+// Helper function to aggregate system activity logs by period
+function aggregateLogs(
+    period: 'day' | 'days' | 'week' | 'month' | '3months' | 'year' | 'all',
+    logs: any[],
+    today: Date
+): { name: string; activity: number }[] {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const todayStr = today.toISOString().split('T')[0];
+    
+    if (period === 'day') {
+        const hourlyMap = new Map<string, number>();
+        for (let h = 0; h < 24; h++) {
+            const label = `${String(h).padStart(2, '0')}:00`;
+            hourlyMap.set(label, 0);
+        }
+        logs.forEach(l => {
+            const d = new Date(l.timestamp);
+            const dStr = d.toISOString().split('T')[0];
+            if (dStr === todayStr) {
+                const label = `${String(d.getHours()).padStart(2, '0')}:00`;
+                if (hourlyMap.has(label)) {
+                    hourlyMap.set(label, hourlyMap.get(label)! + 1);
+                }
+            }
+        });
+        return Array.from(hourlyMap.entries()).map(([name, val]) => ({ name, activity: val }));
+    }
+    
+    if (period === 'days') {
+        const daysMap = new Map<string, { name: string; activity: number }>();
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            daysMap.set(dateStr, { name: label, activity: 0 });
+        }
+        logs.forEach(l => {
+            const dateStr = new Date(l.timestamp).toISOString().split('T')[0];
+            if (daysMap.has(dateStr)) {
+                daysMap.get(dateStr)!.activity++;
+            }
+        });
+        return Array.from(daysMap.values());
+    }
+    
+    if (period === 'week') {
+        const weeklyData = [];
+        for (let w = 3; w >= 0; w--) {
+            const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7) - 6);
+            const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7));
+            
+            const startLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const endLabel = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const label = `${startLabel} - ${endLabel}`;
+            
+            let count = 0;
+            logs.forEach(l => {
+                const lDate = new Date(l.timestamp);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                if (lDate >= start && lDate <= end) {
+                    count++;
+                }
+            });
+            weeklyData.push({ name: label, activity: count });
+        }
+        return weeklyData;
+    }
+    
+    if (period === 'month') {
+        const daysMap = new Map<string, { name: string; activity: number }>();
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            daysMap.set(dateStr, { name: label, activity: 0 });
+        }
+        logs.forEach(l => {
+            const dateStr = new Date(l.timestamp).toISOString().split('T')[0];
+            if (daysMap.has(dateStr)) {
+                daysMap.get(dateStr)!.activity++;
+            }
+        });
+        return Array.from(daysMap.values());
+    }
+    
+    if (period === '3months') {
+        const weeklyData = [];
+        for (let w = 11; w >= 0; w--) {
+            const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7) - 6);
+            const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7));
+            
+            const startLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const endLabel = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const label = `${startLabel} - ${endLabel}`;
+            
+            let count = 0;
+            logs.forEach(l => {
+                const lDate = new Date(l.timestamp);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                if (lDate >= start && lDate <= end) {
+                    count++;
+                }
+            });
+            weeklyData.push({ name: label, activity: count });
+        }
+        return weeklyData;
+    }
+    
+    if (period === 'year') {
+        const monthlyData = [];
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const yr = d.getFullYear();
+            const mon = d.getMonth();
+            const label = `${months[mon]} ${yr}`;
+            
+            let count = 0;
+            logs.forEach(l => {
+                const lDate = new Date(l.timestamp);
+                if (lDate.getFullYear() === yr && lDate.getMonth() === mon) {
+                    count++;
+                }
+            });
+            monthlyData.push({ name: label, activity: count });
+        }
+        return monthlyData;
+    }
+    
+    if (period === 'all') {
+        const yearsMap = new Map<string, number>();
+        let minYear = today.getFullYear() - 4;
+        
+        logs.forEach(l => {
+            const yr = new Date(l.timestamp).getFullYear();
+            if (yr < minYear) minYear = yr;
+        });
+        
+        for (let y = minYear; y <= today.getFullYear(); y++) {
+            yearsMap.set(String(y), 0);
+        }
+        
+        logs.forEach(l => {
+            const yr = String(new Date(l.timestamp).getFullYear());
+            if (yearsMap.has(yr)) {
+                yearsMap.set(yr, yearsMap.get(yr)! + 1);
+            }
+        });
+        return Array.from(yearsMap.entries()).map(([name, val]) => ({ name, activity: val }));
+    }
+    
+    return [];
+}
+
+// Helper function to aggregate AI success and failed requests by period
+function aggregateAiUsage(
+    period: 'day' | 'days' | 'week' | 'month' | '3months' | 'year' | 'all',
+    usage: any[],
+    today: Date
+): { name: string; success: number; failed: number }[] {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const todayStr = today.toISOString().split('T')[0];
+    
+    if (period === 'day') {
+        const hourlyMap = new Map<string, { success: number; failed: number }>();
+        for (let h = 0; h < 24; h++) {
+            const label = `${String(h).padStart(2, '0')}:00`;
+            hourlyMap.set(label, { success: 0, failed: 0 });
+        }
+        usage.forEach(u => {
+            const d = new Date(u.used_at);
+            const dStr = d.toISOString().split('T')[0];
+            if (dStr === todayStr) {
+                const label = `${String(d.getHours()).padStart(2, '0')}:00`;
+                if (hourlyMap.has(label)) {
+                    const item = hourlyMap.get(label)!;
+                    if (u.success) item.success++;
+                    else item.failed++;
+                }
+            }
+        });
+        return Array.from(hourlyMap.entries()).map(([name, val]) => ({ name, ...val }));
+    }
+    
+    if (period === 'days') {
+        const daysMap = new Map<string, { name: string; success: number; failed: number }>();
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            daysMap.set(dateStr, { name: label, success: 0, failed: 0 });
+        }
+        usage.forEach(u => {
+            const dateStr = new Date(u.used_at).toISOString().split('T')[0];
+            if (daysMap.has(dateStr)) {
+                const item = daysMap.get(dateStr)!;
+                if (u.success) item.success++;
+                else item.failed++;
+            }
+        });
+        return Array.from(daysMap.values());
+    }
+    
+    if (period === 'week') {
+        const weeklyData = [];
+        for (let w = 3; w >= 0; w--) {
+            const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7) - 6);
+            const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7));
+            
+            const startLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const endLabel = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const label = `${startLabel} - ${endLabel}`;
+            
+            let success = 0;
+            let failed = 0;
+            usage.forEach(u => {
+                const uDate = new Date(u.used_at);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                if (uDate >= start && uDate <= end) {
+                    if (u.success) success++;
+                    else failed++;
+                }
+            });
+            weeklyData.push({ name: label, success, failed });
+        }
+        return weeklyData;
+    }
+    
+    if (period === 'month') {
+        const daysMap = new Map<string, { name: string; success: number; failed: number }>();
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            daysMap.set(dateStr, { name: label, success: 0, failed: 0 });
+        }
+        usage.forEach(u => {
+            const dateStr = new Date(u.used_at).toISOString().split('T')[0];
+            if (daysMap.has(dateStr)) {
+                const item = daysMap.get(dateStr)!;
+                if (u.success) item.success++;
+                else item.failed++;
+            }
+        });
+        return Array.from(daysMap.values());
+    }
+    
+    if (period === '3months') {
+        const weeklyData = [];
+        for (let w = 11; w >= 0; w--) {
+            const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7) - 6);
+            const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (w * 7));
+            
+            const startLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const endLabel = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const label = `${startLabel} - ${endLabel}`;
+            
+            let success = 0;
+            let failed = 0;
+            usage.forEach(u => {
+                const uDate = new Date(u.used_at);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(23, 59, 59, 999);
+                if (uDate >= start && uDate <= end) {
+                    if (u.success) success++;
+                    else failed++;
+                }
+            });
+            weeklyData.push({ name: label, success, failed });
+        }
+        return weeklyData;
+    }
+    
+    if (period === 'year') {
+        const monthlyData = [];
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const yr = d.getFullYear();
+            const mon = d.getMonth();
+            const label = `${months[mon]} ${yr}`;
+            
+            let success = 0;
+            let failed = 0;
+            usage.forEach(u => {
+                const uDate = new Date(u.used_at);
+                if (uDate.getFullYear() === yr && uDate.getMonth() === mon) {
+                    if (u.success) success++;
+                    else failed++;
+                }
+            });
+            monthlyData.push({ name: label, success, failed });
+        }
+        return monthlyData;
+    }
+    
+    if (period === 'all') {
+        const yearsMap = new Map<string, { success: number; failed: number }>();
+        let minYear = today.getFullYear() - 4;
+        
+        usage.forEach(u => {
+            const yr = new Date(u.used_at).getFullYear();
+            if (yr < minYear) minYear = yr;
+        });
+        
+        for (let y = minYear; y <= today.getFullYear(); y++) {
+            yearsMap.set(String(y), { success: 0, failed: 0 });
+        }
+        
+        usage.forEach(u => {
+            const yr = String(new Date(u.used_at).getFullYear());
+            if (yearsMap.has(yr)) {
+                const item = yearsMap.get(yr)!;
+                if (u.success) item.success++;
+                else item.failed++;
+            }
+        });
+        return Array.from(yearsMap.entries()).map(([name, val]) => ({ name, ...val }));
+    }
+    
+    return [];
+}
+
 export async function GET(req: NextRequest) {
     const user = await getAuthenticatedUser(req);
     if (!user) {
         return NextResponse.json({ status: false, message: 'Unauthorized' }, { status: 401 });
     }
     try {
-        let companies = 0, meetings = 0, users = 0, apis = 0, admins = 0, logs = 0;
-        let whereClause: any = {};
+        const { searchParams } = new URL(req.url);
+        
+        type PeriodType = 'day' | 'days' | 'week' | 'month' | '3months' | 'year' | 'all';
+        const volumePeriod = (searchParams.get('volumePeriod') || 'month') as PeriodType;
+        const systemPeriod = (searchParams.get('systemPeriod') || 'days') as PeriodType;
+
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const today = new Date();
+        
+        let logsLimitDate: Date | undefined = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6, 0, 0, 0, 0); // default days (last 7 days)
+        if (systemPeriod === 'day') {
+            logsLimitDate = startOfToday;
+        } else if (systemPeriod === 'days') {
+            logsLimitDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6, 0, 0, 0, 0);
+        } else if (systemPeriod === 'week') {
+            logsLimitDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 27, 0, 0, 0, 0);
+        } else if (systemPeriod === 'month') {
+            logsLimitDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29, 0, 0, 0, 0);
+        } else if (systemPeriod === '3months') {
+            logsLimitDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 89, 0, 0, 0, 0);
+        } else if (systemPeriod === 'year') {
+            logsLimitDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate(), 0, 0, 0, 0);
+        } else if (systemPeriod === 'all') {
+            logsLimitDate = undefined;
+        }
 
         if (user.role === 'DEVELOPER') {
+            let companies = 0, meetings = 0, users = 0, apis = 0, admins = 0, logs = 0;
+            let whereClause: any = {};
+
             [companies, meetings, users, apis, admins, logs] = await Promise.all([
                 prisma.companies.count(),
                 prisma.meetings.count(),
@@ -44,152 +540,100 @@ export async function GET(req: NextRequest) {
                 prisma.users.count({ where: { role: 'ADMIN' } }),
                 prisma.logs.count(),
             ]);
-        } else {
-            if (!user.companyId) {
-                return NextResponse.json({ status: false, message: 'No company assigned' }, { status: 400 });
-            }
-            whereClause = { company_id: user.companyId };
-            [meetings, users, apis, admins, logs] = await Promise.all([
-                prisma.meetings.count({ where: whereClause }),
-                prisma.users.count({ where: whereClause }),
-                prisma.companies_apis.count({ where: whereClause }),
-                prisma.users.count({ where: { ...whereClause, role: 'ADMIN' } }),
-                prisma.logs.count({ where: whereClause }),
-            ]);
-            companies = 1;
-        }
 
-        const meetingsData = await prisma.meetings.findMany({
-            where: whereClause,
-            select: { status: true, type: true, date: true, mode: true }
-        });
-
-        const meetingsByStatus: Record<string, number> = { SCHEDULED: 0, STARTED: 0, FINISHED: 0, CANCELLED: 0 };
-        const meetingsByType: Record<string, number> = { ORDINAIRE: 0, EXTRAORDINAIRE: 0, COMPLEMENTAIRE: 0, DELEGUES: 0 };
-
-        meetingsData.forEach((m: any) => {
-            if (meetingsByStatus[m.status] !== undefined) meetingsByStatus[m.status]++;
-            if (meetingsByType[m.type] !== undefined) meetingsByType[m.type]++;
-        });
-
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const currentDate = new Date();
-        const trendDataObj: any[] = [];
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-            trendDataObj.push({
-                name: months[d.getMonth()],
-                year: d.getFullYear(),
-                month: d.getMonth(),
-                meetings: 0
-            });
-        }
-
-        meetingsData.forEach((m: any) => {
-            if (m.date) {
-                const [year, month] = m.date.split('-');
-                const y = parseInt(year);
-                const mon = parseInt(month) - 1;
-                const trendItem = trendDataObj.find(t => t.year === y && t.month === mon);
-                if (trendItem) {
-                    trendItem.meetings++;
-                }
-            }
-        });
-
-        const trendData = trendDataObj.map(t => ({ name: t.name, meetings: t.meetings }));
-
-        // Fetch rich data for new charts
-        const [usersData, apiData, logsData] = await Promise.all([
-            prisma.users.findMany({
+            const meetingsData = await prisma.meetings.findMany({
                 where: whereClause,
-                select: { role: true }
-            }),
-            prisma.companies_apis.findMany({
-                where: user.role !== 'DEVELOPER' ? { company_id: user.companyId! } : {},
-                select: { method: true }
-            }),
-            prisma.logs.findMany({
-                where: {
-                    ...whereClause,
-                    timestamp: { gte: new Date(new Date().setDate(new Date().getDate() - 6)) } // last 7 days
-                },
-                select: { timestamp: true }
-            })
-        ]);
+                select: { status: true, type: true, date: true, time: true, mode: true }
+            });
 
-        // Group Users by Role
-        const usersByRole: Record<string, number> = { ADMIN: 0, PARTICIPANT: 0, DEVELOPER: 0 };
-        usersData.forEach(u => {
-            const role = u.role || 'PARTICIPANT';
-            if (usersByRole[role] !== undefined) usersByRole[role]++;
-        });
+            const meetingsByStatus: Record<string, number> = { SCHEDULED: 0, STARTED: 0, FINISHED: 0, CANCELLED: 0 };
+            const meetingsByType: Record<string, number> = { ORDINAIRE: 0, EXTRAORDINAIRE: 0, COMPLEMENTAIRE: 0, DELEGUES: 0 };
 
-        // Group APIs by Method
-        const apisByMethod: Record<string, number> = { GET: 0, POST: 0, PUT: 0, DELETE: 0, PATCH: 0 };
-        apiData.forEach(a => {
-            const method = a.method?.toUpperCase() || 'GET';
-            if (apisByMethod[method] !== undefined) apisByMethod[method]++;
-            else apisByMethod[method] = 1;
-        });
+            meetingsData.forEach((m: any) => {
+                if (meetingsByStatus[m.status] !== undefined) meetingsByStatus[m.status]++;
+                if (meetingsByType[m.type] !== undefined) meetingsByType[m.type]++;
+            });
 
-        // Group Logs by Day (Last 7 Days)
-        const logsActivityMap = new Map();
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const dateStr = d.toISOString().split('T')[0];
-            logsActivityMap.set(dateStr, { name: dateStr, activity: 0 });
-        }
-        logsData.forEach(l => {
-            const dateStr = new Date(l.timestamp).toISOString().split('T')[0];
-            if (logsActivityMap.has(dateStr)) {
-                logsActivityMap.get(dateStr).activity++;
-            }
-        });
-        const logsActivity = Array.from(logsActivityMap.values());
+            // Dynamic Trend Data (Volume Analysis)
+            const trendData = aggregateMeetings(volumePeriod, meetingsData, today);
 
-        // Fetch recent meetings for all roles (scoped accordingly)
-        const recentMeetings = await prisma.meetings.findMany({
-            where: whereClause,
-            orderBy: [
-                { date: 'desc' },
-                { time: 'desc' }
-            ],
-            take: 5,
-            select: {
-                id: true,
-                subject: true,
-                date: true,
-                time: true,
-                type: true,
-                status: true,
-                company: { select: { name: true } }
-            }
-        });
+            // Fetch rich data for new charts
+            const [usersData, apiData, logsData] = await Promise.all([
+                prisma.users.findMany({
+                    where: whereClause,
+                    select: { role: true }
+                }),
+                prisma.companies_apis.findMany({
+                    where: {},
+                    select: { method: true }
+                }),
+                prisma.logs.findMany({
+                    where: {
+                        ...whereClause,
+                        timestamp: logsLimitDate ? { gte: logsLimitDate } : undefined
+                    },
+                    select: { timestamp: true }
+                })
+            ]);
 
-        // Fetch all meetings for calendar rendering
-        const calendarMeetings = await prisma.meetings.findMany({
-            where: whereClause,
-            select: {
-                id: true,
-                subject: true,
-                date: true,
-                time: true,
-                status: true,
-                company: { select: { name: true } }
-            }
-        });
+            // Group Users by Role
+            const usersByRole: Record<string, number> = { ADMIN: 0, PARTICIPANT: 0, DEVELOPER: 0 };
+            usersData.forEach(u => {
+                const role = u.role || 'PARTICIPANT';
+                if (usersByRole[role] !== undefined) usersByRole[role]++;
+            });
 
-        // For Developers: Top Companies by Users & diagnostics
-        let topCompanies: any[] = [];
-        let devStats: any = null;
-        let recentLogs: any[] = [];
-        let recentSignups: any[] = [];
-        let recentContacts: any[] = [];
-        let aiFeatureUsage: any[] = [];
+            // Group APIs by Method
+            const apisByMethod: Record<string, number> = { GET: 0, POST: 0, PUT: 0, DELETE: 0, PATCH: 0 };
+            apiData.forEach(a => {
+                const method = a.method?.toUpperCase() || 'GET';
+                if (apisByMethod[method] !== undefined) apisByMethod[method]++;
+                else apisByMethod[method] = 1;
+            });
 
-        if (user.role === 'DEVELOPER') {
+            // Dynamic Logs Activity (System Activity)
+            const logsActivity = aggregateLogs(systemPeriod, logsData, today);
+
+            // Fetch recent meetings for all roles (scoped accordingly)
+            const recentMeetings = await prisma.meetings.findMany({
+                where: whereClause,
+                orderBy: [
+                    { date: 'desc' },
+                    { time: 'desc' }
+                ],
+                take: 5,
+                select: {
+                    id: true,
+                    subject: true,
+                    date: true,
+                    time: true,
+                    type: true,
+                    status: true,
+                    company: { select: { name: true } }
+                }
+            });
+
+            // Fetch all meetings for calendar rendering
+            const calendarMeetings = await prisma.meetings.findMany({
+                where: whereClause,
+                select: {
+                    id: true,
+                    subject: true,
+                    date: true,
+                    time: true,
+                    status: true,
+                    company: { select: { name: true } }
+                }
+            });
+
+            // For Developers: Top Companies by Users & diagnostics
+            let topCompanies: any[] = [];
+            let devStats: any = null;
+            let recentLogs: any[] = [];
+            let recentSignups: any[] = [];
+            let recentContacts: any[] = [];
+            let aiFeatureUsage: any[] = [];
+
             const [
                 companiesWithUsers,
                 totalSignups, pendingSignups,
@@ -200,12 +644,13 @@ export async function GET(req: NextRequest) {
                 fetchedRecentLogs,
                 fetchedRecentSignups,
                 fetchedRecentContacts,
-                tokenUsageGrouped
+                tokenUsageGrouped,
+                aiWorkersCount,
+                aiUsageData
             ] = await Promise.all([
                 prisma.companies.findMany({
                     include: { _count: { select: { users: true } } },
-                    orderBy: { users: { _count: 'desc' } },
-                    take: 5
+                    orderBy: { users: { _count: 'desc' } }
                 }),
                 prisma.signup_requests.count(),
                 prisma.signup_requests.count({ where: { status: 'PENDING' } }),
@@ -240,11 +685,31 @@ export async function GET(req: NextRequest) {
                 prisma.ia_token_usage.groupBy({
                     by: ['feature'],
                     _count: { id: true }
+                }),
+                prisma.ia_tokens_keys.count({
+                    where: {
+                        usage: {
+                            some: {
+                                used_at: {
+                                    gte: startOfToday
+                                }
+                            }
+                        }
+                    }
+                }),
+                prisma.ia_token_usage.findMany({
+                    where: {
+                        used_at: logsLimitDate ? { gte: logsLimitDate } : undefined
+                    },
+                    select: { used_at: true, success: true }
                 })
             ]);
 
             topCompanies = companiesWithUsers.map(c => ({
+                id: c.id,
                 name: c.name,
+                logo_url: c.logo_url,
+                url: c.url,
                 users: c._count.users
             }));
 
@@ -263,27 +728,167 @@ export async function GET(req: NextRequest) {
                 name: g.feature,
                 value: g._count.id
             }));
+
+            const aiUsageTrend = aggregateAiUsage(systemPeriod, aiUsageData, today);
+            const meetingDates = meetingsData.map((m: any) => m.date).filter(Boolean);
+
+            return NextResponse.json({ 
+                status: true, 
+                data: { 
+                    companies, meetings, users, apis, admins, logs,
+                    aiWorkers: aiWorkersCount,
+                    meetingsByStatus, meetingsByType, trendData,
+                    usersByRole, apisByMethod, logsActivity, topCompanies,
+                    meetingDates,
+                    devStats,
+                    recentMeetings,
+                    calendarMeetings,
+                    recentLogs,
+                    recentSignups,
+                    recentContacts,
+                    aiFeatureUsage,
+                    aiUsageTrend
+                } 
+            });
+        } else {
+            if (!user.companyId) {
+                return NextResponse.json({ status: false, message: 'No company assigned' }, { status: 400 });
+            }
+            const companyId = user.companyId;
+            const cacheKey = `overview:company:${companyId}:vp:${volumePeriod}:sp:${systemPeriod}`;
+            
+            const cachedData = await getOrSetCache(cacheKey, 60, async () => {
+                const whereClause = { company_id: companyId };
+                
+                const [
+                    [meetings, users, apis, admins, logs],
+                    meetingsData,
+                    [usersData, apiData, logsData],
+                    recentMeetings,
+                    calendarMeetings,
+                    aiWorkersCount
+                ] = await Promise.all([
+                    Promise.all([
+                        prisma.meetings.count({ where: whereClause }),
+                        prisma.users.count({ where: whereClause }),
+                        prisma.companies_apis.count({ where: whereClause }),
+                        prisma.users.count({ where: { ...whereClause, role: 'ADMIN' } }),
+                        prisma.logs.count({ where: whereClause }),
+                    ]),
+                    prisma.meetings.findMany({
+                        where: whereClause,
+                        select: { status: true, type: true, date: true, time: true, mode: true }
+                    }),
+                    Promise.all([
+                        prisma.users.findMany({
+                            where: whereClause,
+                            select: { role: true }
+                        }),
+                        prisma.companies_apis.findMany({
+                            where: { company_id: companyId },
+                            select: { method: true }
+                        }),
+                        prisma.logs.findMany({
+                            where: {
+                                ...whereClause,
+                                timestamp: logsLimitDate ? { gte: logsLimitDate } : undefined
+                            },
+                            select: { timestamp: true }
+                        })
+                    ]),
+                    prisma.meetings.findMany({
+                        where: whereClause,
+                        orderBy: [
+                            { date: 'desc' },
+                            { time: 'desc' }
+                        ],
+                        take: 5,
+                        select: {
+                            id: true,
+                            subject: true,
+                            date: true,
+                            time: true,
+                            type: true,
+                            status: true,
+                            company: { select: { name: true } }
+                        }
+                    }),
+                    prisma.meetings.findMany({
+                        where: whereClause,
+                        select: {
+                            id: true,
+                            subject: true,
+                            date: true,
+                            time: true,
+                            status: true,
+                            company: { select: { name: true } }
+                        }
+                    }),
+                    prisma.ia_tokens_keys.count({
+                        where: {
+                            usage: {
+                                some: {
+                                    used_at: {
+                                        gte: startOfToday
+                                    }
+                                }
+                            }
+                        }
+                    })
+                ]);
+
+                const companies = 1;
+
+                const meetingsByStatus: Record<string, number> = { SCHEDULED: 0, STARTED: 0, FINISHED: 0, CANCELLED: 0 };
+                const meetingsByType: Record<string, number> = { ORDINAIRE: 0, EXTRAORDINAIRE: 0, COMPLEMENTAIRE: 0, DELEGUES: 0 };
+
+                meetingsData.forEach((m: any) => {
+                    if (meetingsByStatus[m.status] !== undefined) meetingsByStatus[m.status]++;
+                    if (meetingsByType[m.type] !== undefined) meetingsByType[m.type]++;
+                });
+
+                // Dynamic Trend Data (Volume Analysis)
+                const trendData = aggregateMeetings(volumePeriod, meetingsData, today);
+
+                const usersByRole: Record<string, number> = { ADMIN: 0, PARTICIPANT: 0, DEVELOPER: 0 };
+                usersData.forEach(u => {
+                    const role = u.role || 'PARTICIPANT';
+                    if (usersByRole[role] !== undefined) usersByRole[role]++;
+                });
+
+                const apisByMethod: Record<string, number> = { GET: 0, POST: 0, PUT: 0, DELETE: 0, PATCH: 0 };
+                apiData.forEach(a => {
+                    const method = a.method?.toUpperCase() || 'GET';
+                    if (apisByMethod[method] !== undefined) apisByMethod[method]++;
+                    else apisByMethod[method] = 1;
+                });
+
+                // Dynamic Logs Activity (System Activity)
+                const logsActivity = aggregateLogs(systemPeriod, logsData, today);
+                const meetingDates = meetingsData.map((m: any) => m.date).filter(Boolean);
+
+                return {
+                    companies, meetings, users, apis, admins, logs,
+                    aiWorkers: aiWorkersCount,
+                    meetingsByStatus, meetingsByType, trendData,
+                    usersByRole, apisByMethod, logsActivity, topCompanies: [],
+                    meetingDates,
+                    devStats: null,
+                    recentMeetings,
+                    calendarMeetings,
+                    recentLogs: [],
+                    recentSignups: [],
+                    recentContacts: [],
+                    aiFeatureUsage: [],
+                    aiUsageTrend: []
+                };
+            });
+
+            return NextResponse.json({
+                status: true,
+                data: cachedData
+            });
         }
-
-        const meetingDates = meetingsData.map((m: any) => m.date).filter(Boolean);
-
-        return NextResponse.json({ 
-            status: true, 
-            data: { 
-                companies, meetings, users, apis, admins, logs,
-                aiWorkers: 5,
-                meetingsByStatus, meetingsByType, trendData,
-                usersByRole, apisByMethod, logsActivity, topCompanies,
-                meetingDates,
-                devStats,
-                recentMeetings,
-                calendarMeetings,
-                recentLogs,
-                recentSignups,
-                recentContacts,
-                aiFeatureUsage
-            } 
-        });
     } catch (error) {
         console.error('Error fetching stats:', error);
         return NextResponse.json({ status: false, message: 'Internal server error' }, { status: 500 });

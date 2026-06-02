@@ -80,7 +80,13 @@ export interface OverviewStats {
     usersByRole?: Record<string, number>;
     apisByMethod?: Record<string, number>;
     logsActivity?: { name: string; activity: number }[];
-    topCompanies?: { name: string; users: number }[];
+    topCompanies?: {
+        id: number;
+        name: string;
+        logo_url: string | null;
+        url: string;
+        users: number;
+    }[];
     meetingDates?: string[];
     devStats?: {
         signups: { total: number; pending: number };
@@ -135,5 +141,10 @@ export interface OverviewStats {
     aiFeatureUsage?: {
         name: string;
         value: number;
+    }[];
+    aiUsageTrend?: {
+        name: string;
+        success: number;
+        failed: number;
     }[];
 }

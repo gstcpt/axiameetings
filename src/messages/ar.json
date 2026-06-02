@@ -4,6 +4,7 @@
         "description": "منصة إدارة الاجتماعات والجمعيات العامة في الوقت الفعلي."
     },
     "Common": {
+        "total": "الإجمالي",
         "showAll": "عرض الكل",
         "loading": "جاري التحميل...",
         "save": "حفظ",
@@ -545,7 +546,19 @@
                 "aiFeatureTitle": "الميزة",
                 "aiFeatureCalls": "استدعاءات واجهة البرمجة (API Calls)",
                 "apiMethods": "طرق HTTP للواجهة البرمجية",
-                "apiMethodsSubtitle": "توزيع نقاط نهاية الواجهة البرمجية حسب طريقة HTTP"
+                "apiMethodsSubtitle": "توزيع نقاط نهاية الواجهة البرمجية حسب طريقة HTTP",
+                "failedRate": "{rate}% معدل الخطأ",
+                "success": "ناجح",
+                "failed": "فاشل"
+            },
+            "periods": {
+                "day": "اليوم",
+                "days": "7 أيام",
+                "week": "أسبوعي",
+                "month": "30 يوم",
+                "3months": "3 أشهر",
+                "year": "سنوي",
+                "all": "كل الأوقات"
             }
         },
         "sidebar": {

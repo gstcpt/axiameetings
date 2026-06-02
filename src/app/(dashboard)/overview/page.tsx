@@ -23,6 +23,7 @@ import RadialBarChartComponent from '@/components/ui/charts/radialbars';
 import HorizontalBarChartComponent from '@/components/ui/charts/horizontal-bars';
 import RadarChartComponent from '@/components/ui/charts/radars';
 import { cn } from '@/lib/utils';
+import { CompanyCarousel } from '@/components/ui/carousels';
 
 const STATUS_COLORS: Record<string, string> = { SCHEDULED: '#3b82f6', STARTED: '#22c55e', FINISHED: '#64748b', CANCELLED: '#ef4444' };
 const PIE_COLORS = ["#002B5B", "#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444"];
@@ -280,10 +281,14 @@ const MiniCalendar = ({ meetings = [] }: { meetings?: CalendarMeeting[] }) => {
 export default function OverviewPage() {
     const [stats, setStats] = useState<OverviewStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [volumePeriod, setVolumePeriod] = useState<'day' | 'days' | 'week' | 'month' | '3months' | 'year' | 'all'>('month');
+    const [systemPeriod, setSystemPeriod] = useState<'day' | 'days' | 'week' | 'month' | '3months' | 'year' | 'all'>('days');
+
     const t = useTranslations('Dashboard.overview');
     const ts = useTranslations('Dashboard.sidebar');
     const tc = useTranslations('Common');
     const tm = useTranslations('Meetings');
+    const tf = useTranslations('Dashboard.aiTokens.features');
     const { user } = useAuth();
     const locale = useLocale();
     const isDeveloper = user?.role === 'DEVELOPER';
@@ -291,7 +296,7 @@ export default function OverviewPage() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch('/api/overview');
+                const res = await fetch(`/api/overview?volumePeriod=${volumePeriod}&systemPeriod=${systemPeriod}`);
                 const result: ApiResponse<OverviewStats> = await res.json();
                 if (result.status && result.data) {
                     setStats(result.data);
@@ -305,7 +310,7 @@ export default function OverviewPage() {
             }
         };
         fetchStats();
-    }, [tc]);
+    }, [volumePeriod, systemPeriod, tc]);
 
     const statCards = [
         ...(isDeveloper ? [{ title: ts('companies'), value: stats?.companies ?? 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', href: '/companies' }] : []),
@@ -315,7 +320,7 @@ export default function OverviewPage() {
         { title: ts('meetings'), value: stats?.meetings ?? 0, icon: Video, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', href: '/meetings' },
         { title: t('stats.cancelled'), value: stats?.meetingsByStatus?.CANCELLED ?? 0, icon: Ban, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100', href: '/meetings' },
         { title: ts('logs'), value: stats?.logs ?? 0, icon: ScrollText, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', href: '/logs' },
-        ...(isDeveloper ? [{ title: t('stats.aiWorkers'), value: stats?.aiWorkers ?? 5, icon: Cpu, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', href: '/ai-tokens' }] : []),
+        ...(isDeveloper ? [{ title: t('stats.aiWorkers'), value: stats?.aiWorkers ?? 0, icon: Cpu, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', href: '/ai-tokens' }] : []),
     ];
 
     if (loading) {
@@ -336,6 +341,18 @@ export default function OverviewPage() {
     const typeData = formatPieData(stats?.meetingsByType);
     const usersRoleData = formatPieData(stats?.usersByRole);
     const apiMethodsData = stats?.apisByMethod ? Object.entries(stats.apisByMethod).filter(([_, value]) => value > 0).map(([name, value]) => ({ name, value })) : [];
+
+    const totalMeetings = (stats?.meetingsByStatus?.SCHEDULED ?? 0) + 
+                          (stats?.meetingsByStatus?.STARTED ?? 0) + 
+                          (stats?.meetingsByStatus?.FINISHED ?? 0) + 
+                          (stats?.meetingsByStatus?.CANCELLED ?? 0);
+
+    const statusesList = [
+        { key: 'FINISHED', label: tm('status.finished') || 'Finished', count: stats?.meetingsByStatus?.FINISHED ?? 0, color: '#64748b' },
+        { key: 'STARTED', label: tm('status.started') || 'Live', count: stats?.meetingsByStatus?.STARTED ?? 0, color: '#22c55e' },
+        { key: 'SCHEDULED', label: tm('status.scheduled') || 'Scheduled', count: stats?.meetingsByStatus?.SCHEDULED ?? 0, color: '#3b82f6' },
+        { key: 'CANCELLED', label: tm('status.cancelled') || 'Cancelled', count: stats?.meetingsByStatus?.CANCELLED ?? 0, color: '#ef4444' },
+    ];
 
     return (
         <div className="space-y-8 md:space-y-12 pb-20">
@@ -426,9 +443,21 @@ export default function OverviewPage() {
                         iconWrapperClassName="bg-blue-50 text-[#002B5B] border-blue-100"
                         className="h-full flex flex-col justify-between"
                         action={
-                            <div className="flex gap-2">
-                                <div className="h-2 w-2 rounded-full bg-[#002B5B]" />
-                                <div className="h-2 w-2 rounded-full bg-slate-100" />
+                            <div className="flex bg-slate-100 p-0.5 rounded-lg text-xs font-semibold border border-slate-200/50">
+                                {(['day', 'days', 'week', 'month', '3months', 'year', 'all'] as const).map((p) => (
+                                    <button
+                                        key={p}
+                                        onClick={() => setVolumePeriod(p)}
+                                        className={cn(
+                                            "px-2.5 py-1 rounded-md transition-all uppercase text-[9px] cursor-pointer",
+                                            volumePeriod === p
+                                                ? "bg-white text-[#002B5B] shadow-xs font-bold"
+                                                : "text-slate-500 hover:text-[#002B5B]"
+                                        )}
+                                    >
+                                        {t(`periods.${p}`)}
+                                    </button>
+                                ))}
                             </div>
                         }
                     >
@@ -452,14 +481,36 @@ export default function OverviewPage() {
                     iconWrapperClassName="bg-purple-50 text-purple-600 border-purple-100"
                     className="lg:col-span-6"
                 >
-                    <div className="grow flex items-center justify-center min-h-[300px]">
+                    <div className="grow flex flex-col items-center justify-between w-full min-h-[300px] py-2">
                         {statusData.length > 0 ? (
-                            <DoughnutChartComponent
-                                data={statusData}
-                                colors={statusData.map(entry => STATUS_COLORS[entry.name] || PIE_COLORS[0])}
-                                height={320}
-                                totalLabel={t('charts.statusMix')}
-                            />
+                            <>
+                                <div className="w-full flex justify-center">
+                                    <DoughnutChartComponent
+                                        data={statusData}
+                                        colors={statusData.map(entry => STATUS_COLORS[entry.name] || PIE_COLORS[0])}
+                                        height={180}
+                                        totalLabel={tm('multiple') || 'Meetings'}
+                                        hideLegend={true}
+                                    />
+                                </div>
+                                <div className="w-full space-y-2 mt-4 pt-4 border-t border-slate-100 text-xs md:text-sm">
+                                    {statusesList.map((st) => {
+                                        const pct = totalMeetings > 0 ? ((st.count / totalMeetings) * 100).toFixed(1) : "0.0";
+                                        return (
+                                            <div key={st.key} className="flex items-center justify-between text-slate-600 hover:bg-slate-50/50 p-2 rounded-xl transition-all duration-300">
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: st.color }} />
+                                                    <span className="font-semibold text-slate-700">{st.label}</span>
+                                                </div>
+                                                <div className="flex items-center gap-6">
+                                                    <span className="font-medium text-slate-500">{st.count} {st.count === 1 ? tm('single') : tm('multiple')}</span>
+                                                    <span className="font-bold text-[#002B5B] w-12 text-right">{pct}%</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </>
                         ) : (
                             <div className="flex flex-col items-center justify-center text-slate-300 opacity-20 py-20">
                                 <PieChartIcon size={64} className="mb-4" />
@@ -500,6 +551,24 @@ export default function OverviewPage() {
                         icon={<Activity size={14} className="sm:w-[18px] sm:h-[18px]" />}
                         iconWrapperClassName="bg-amber-50 text-amber-600 border-amber-100"
                         className="lg:col-span-12"
+                        action={
+                            <div className="flex bg-slate-100 p-0.5 rounded-lg text-xs font-semibold border border-slate-200/50">
+                                {(['day', 'days', 'week', 'month', '3months', 'year', 'all'] as const).map((p) => (
+                                    <button
+                                        key={p}
+                                        onClick={() => setSystemPeriod(p)}
+                                        className={cn(
+                                            "px-2.5 py-1 rounded-md transition-all uppercase text-[9px] cursor-pointer",
+                                            systemPeriod === p
+                                                ? "bg-white text-amber-600 shadow-xs font-bold"
+                                                : "text-slate-500 hover:text-amber-600"
+                                        )}
+                                    >
+                                        {t(`periods.${p}`)}
+                                    </button>
+                                ))}
+                            </div>
+                        }
                     >
                         <AreaChartComponent
                             data={stats?.logsActivity || []}
@@ -617,7 +686,7 @@ export default function OverviewPage() {
                     </div>
 
                     {/* Row 2: Diagnostics and Breakdown */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* AI Gateway Reliability Rate */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -635,22 +704,50 @@ export default function OverviewPage() {
                                         <Activity size={16} />
                                     </div>
                                 </div>
-                                <Typography variant="h3" className="text-sm font-semibold text-slate-800 mb-2">
-                                    {t('developer.successRate', { rate: stats.devStats.aiUsage.successRate })}
-                                </Typography>
-                                <div className="grow flex items-center justify-center min-h-[160px] mt-2">
-                                    <RadialBarChartComponent
-                                        data={[
-                                            { name: 'Success Rate', value: stats.devStats.aiUsage.successRate }
-                                        ]}
-                                        height={160}
-                                    />
+                                <div className="mt-2 mb-4">
+                                    <div className="flex items-baseline gap-2">
+                                        <Typography variant="h2" className="text-xl md:text-2xl font-bold leading-none text-slate-800">
+                                            {t('developer.successRate', { rate: stats.devStats.aiUsage.successRate })}
+                                        </Typography>
+                                        <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-md border border-red-100 uppercase">
+                                            {t('developer.failedRate', { rate: stats.devStats.aiUsage.total > 0 ? 100 - stats.devStats.aiUsage.successRate : 0 })}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="grow min-h-[160px] mt-2">
+                                    {stats.aiUsageTrend && stats.aiUsageTrend.length > 0 ? (
+                                        <AreaChartComponent
+                                            data={stats.aiUsageTrend}
+                                            xKey="name"
+                                            series={[
+                                                { key: 'success', name: t('developer.success') || 'Success', color: '#22c55e' },
+                                                { key: 'failed', name: t('developer.failed') || 'Failed', color: '#ef4444' }
+                                            ]}
+                                            height={160}
+                                        />
+                                    ) : stats.devStats.aiUsage.total > 0 ? (
+                                        <AreaChartComponent
+                                            data={[{
+                                                name: '',
+                                                success: stats.devStats.aiUsage.success,
+                                                failed: stats.devStats.aiUsage.total - stats.devStats.aiUsage.success
+                                            }]}
+                                            xKey="name"
+                                            series={[
+                                                { key: 'success', name: t('developer.success') || 'Success', color: '#22c55e' },
+                                                { key: 'failed', name: t('developer.failed') || 'Failed', color: '#ef4444' }
+                                            ]}
+                                            height={160}
+                                        />
+                                    ) : (
+                                        <div className="text-xs text-slate-400 italic py-6 text-center">{tc('notAvailable')}</div>
+                                    )}
                                 </div>
                             </div>
                             <div className="mt-4 pt-4 border-t border-slate-100 relative z-10 w-full">
-                                <Link href="/logs">
+                                <Link href="/ai-tokens">
                                     <Button size="sm" className="w-full justify-between bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-xl shadow-md shadow-amber-900/10 h-9 px-4">
-                                        <span>{t('developer.viewLogs')}</span>
+                                        <span>{t('developer.aiKeys')}</span>
                                         <ChevronRight size={14} className="rtl:rotate-180" />
                                     </Button>
                                 </Link>
@@ -677,12 +774,11 @@ export default function OverviewPage() {
                                 <Typography variant="h3" className="text-sm font-semibold text-slate-800 mb-2">
                                     {t('developer.apiMethodsSubtitle')}
                                 </Typography>
-                                <div className="grow flex items-center justify-center min-h-[160px] mt-2">
+                                <div className="grow min-h-[160px] mt-2">
                                     {apiMethodsData.length > 0 ? (
-                                        <RadarChartComponent
+                                        <HorizontalBarChartComponent
                                             data={apiMethodsData}
                                             height={160}
-                                            color="#3b82f6"
                                         />
                                     ) : (
                                         <div className="text-xs text-slate-400 italic py-6 text-center">{tc('notAvailable')}</div>
@@ -718,9 +814,14 @@ export default function OverviewPage() {
                                 </div>
                                 <div className="grow min-h-[160px] mt-2">
                                     {stats?.aiFeatureUsage && stats.aiFeatureUsage.length > 0 ? (
-                                        <HorizontalBarChartComponent
-                                            data={stats.aiFeatureUsage}
-                                            height={160}
+                                        <RadialBarChartComponent
+                                            data={stats.aiFeatureUsage.map((f: any) => ({
+                                                name: tf.has(f.name) ? tf(f.name) : f.name,
+                                                value: f.value
+                                            }))}
+                                            height={180}
+                                            totalLabel={tc.has('total') ? tc('total') : 'Total'}
+                                            hideLegend={true}
                                         />
                                     ) : (
                                         <div className="text-xs text-slate-400 italic py-6 text-center">{tc('notAvailable')}</div>
@@ -736,49 +837,26 @@ export default function OverviewPage() {
                                 </Link>
                             </div>
                         </motion.div>
+                    </div>
 
-                        {/* Top Active Tenants List */}
+                    {/* Row 2.5: Featured Tenants Carousel */}
+                    {stats.topCompanies && stats.topCompanies.length > 0 && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between group hover:shadow-xl hover:border-slate-300 transition-all duration-500 h-full relative overflow-hidden"
+                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 group hover:shadow-xl hover:border-slate-300 transition-all duration-500 relative overflow-hidden"
                         >
                             <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-slate-50/30 rounded-full blur-2xl group-hover:bg-slate-50/50 transition-colors duration-500" />
-                            <div className="relative z-10 w-full">
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                                        {t('developer.topTenants')}
-                                    </span>
-                                    <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center border border-slate-200">
-                                        <Building2 size={16} />
-                                    </div>
-                                </div>
-                                <div className="space-y-3 mt-2">
-                                    {stats.topCompanies && stats.topCompanies.length > 0 ? (
-                                        stats.topCompanies.map((c, i) => (
-                                            <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
-                                                <span className="text-xs font-semibold text-slate-700 truncate max-w-[150px]">{c.name}</span>
-                                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
-                                                    {t('developer.usersCount', { count: c.users })}
-                                                </span>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="text-xs text-slate-400 italic py-2">{tc('notAvailable')}</div>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="mt-4 pt-4 border-t border-slate-100 relative z-10 w-full">
-                                <Link href="/companies">
-                                    <Button size="sm" className="w-full justify-between bg-slate-700 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-md shadow-slate-900/10 h-9 px-4">
-                                        <span>{ts('companies')}</span>
-                                        <ChevronRight size={14} className="rtl:rotate-180" />
-                                    </Button>
-                                </Link>
+                            <div className="relative z-10">
+                                <CompanyCarousel 
+                                    items={stats.topCompanies} 
+                                    title={t('developer.topTenants') || 'Top Tenants'}
+                                    usersLabel={ts.has('users') ? ts('users') : 'users'}
+                                />
                             </div>
                         </motion.div>
-                    </div>
+                    )}
 
                     {/* Row 3: Operational Inboxes */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -907,6 +985,24 @@ export default function OverviewPage() {
                                 icon={<Activity size={14} className="sm:w-[18px] sm:h-[18px]" />}
                                 iconWrapperClassName="bg-amber-50 text-amber-600 border-amber-100"
                                 className="h-full"
+                                action={
+                                    <div className="flex bg-slate-100 p-0.5 rounded-lg text-xs font-semibold border border-slate-200/50">
+                                        {(['day', 'days', 'week', 'month', '3months', 'year', 'all'] as const).map((p) => (
+                                            <button
+                                                key={p}
+                                                onClick={() => setSystemPeriod(p)}
+                                                className={cn(
+                                                    "px-2.5 py-1 rounded-md transition-all uppercase text-[9px] cursor-pointer",
+                                                    systemPeriod === p
+                                                        ? "bg-white text-amber-600 shadow-xs font-bold"
+                                                        : "text-slate-500 hover:text-amber-600"
+                                                )}
+                                            >
+                                                {t(`periods.${p}`)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                }
                             >
                                 <AreaChartComponent
                                     data={stats?.logsActivity || []}

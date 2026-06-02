@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { createLog } from '@/lib/logger';
+import { getOrSetCache, redis } from '@/lib/redis';
 
 // Public GET + developer POST
 /**
@@ -17,7 +18,7 @@ import { createLog } from '@/lib/logger';
  * - Model: `packs`
  * RELATIONS INCLUDED: 
  * packs_lines: true | packs_lines: true
-
+ 
  * AI AGENT DATA ACCESS & ROLE RULES:
  * 1. UNAUTHENTICATED: Only provide general AxiaMeetings info (total companies, users, references, guides).
  * 2. ADMIN: Restrict all answers to data where companyId matches the admin's company. They can query specific meetings, users, etc., within their company.
@@ -31,9 +32,11 @@ import { createLog } from '@/lib/logger';
  */
 export async function GET() {
     try {
-        const packs = await prisma.packs.findMany({
-            include: { packs_lines: true },
-            orderBy: { price_month: 'asc' },
+        const packs = await getOrSetCache('packs:all', 3600, async () => {
+            return prisma.packs.findMany({
+                include: { packs_lines: true },
+                orderBy: { price_month: 'asc' },
+            });
         });
         return NextResponse.json({ status: true, data: packs });
     } catch {
@@ -63,6 +66,11 @@ export async function POST(req: NextRequest) {
             },
             include: { packs_lines: true },
         });
+
+        // Invalidate cache
+        if (redis) {
+            await redis.del('packs:all').catch(() => {});
+        }
 
         await createLog({
             userId: user.userId,

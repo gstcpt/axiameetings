@@ -455,7 +455,7 @@ function extractEndpoints(text: string): string[] {
 // ─── POST: Send a chat message ──────────────────────────────────────────────
 export async function POST(req: NextRequest) {
     const ip = getIp(req);
-    if (!rateLimit(ip, 30, 60000)) {
+    if (!(await rateLimit(ip, 30, 60000))) {
         return new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), { 
             status: 429, 
             headers: { 'Content-Type': 'application/json' } 
@@ -961,6 +961,7 @@ export async function POST(req: NextRequest) {
                     update: {
                         messages: allMessages,
                         locale,
+                        is_closed: false,
                         ...(userId && { user_id: userId }),
                         ...(role && { role }),
                     },

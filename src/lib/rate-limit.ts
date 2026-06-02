@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { redis, isCacheConnected } from './redis';
 
 interface RateLimiter {
     tokens: number;
@@ -20,14 +21,8 @@ if (typeof setInterval !== 'undefined') {
     }, 5 * 60 * 1000); // run every 5 minutes
 }
 
-/**
- * Check if the request IP has exceeded its limit.
- * @param ip IP address of request
- * @param limit Max requests allowed in window
- * @param windowMs Time window in milliseconds
- * @returns true if allowed, false if rate limited
- */
-export function rateLimit(ip: string, limit: number = 60, windowMs: number = 60000): boolean {
+// In-memory token bucket rate limiter fallback
+function rateLimitLocal(ip: string, limit: number, windowMs: number): boolean {
     const now = Date.now();
     let limiter = limiters.get(ip);
 
@@ -49,6 +44,30 @@ export function rateLimit(ip: string, limit: number = 60, windowMs: number = 600
     }
 
     return false;
+}
+
+/**
+ * Check if the request IP has exceeded its limit.
+ * @param ip IP address of request
+ * @param limit Max requests allowed in window
+ * @param windowMs Time window in milliseconds
+ * @returns Promise<boolean> true if allowed, false if rate limited
+ */
+export async function rateLimit(ip: string, limit: number = 60, windowMs: number = 60000): Promise<boolean> {
+    if (!redis || !isCacheConnected()) {
+        return rateLimitLocal(ip, limit, windowMs);
+    }
+    try {
+        const key = `ratelimit:${ip}:${Math.floor(Date.now() / windowMs)}`;
+        const current = await redis.incr(key);
+        if (current === 1) {
+            await redis.pexpire(key, windowMs);
+        }
+        return current <= limit;
+    } catch (err) {
+        console.error('Redis rate limit error, falling back to local:', err);
+        return rateLimitLocal(ip, limit, windowMs);
+    }
 }
 
 /**

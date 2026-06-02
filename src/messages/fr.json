@@ -4,6 +4,7 @@
         "description": "Plateforme de gestion de réunions et d'assemblées générales en temps réel."
     },
     "Common": {
+        "total": "Total",
         "showAll": "Afficher tout",
         "loading": "Chargement...",
         "save": "Enregistrer",
@@ -545,7 +546,19 @@
                 "aiFeatureTitle": "Fonctionnalité",
                 "aiFeatureCalls": "Appels API",
                 "apiMethods": "Méthodes HTTP API",
-                "apiMethodsSubtitle": "Distribution des points d'accès API par méthode HTTP"
+                "apiMethodsSubtitle": "Distribution des points d'accès API par méthode HTTP",
+                "failedRate": "{rate}% de taux d'erreur",
+                "success": "Succès",
+                "failed": "Échoué"
+            },
+            "periods": {
+                "day": "Aujourd'hui",
+                "days": "7 Jours",
+                "week": "Hebdomadaire",
+                "month": "30 Jours",
+                "3months": "3 Mois",
+                "year": "Annuel",
+                "all": "Tout le temps"
             }
         },
         "sidebar": {

@@ -5,7 +5,7 @@ import { rateLimit, getIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
     const ip = getIp(req);
-    if (!rateLimit(ip, 5, 60000)) {
+    if (!await rateLimit(ip, 5, 60000)) {
         return NextResponse.json({ status: false, message: 'Too many attempts. Please try again later.' }, { status: 429 });
     }
     try {

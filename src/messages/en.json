@@ -4,6 +4,7 @@
         "description": "Axia Meetings is a meeting management tool that helps you to organize and manage your meetings."
     },
     "Common": {
+        "total": "Total",
         "showAll": "Show All",
         "loading": "Loading...",
         "save": "Save",
@@ -545,7 +546,19 @@
                 "aiFeatureTitle": "Feature",
                 "aiFeatureCalls": "API Calls",
                 "apiMethods": "API HTTP Methods",
-                "apiMethodsSubtitle": "Distribution of API endpoints by HTTP method"
+                "apiMethodsSubtitle": "Distribution of API endpoints by HTTP method",
+                "failedRate": "{rate}% error rate",
+                "success": "Success",
+                "failed": "Failed"
+            },
+            "periods": {
+                "day": "Today",
+                "days": "7 Days",
+                "week": "Weekly",
+                "month": "30 Days",
+                "3months": "3 Months",
+                "year": "Yearly",
+                "all": "All Time"
             }
         },
         "sidebar": {
