@@ -100,10 +100,10 @@ function ResetPasswordForm() {
                 <motion.div className="flex-1 flex flex-col justify-center" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}>
                     <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8 w-fit">
                         <Sparkles size={12} className="text-blue-300" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">Secure Reset</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">{t('secureReset')}</span>
                     </div>
                     <h1 className="text-4xl xl:text-5xl font-black text-white leading-[1.1] mb-6">
-                        Create your<br /><span className="text-blue-300">new password.</span>
+                        {t('createYour')}<br /><span className="text-blue-300">{t('newPassword')}</span>
                     </h1>
                     <p className="text-blue-200/70 text-lg font-medium leading-relaxed max-w-xs">{t('heroSubtitle')}</p>
                     <div className="mt-12 space-y-3">
@@ -116,7 +116,7 @@ function ResetPasswordForm() {
                     </div>
                 </motion.div>
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }} className="border-t border-white/10 pt-6">
-                    <p className="text-blue-200/40 text-xs font-medium">© {new Date().getFullYear()} Axia Meetings. All rights reserved.</p>
+                    <p className="text-blue-200/40 text-xs font-medium">© {new Date().getFullYear()} Axia Meetings. {t('allRightsReserved')}</p>
                 </motion.div>
             </div>
         </div>
@@ -131,8 +131,8 @@ function ResetPasswordForm() {
                         <ArrowLeft size={14} /> {t('backToLogin')}
                     </Link>
                     <div className="flex gap-4 text-xs font-semibold text-slate-400">
-                        <Link href="/terms-of-use" className="hover:text-slate-600 transition-colors">Terms of Use</Link>
-                        <Link href="/privacy-policy" className="hover:text-slate-600 transition-colors">Privacy Policy</Link>
+                        <Link href="/terms-of-use" className="hover:text-slate-600 transition-colors">{t('termsOfUse')}</Link>
+                        <Link href="/privacy-policy" className="hover:text-slate-600 transition-colors">{t('privacyPolicy')}</Link>
                     </div>
                 </div>
                 <div className="lg:hidden flex items-center justify-center pt-10 pb-2 bg-[#002B5B]">
@@ -232,7 +232,7 @@ function ResetPasswordForm() {
 
                                     <div className="mt-8 flex items-center justify-center gap-2 text-slate-300">
                                         <ShieldCheck size={14} />
-                                        <span className="text-[10px] uppercase font-black tracking-[0.18em]">End-to-End Encryption Enabled</span>
+                                        <span className="text-[10px] uppercase font-black tracking-[0.18em]">{t('encryptionEnabled')}</span>
                                     </div>
                                 </motion.div>
                             )}

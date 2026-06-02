@@ -257,7 +257,7 @@ export default function MeetingDetailsPage() {
     };
 
     const handleAiSuggest = async () => {
-        if (!form.subject) { toast.error(t('toast.errorSubject')); return; }
+        if (!form.subject) { toast.error(tm('toast.errorSubject')); return; }
         setAiSuggestLoading(true);
         try {
             const res = await fetch('/api/ai/suggest-agenda', {
@@ -432,7 +432,7 @@ export default function MeetingDetailsPage() {
                             </div>
                             <div>
                                 <Typography variant="label" className="text-violet-900 font-semibold uppercase text-[10px]">{t('ai.assistant')}</Typography>
-                                <Typography variant="small" color="secondary" className="text-[10px]">Real-time administrative enhancement</Typography>
+                                <Typography variant="small" color="secondary" className="text-[10px]">{t('aiSubtitle')}</Typography>
                             </div>
                         </div>
 
@@ -784,7 +784,7 @@ export default function MeetingDetailsPage() {
                     <div className="lg:col-span-7 space-y-8">
                         <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-6">
                             <Typography variant="label" className="flex items-center gap-3 uppercase text-xs text-blue-600 font-semibold">
-                                <Info size={16} /> Meeting Foundations
+                                <Info size={16} /> {t('modals.edit.foundations')}
                             </Typography>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -793,7 +793,7 @@ export default function MeetingDetailsPage() {
                                         label={`${t('modals.edit.subject')} *`}
                                         value={form.subject}
                                         onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                                        placeholder="Meeting subject"
+                                        placeholder={t('modals.edit.subjectPlaceholder')}
                                         icon={FileText}
                                     />
                                 </div>
@@ -809,10 +809,10 @@ export default function MeetingDetailsPage() {
                                     ]}
                                 />
                                 <div className="flex flex-col gap-2">
-                                    <Typography variant="label" className="text-slate-400">Security Context</Typography>
+                                    <Typography variant="label" className="text-slate-400">{t('modals.edit.securityContext')}</Typography>
                                     <Badge variant="secondary" className="h-14 rounded-2xl bg-white border-slate-100 flex items-center justify-center gap-2">
                                         <ShieldAlert size={16} className="text-blue-500" />
-                                        <span className="font-black text-sm uppercase tracking-widest">Administrative access</span>
+                                        <span className="font-black text-sm uppercase tracking-widest">{t('modals.edit.adminAccess')}</span>
                                     </Badge>
                                 </div>
                             </div>
@@ -820,7 +820,7 @@ export default function MeetingDetailsPage() {
 
                         <div className="bg-slate-50/50 p-10 rounded-[2.5rem] border border-slate-100 space-y-8">
                             <Typography variant="label" className="flex items-center gap-3 uppercase tracking-[0.2em] text-sm text-blue-600 font-black">
-                                <Calendar size={16} /> Time & Venue
+                                <Calendar size={16} /> {t('modals.edit.timeVenue')}
                             </Typography>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -847,8 +847,8 @@ export default function MeetingDetailsPage() {
                                         { value: 'ONE_HOUR', label: tm('form.durations.oneHour') },
                                         { value: 'TWO_HOURS', label: tm('form.durations.twoHours') },
                                         { value: 'THREE_HOURS', label: tm('form.durations.threeHours') },
-                                        { value: 'FOUR_HOURS', label: '4 Hours' },
-                                        { value: 'FIVE_HOURS', label: '5 Hours' },
+                                        { value: 'FOUR_HOURS', label: tm('form.durations.fourHours') },
+                                        { value: 'FIVE_HOURS', label: tm('form.durations.fiveHours') },
                                         { value: 'FULL_DAY', label: tm('form.durations.fullDay') },
                                     ].filter(d => {
                                         if (user?.role === 'DEVELOPER') return true;
@@ -862,7 +862,7 @@ export default function MeetingDetailsPage() {
                                         label={t('modals.edit.location')}
                                         value={form.location}
                                         onChange={(e) => setForm({ ...form, location: e.target.value })}
-                                        placeholder="Physical or virtual address"
+                                        placeholder={t('modals.edit.locationPlaceholder')}
                                         icon={MapPin}
                                     />
                                 </div>
@@ -871,7 +871,7 @@ export default function MeetingDetailsPage() {
 
                         <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
                             <div className="flex items-center justify-between">
-                                <Typography variant="label" className="uppercase tracking-widest text-sm font-black text-slate-400">Contextual Description</Typography>
+                                <Typography variant="label" className="uppercase tracking-widest text-sm font-black text-slate-400">{t('modals.edit.contextualDescription')}</Typography>
                                 <AiFeatureGuard>
                                     <Button variant="outline" size="sm" onClick={handlePolishDescription} disabled={polishLoading} className="rounded-xl border-blue-100 bg-blue-50/30 text-blue-600 h-10">
                                         {polishLoading ? <Loader2 size={16} className="animate-spin me-2" /> : <Wand2 size={16} className="me-2" />}

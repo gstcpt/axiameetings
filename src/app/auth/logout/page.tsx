@@ -50,7 +50,7 @@ export default function LogoutPage() {
                 
                 <div className="text-center space-y-2">
                     <Typography variant="h3" className="text-xl tracking-tight">{t('title')}</Typography>
-                    <Typography variant="label" className="uppercase tracking-[0.2em] font-black opacity-30 text-[10px]">Securely clearing your session</Typography>
+                    <Typography variant="label" className="uppercase tracking-[0.2em] font-black opacity-30 text-[10px]">{t('clearingSession')}</Typography>
                 </div>
             </motion.div>
         </div>

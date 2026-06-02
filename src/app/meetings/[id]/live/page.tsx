@@ -378,7 +378,7 @@ export default function LiveMeetingPage() {
       if (!participantId) toast.error(t('toasts.notAuthorizedWord'));
       return;
     }
-    const name = user?.fullname || email || 'Participant';
+    const name = user?.fullname || email || tc('participant');
     socket.emit('hand:raise', {
       roomId: `meeting-${id}`,
       participantId: participantId,
@@ -745,7 +745,7 @@ export default function LiveMeetingPage() {
                                       <BarChart3 size={12} />
                                       <span>{t('overlays.voteResults.title')}</span>
                                     </div>
-                                    <Badge className="bg-emerald-500 text-white border-none h-4 px-1.5 rounded-full text-[7px]">{tc('status.finished') || 'Terminé'}</Badge>
+                                    <Badge className="bg-emerald-500 text-white border-none h-4 px-1.5 rounded-full text-[7px]">{t('status.finished')}</Badge>
                                   </div>
                                   <div className="flex gap-4 pt-2">
                                     <div className="flex-1">
@@ -1230,7 +1230,7 @@ export default function LiveMeetingPage() {
                 ) : (
                   <div className="space-y-1">
                     <Typography variant="p" className="text-slate-600 font-medium">{tc('modals.addDocument.drop')}</Typography>
-                    <Typography variant="small" className="text-slate-400">PDF, Word, Images, etc.</Typography>
+                    <Typography variant="small" className="text-slate-400">{tc('modals.addDocument.allowedTypes')}</Typography>
                   </div>
                 )}
               </div>

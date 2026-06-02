@@ -159,23 +159,23 @@ function SignupForm() {
                     >
                         <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8 w-fit">
                             <Sparkles size={12} className="text-blue-300" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">Axia Workspace</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">{t('workspace')}</span>
                         </div>
 
                         <h1 className="text-4xl xl:text-5xl font-black text-white leading-[1.1] mb-6">
-                            Start your<br />
-                            <span className="text-blue-300">journey.</span>
+                            {t('startYour')}<br />
+                            <span className="text-blue-300">{t('journey')}</span>
                         </h1>
                         <p className="text-blue-200/70 text-lg font-medium leading-relaxed max-w-sm">
-                            Configure your custom meeting environment and empower your team today.
+                            {t('heroSubtitle')}
                         </p>
 
                         {/* Feature milestones */}
                         <div className="mt-12 space-y-4">
                             {[
-                                { title: 'Select a customized plan', desc: 'Find the package that fits your organization.' },
-                                { title: 'Register your company', desc: 'Secure unique domain and user profiles.' },
-                                { title: 'Fast administrative approval', desc: 'We launch your meetings workspace instantly.' }
+                                { title: t('milestone1Title'), desc: t('milestone1Desc') },
+                                { title: t('milestone2Title'), desc: t('milestone2Desc') },
+                                { title: t('milestone3Title'), desc: t('milestone3Desc') }
                             ].map((item, index) => (
                                 <div key={index} className="flex gap-4">
                                     <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center shrink-0 text-xs font-bold text-blue-300">
@@ -198,7 +198,7 @@ function SignupForm() {
                         className="border-t border-white/10 pt-6"
                     >
                         <p className="text-blue-200/40 text-xs font-medium">
-                            © {new Date().getFullYear()} Axia Meetings. All rights reserved.
+                            © {new Date().getFullYear()} Axia Meetings. {t('allRightsReserved')}
                         </p>
                     </motion.div>
                 </div>
@@ -209,11 +209,11 @@ function SignupForm() {
                 {/* Sleek Top Navigation Bar */}
                 <div className="w-full flex items-center justify-between px-6 md:px-12 pt-8 pb-4 shrink-0">
                     <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
-                        <ArrowLeft size={14} /> Back to website
+                        <ArrowLeft size={14} /> {t('backToWebsite')}
                     </Link>
                     <div className="flex gap-4 text-xs font-semibold text-slate-400">
-                        <Link href="/terms-of-use" className="hover:text-slate-600 transition-colors">Terms of Use</Link>
-                        <Link href="/privacy-policy" className="hover:text-slate-600 transition-colors">Privacy Policy</Link>
+                        <Link href="/terms-of-use" className="hover:text-slate-600 transition-colors">{t('termsOfUse')}</Link>
+                        <Link href="/privacy-policy" className="hover:text-slate-600 transition-colors">{t('privacyPolicy')}</Link>
                     </div>
                 </div>
 
@@ -297,9 +297,9 @@ function SignupForm() {
                                     {packs.length === 0 ? (
                                         <div className="bg-white rounded-[2rem] border border-slate-100 p-12 text-center">
                                             <Package size={40} className="text-slate-200 mx-auto mb-4" />
-                                            <Typography variant="h3" className="text-slate-400 font-bold">No plans available</Typography>
+                                            <Typography variant="h3" className="text-slate-400 font-bold">{t('noPacks')}</Typography>
                                             <Button onClick={() => setStep('details')} variant="ghost" className="mt-4">
-                                                Skip Plan Selection <ArrowRight size={14} className="ml-2" />
+                                                {t('skipPack')} <ArrowRight size={14} className="ml-2" />
                                             </Button>
                                         </div>
                                     ) : (
@@ -320,10 +320,10 @@ function SignupForm() {
                                                         <div className="mb-3">
                                                             <p className="text-xl font-black text-[#002B5B]">
                                                                 {pack.price_month === 0 ? t('free') : `TND ${pack.price_month.toFixed(0)}`}
-                                                                <span className="text-xs font-semibold text-slate-400">/mois</span>
+                                                                <span className="text-xs font-semibold text-slate-400">{t('perMonth')}</span>
                                                             </p>
                                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
-                                                                TND {pack.price_year.toFixed(0)} /an
+                                                                TND {pack.price_year.toFixed(0)} {t('perYear')}
                                                             </p>
                                                         </div>
                                                         {pack.description && (
@@ -331,7 +331,7 @@ function SignupForm() {
                                                         )}
                                                     </div>
                                                     <Button className="w-full h-11 text-xs font-bold rounded-xl mt-2 group-hover:bg-[#002B5B] group-hover:text-white transition-colors">
-                                                        Select Plan <ArrowRight size={12} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                                                        {t('selectPack')} <ArrowRight size={12} className="ml-2 group-hover:translate-x-1 transition-transform" />
                                                     </Button>
                                                 </motion.div>
                                             ))}
@@ -353,7 +353,7 @@ function SignupForm() {
                                             onClick={() => setStep('pack')}
                                             className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-600 mb-6 transition-colors"
                                         >
-                                            <ArrowLeft size={14} /> Back to plans
+                                            <ArrowLeft size={14} /> {t('backToPlans')}
                                         </button>
 
                                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -464,10 +464,10 @@ function SignupForm() {
                                                     <div>
                                                         <p className="text-2xl font-black text-white">
                                                             {selectedPack.price_month === 0 ? t('free') : `TND ${selectedPack.price_month.toFixed(0)}`}
-                                                            <span className="text-xs font-medium text-blue-200/60">/mois</span>
+                                                            <span className="text-xs font-medium text-blue-200/60">{t('perMonth')}</span>
                                                         </p>
                                                         <p className="text-[10px] font-bold text-blue-200/60 uppercase tracking-widest mt-0.5">
-                                                            TND {selectedPack.price_year.toFixed(0)} /an
+                                                            TND {selectedPack.price_year.toFixed(0)} {t('perYear')}
                                                         </p>
                                                     </div>
                                                 </div>

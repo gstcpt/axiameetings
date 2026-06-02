@@ -18,18 +18,13 @@ import { getAuthenticatedUser } from '@/lib/auth';
  * - Model: `companies_apis`
  * - Model: `logs`
  * RELATIONS INCLUDED: 
- * _count: { select: { users: true
-
+ * _count: { select: { users: true } }
+ * 
  * AI AGENT DATA ACCESS & ROLE RULES:
  * 1. UNAUTHENTICATED: Only provide general AxiaMeetings info (total companies, users, references, guides).
  * 2. ADMIN: Restrict all answers to data where companyId matches the admin's company. They can query specific meetings, users, etc., within their company.
  * 3. PARTICIPANT (Token): Restrict all answers strictly to the single meeting associated with their token.
  * 4. DEVELOPER: Full access to all data.
- * 
- * INSTRUCTIONS FOR AI:
- * - Read `prisma/schema.prisma` first to understand the exact fields and relations available for the models listed above.
- * - Call this GET endpoint to fetch the JSON data.
- * - Parse the JSON, filter it according to the ROLE RULES above, and return the exact properties the user asked for.
  */
 export async function GET(req: NextRequest) {
     const user = await getAuthenticatedUser(req);
@@ -154,17 +149,119 @@ export async function GET(req: NextRequest) {
         });
         const logsActivity = Array.from(logsActivityMap.values());
 
-        // For Developers: Top Companies by Users
+        // Fetch recent meetings for all roles (scoped accordingly)
+        const recentMeetings = await prisma.meetings.findMany({
+            where: whereClause,
+            orderBy: [
+                { date: 'desc' },
+                { time: 'desc' }
+            ],
+            take: 5,
+            select: {
+                id: true,
+                subject: true,
+                date: true,
+                time: true,
+                type: true,
+                status: true,
+                company: { select: { name: true } }
+            }
+        });
+
+        // Fetch all meetings for calendar rendering
+        const calendarMeetings = await prisma.meetings.findMany({
+            where: whereClause,
+            select: {
+                id: true,
+                subject: true,
+                date: true,
+                time: true,
+                status: true,
+                company: { select: { name: true } }
+            }
+        });
+
+        // For Developers: Top Companies by Users & diagnostics
         let topCompanies: any[] = [];
+        let devStats: any = null;
+        let recentLogs: any[] = [];
+        let recentSignups: any[] = [];
+        let recentContacts: any[] = [];
+        let aiFeatureUsage: any[] = [];
+
         if (user.role === 'DEVELOPER') {
-            const companiesWithUsers = await prisma.companies.findMany({
-                include: { _count: { select: { users: true } } },
-                orderBy: { users: { _count: 'desc' } },
-                take: 5
-            });
+            const [
+                companiesWithUsers,
+                totalSignups, pendingSignups,
+                totalContacts, pendingContacts,
+                totalKeys, activeKeys,
+                totalAIUsage, successAIUsage,
+                totalChats, openChats,
+                fetchedRecentLogs,
+                fetchedRecentSignups,
+                fetchedRecentContacts,
+                tokenUsageGrouped
+            ] = await Promise.all([
+                prisma.companies.findMany({
+                    include: { _count: { select: { users: true } } },
+                    orderBy: { users: { _count: 'desc' } },
+                    take: 5
+                }),
+                prisma.signup_requests.count(),
+                prisma.signup_requests.count({ where: { status: 'PENDING' } }),
+                prisma.contact_messages.count(),
+                prisma.contact_messages.count({ where: { reply_content: null } }),
+                prisma.ia_tokens_keys.count(),
+                prisma.ia_tokens_keys.count({ where: { is_active: true } }),
+                prisma.ia_token_usage.count(),
+                prisma.ia_token_usage.count({ where: { success: true } }),
+                prisma.chat_sessions.count(),
+                prisma.chat_sessions.count({ where: { is_closed: false } }),
+                prisma.logs.findMany({
+                    orderBy: { timestamp: 'desc' },
+                    take: 5,
+                    include: {
+                        user: { select: { fullname: true, username: true } },
+                        company: { select: { name: true } }
+                    }
+                }),
+                prisma.signup_requests.findMany({
+                    where: { status: 'PENDING' },
+                    orderBy: { created_at: 'desc' },
+                    take: 3,
+                    select: { id: true, fullname: true, email: true, company_name: true, pack_id: true, created_at: true }
+                }),
+                prisma.contact_messages.findMany({
+                    where: { reply_content: null },
+                    orderBy: { created_at: 'desc' },
+                    take: 3,
+                    select: { id: true, sender_name: true, sender_email: true, subject: true, created_at: true }
+                }),
+                prisma.ia_token_usage.groupBy({
+                    by: ['feature'],
+                    _count: { id: true }
+                })
+            ]);
+
             topCompanies = companiesWithUsers.map(c => ({
                 name: c.name,
                 users: c._count.users
+            }));
+
+            devStats = {
+                signups: { total: totalSignups, pending: pendingSignups },
+                contacts: { total: totalContacts, pending: pendingContacts },
+                aiKeys: { total: totalKeys, active: activeKeys },
+                aiUsage: { total: totalAIUsage, success: successAIUsage, successRate: totalAIUsage > 0 ? Math.round((successAIUsage / totalAIUsage) * 100) : 100 },
+                chats: { total: totalChats, open: openChats }
+            };
+
+            recentLogs = fetchedRecentLogs;
+            recentSignups = fetchedRecentSignups;
+            recentContacts = fetchedRecentContacts;
+            aiFeatureUsage = tokenUsageGrouped.map((g: any) => ({
+                name: g.feature,
+                value: g._count.id
             }));
         }
 
@@ -174,9 +271,17 @@ export async function GET(req: NextRequest) {
             status: true, 
             data: { 
                 companies, meetings, users, apis, admins, logs,
+                aiWorkers: 5,
                 meetingsByStatus, meetingsByType, trendData,
                 usersByRole, apisByMethod, logsActivity, topCompanies,
-                meetingDates
+                meetingDates,
+                devStats,
+                recentMeetings,
+                calendarMeetings,
+                recentLogs,
+                recentSignups,
+                recentContacts,
+                aiFeatureUsage
             } 
         });
     } catch (error) {

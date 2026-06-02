@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Building2, Users, Video, CalendarClock, PieChart as PieChartIcon, Activity, Database, ShieldCheck, ScrollText, TrendingUp, ArrowUpRight, Plus, Calendar, Clock, ChevronRight, Sparkles, Ban } from 'lucide-react';
+import { Building2, Users, Video, CalendarClock, PieChart as PieChartIcon, Activity, Database, ShieldCheck, ScrollText, TrendingUp, ArrowUpRight, Plus, Calendar, Clock, ChevronRight, Sparkles, Ban, Terminal, UserPlus, MessageSquare, KeyRound, MessageCircle, Cpu } from 'lucide-react';
 import { OverviewStats, ApiResponse } from '@/lib/types';
 import { toast } from 'sonner';
 import { motion, animate, AnimatePresence } from 'framer-motion';
@@ -14,9 +14,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badges';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/cards';
 import { StatsCard } from '@/components/ui/StatsCard';
+import { Progress } from '@/components/ui/progress';
 import AreaChartComponent from '@/components/ui/charts/areas';
 import BarChartComponent from '@/components/ui/charts/bars';
 import PieChartComponent from '@/components/ui/charts/pies';
+import DoughnutChartComponent from '@/components/ui/charts/doughnuts';
+import RadialBarChartComponent from '@/components/ui/charts/radialbars';
+import HorizontalBarChartComponent from '@/components/ui/charts/horizontal-bars';
+import RadarChartComponent from '@/components/ui/charts/radars';
 import { cn } from '@/lib/utils';
 
 const STATUS_COLORS: Record<string, string> = { SCHEDULED: '#3b82f6', STARTED: '#22c55e', FINISHED: '#64748b', CANCELLED: '#ef4444' };
@@ -40,68 +45,233 @@ function AnimatedCounter({ value }: { value: number }) {
     return <Typography variant="h1" as="p" ref={nodeRef} className="text-xl md:text-2xl font-semibold leading-none tabular-nums">{value.toLocaleString()}</Typography>;
 }
 
-const MiniCalendar = ({ meetingDates = [] }: { meetingDates?: string[] }) => {
+interface CalendarMeeting {
+    id: number;
+    subject: string;
+    date: string;
+    time: string;
+    status: string;
+    company?: { name: string } | null;
+}
+
+const MiniCalendar = ({ meetings = [] }: { meetings?: CalendarMeeting[] }) => {
     const t = useTranslations('Dashboard.overview');
+    const tm = useTranslations('Meetings');
+    const tc = useTranslations('Common');
     const locale = useLocale();
+
     const today = new Date();
-    const currentMonth = today.toLocaleString(locale === 'ar' ? 'ar-TN' : locale === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+    const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
+    const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+    const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
 
-    const meetingDays = new Set(
-        meetingDates
-            .filter(d => d.startsWith(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`))
-            .map(d => parseInt(d.split('-')[2], 10))
-    );
+    const currentYear = today.getFullYear();
+    const yearsRange = Array.from({ length: 7 }, (_, i) => currentYear - 3 + i);
 
-    const days = [];
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let i = 1; i <= daysInMonth; i++) days.push(i);
-
+    const months = t.raw('calendar.months');
     const weekDays = t.raw('calendar.days');
+
+    const firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
+    const totalDaysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+    const totalDaysInPrevMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+    const cells = [];
+
+    // Prev month days
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+        const d = totalDaysInPrevMonth - i;
+        const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+        const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
+        cells.push({
+            day: d,
+            isCurrentMonth: false,
+            dateString: `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+        });
+    }
+
+    // Current month days
+    for (let i = 1; i <= totalDaysInMonth; i++) {
+        cells.push({
+            day: i,
+            isCurrentMonth: true,
+            dateString: `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+        });
+    }
+
+    // Next month days
+    const remaining = 42 - cells.length;
+    for (let i = 1; i <= remaining; i++) {
+        const nextMonth = selectedMonth === 11 ? 0 : selectedMonth + 1;
+        const nextYear = selectedMonth === 11 ? selectedYear + 1 : selectedYear;
+        cells.push({
+            day: i,
+            isCurrentMonth: false,
+            dateString: `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+        });
+    }
+
+    const meetingDateStrings = new Set(meetings.map(m => m.date));
+
+    const formatTime12h = (timeStr: string) => {
+        if (!timeStr) return '';
+        const [hoursStr, minutesStr] = timeStr.split(':');
+        const hours = parseInt(hoursStr, 10);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours % 12 || 12;
+        return `${String(hours12).padStart(2, '0')}:${minutesStr} ${ampm}`;
+    };
+
+    const isToday = (dateString: string) => {
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        return dateString === todayStr;
+    };
+
+    const formatEventDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        const [y, m, d] = dateStr.split('-');
+        const monthIdx = parseInt(m, 10) - 1;
+        const monthName = months[monthIdx]?.substring(0, 3) || m;
+        return `${d} ${monthName}`;
+    };
+
+    const sortedRecentMeetings = [...meetings].sort((a, b) => {
+        if (a.date !== b.date) return b.date.localeCompare(a.date);
+        return b.time.localeCompare(a.time);
+    });
+
+    const eventList = selectedDateStr
+        ? meetings.filter(m => m.date === selectedDateStr).sort((a, b) => a.time.localeCompare(b.time))
+        : sortedRecentMeetings.slice(0, 5);
 
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-full group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
+            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col h-full group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
         >
             <div className="flex items-center justify-between mb-4">
-                <div>
-                    <Typography variant="label" className="text-[10px] uppercase font-semibold text-slate-400 block mb-0.5">{t('header.outlook')}</Typography>
-                    <Typography variant="h3" className="text-sm font-semibold">{currentMonth}</Typography>
-                </div>
-                <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#002B5B] flex items-center justify-center shadow-sm border border-blue-100/50">
-                    <Calendar size={14} />
+                <Typography variant="h3" className="text-[#002B5B] text-sm md:text-base font-bold">
+                    {t('calendar.upcomingSchedules')}
+                </Typography>
+                <div className="flex items-center gap-1.5">
+                    <select
+                        value={selectedMonth}
+                        onChange={(e) => {
+                            setSelectedMonth(parseInt(e.target.value));
+                            setSelectedDateStr(null);
+                        }}
+                        className="text-slate-600 font-semibold border-slate-200 border rounded-lg px-2 py-1 text-[11px] bg-white focus:outline-none cursor-pointer hover:border-slate-300 transition-colors"
+                    >
+                        {months.map((name: string, idx: number) => (
+                            <option key={idx} value={idx}>{name}</option>
+                        ))}
+                    </select>
+                    <select
+                        value={selectedYear}
+                        onChange={(e) => {
+                            setSelectedYear(parseInt(e.target.value));
+                            setSelectedDateStr(null);
+                        }}
+                        className="text-slate-600 font-semibold border-slate-200 border rounded-lg px-2 py-1 text-[11px] bg-white focus:outline-none cursor-pointer hover:border-slate-300 transition-colors"
+                    >
+                        {yearsRange.map((yr) => (
+                            <option key={yr} value={yr}>{yr}</option>
+                        ))}
+                    </select>
                 </div>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase text-slate-300 mb-6">
+            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase text-slate-400 mb-2">
                 {weekDays.map((d: string) => <div key={d}>{d}</div>)}
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center text-xs flex-1 content-start">
-                {days.map((d, i) => (
-                    <div
-                        key={i}
-                        className={cn(
-                            "p-1.5 rounded-lg flex flex-col items-center justify-center relative transition-all duration-300 h-8",
-                            !d ? 'opacity-0' :
-                                d === today.getDate() ? 'bg-[#002B5B] text-white font-semibold shadow-xl shadow-blue-900/10 z-10' :
-                                    'text-slate-600 font-medium hover:bg-slate-50 cursor-default'
-                        )}
-                    >
-                        {d || ''}
-                        {d && meetingDays.has(d) && (
-                            <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className={cn(
+            <div className="grid grid-cols-7 gap-1 text-center text-xs content-start mb-6">
+                {cells.map((cell, idx) => {
+                    const isCellToday = isToday(cell.dateString);
+                    const hasMeeting = meetingDateStrings.has(cell.dateString);
+                    const isSelected = selectedDateStr === cell.dateString;
+                    return (
+                        <div
+                            key={idx}
+                            onClick={() => {
+                                if (selectedDateStr === cell.dateString) {
+                                    setSelectedDateStr(null);
+                                } else {
+                                    setSelectedDateStr(cell.dateString);
+                                }
+                            }}
+                            className={cn(
+                                "p-1 rounded-lg flex flex-col items-center justify-center relative transition-all duration-300 h-9 cursor-pointer select-none",
+                                !cell.isCurrentMonth ? 'text-slate-300 hover:bg-slate-50/50' :
+                                    isCellToday ? 'bg-[#0cb09d] text-white font-bold shadow-md shadow-teal-500/20 z-10 hover:bg-[#0aa391]' :
+                                        isSelected ? 'bg-slate-100 text-slate-800 font-bold border border-[#0cb09d]/30' :
+                                            'text-slate-600 font-medium hover:bg-slate-50'
+                            )}
+                        >
+                            <span>{cell.day}</span>
+                            {hasMeeting && (
+                                <span className={cn(
                                     "w-1 h-1 rounded-full absolute bottom-1",
-                                    d === today.getDate() ? "bg-white" : "bg-blue-500"
-                                )}
-                            />
-                        )}
+                                    isCellToday ? "bg-white" : "bg-[#0cb09d]"
+                                )} />
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            <div className="border-t border-slate-100 pt-4 flex-1 flex flex-col justify-start">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                        {t('calendar.eventsHeader')}
+                    </span>
+                    {selectedDateStr && (
+                        <button
+                            onClick={() => setSelectedDateStr(null)}
+                            className="text-[9px] font-bold text-[#0cb09d] hover:underline uppercase tracking-wider"
+                        >
+                            {tc('showAll')}
+                        </button>
+                    )}
+                </div>
+                <div className="space-y-3 pr-1">
+                    {eventList.length > 0 ? (
+                        eventList.slice(0, 5).map((m) => {
+                            const dayNum = m.date.split('-')[2];
+                            return (
+                                <Link key={m.id} href={`/meetings/${m.id}`} className="block group">
+                                    <div className="flex items-center justify-between py-1 transition-all duration-300 group-hover:translate-x-1 cursor-pointer">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-[#0cb09d]/10 text-[#0cb09d] flex items-center justify-center font-bold text-xs shrink-0 transition-colors group-hover:bg-[#0cb09d] group-hover:text-white">
+                                                {dayNum}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-slate-700 font-semibold text-xs truncate max-w-[150px] sm:max-w-[200px] group-hover:text-[#002B5B] transition-colors">
+                                                    {m.subject}
+                                                </span>
+                                                <span className="text-slate-400 text-[10px] font-medium truncate max-w-[120px] sm:max-w-[160px]">
+                                                    {m.company?.name || tm('card.notSpecified')} • {formatEventDate(m.date)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span className="text-slate-400 text-[10px] font-semibold whitespace-nowrap">
+                                            {formatTime12h(m.time)}
+                                        </span>
+                                    </div>
+                                </Link>
+                            );
+                        })
+                    ) : (
+                        <div className="text-center text-slate-400 italic text-[11px] py-4">
+                            {t('calendar.noEvents')}
+                        </div>
+                    )}
+                </div>
+                {meetings.length > 0 && (
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex justify-center">
+                        <Link href="/meetings" className="text-[11px] font-bold text-[#0cb09d] hover:underline uppercase tracking-wider flex items-center gap-1">
+                            <span>{t('calendar.viewAllMeetings')}</span>
+                            <ChevronRight size={12} className="rtl:rotate-180" />
+                        </Link>
                     </div>
-                ))}
+                )}
             </div>
         </motion.div>
     );
@@ -113,6 +283,7 @@ export default function OverviewPage() {
     const t = useTranslations('Dashboard.overview');
     const ts = useTranslations('Dashboard.sidebar');
     const tc = useTranslations('Common');
+    const tm = useTranslations('Meetings');
     const { user } = useAuth();
     const locale = useLocale();
     const isDeveloper = user?.role === 'DEVELOPER';
@@ -144,6 +315,7 @@ export default function OverviewPage() {
         { title: ts('meetings'), value: stats?.meetings ?? 0, icon: Video, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', href: '/meetings' },
         { title: t('stats.cancelled'), value: stats?.meetingsByStatus?.CANCELLED ?? 0, icon: Ban, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100', href: '/meetings' },
         { title: ts('logs'), value: stats?.logs ?? 0, icon: ScrollText, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', href: '/logs' },
+        ...(isDeveloper ? [{ title: t('stats.aiWorkers'), value: stats?.aiWorkers ?? 5, icon: Cpu, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', href: '/ai-tokens' }] : []),
     ];
 
     if (loading) {
@@ -163,11 +335,13 @@ export default function OverviewPage() {
     const statusData = formatPieData(stats?.meetingsByStatus);
     const typeData = formatPieData(stats?.meetingsByType);
     const usersRoleData = formatPieData(stats?.usersByRole);
+    const apiMethodsData = stats?.apisByMethod ? Object.entries(stats.apisByMethod).filter(([_, value]) => value > 0).map(([name, value]) => ({ name, value })) : [];
 
     return (
         <div className="space-y-8 md:space-y-12 pb-20">
             {/* Premium Welcome Header */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm shadow-blue-900/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 md:w-80 h-64 md:h-80 bg-blue-50/40 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 -z-10"></div>
                 <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 relative z-10">
                     <div className="flex flex-col sm:flex-row items-center gap-6 md:gap-8 text-center sm:text-left w-full md:w-auto">
                         <div className="w-10 h-10 md:w-12 md:h-12 bg-[#002B5B] rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-900/20 shrink-0 relative">
@@ -199,82 +373,92 @@ export default function OverviewPage() {
                 </div>
             </div>
 
-            {/* Stats Ecosystem */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:col-span-3">
-                    {statCards.map((stat, i) => (
-                        <Link key={i} href={stat.href} className="block group">
-                            <motion.div
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.05, type: 'spring', damping: 20 }}
-                                className={cn(
-                                    "bg-white rounded-2xl p-4 border shadow-sm h-full transition-all duration-500 flex flex-col justify-between relative overflow-hidden group-hover:shadow-2xl group-hover:shadow-blue-900/10 group-hover:-translate-y-1",
-                                    stat.border
-                                )}
-                            >
-                                <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-slate-50/50 rounded-full blur-2xl group-hover:bg-blue-50/50 transition-colors duration-500" />
-                                <div className="flex items-center justify-between mb-4 relative z-10">
-                                    <Typography variant="label" className="text-[12px] font-bold uppercase text-slate-400 group-hover:text-[#002B5B] transition-colors">{stat.title}</Typography>
-                                    <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border border-current/10 transition-transform duration-500 group-hover:scale-110", stat.bg, stat.color)}>
-                                        <stat.icon size={14} />
-                                    </div>
+            {/* Stats Cards Row */}
+            <div className={cn(
+                "grid gap-4",
+                isDeveloper 
+                    ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-4"
+                    : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-3"
+            )}>
+                {statCards.map((stat, i) => (
+                    <Link key={i} href={stat.href} className="block group">
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05, type: 'spring', damping: 20 }}
+                            className={cn(
+                                "bg-white rounded-2xl p-4 border shadow-sm h-28 transition-all duration-500 flex flex-col justify-between relative overflow-hidden group-hover:shadow-xl group-hover:shadow-blue-900/5 group-hover:-translate-y-1",
+                                stat.border
+                            )}
+                        >
+                            <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-slate-50/50 rounded-full blur-2xl group-hover:bg-blue-50/50 transition-colors duration-500" />
+                            <div className="flex items-center justify-between mb-2 relative z-10">
+                                <Typography variant="label" className="text-[11px] font-bold uppercase text-slate-400 group-hover:text-[#002B5B] transition-colors">{stat.title}</Typography>
+                                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border border-current/10 transition-transform duration-500 group-hover:scale-110", stat.bg, stat.color)}>
+                                    <stat.icon size={14} />
                                 </div>
-                                <div className="relative z-10 flex items-baseline gap-2">
-                                    <AnimatedCounter value={stat.value} />
-                                    <div className="flex items-center text-emerald-500 text-[9px] font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100">
-                                        <ArrowUpRight size={10} className="me-1" />
-                                        {t('stats.live')}
-                                    </div>
+                            </div>
+                            <div className="relative z-10 flex items-baseline gap-2 mt-auto">
+                                <AnimatedCounter value={stat.value} />
+                                <div className="flex items-center text-emerald-500 text-[9px] font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-100">
+                                    <ArrowUpRight size={10} className="me-1" />
+                                    {t('stats.live')}
                                 </div>
-                            </motion.div>
-                        </Link>
-                    ))}
+                            </div>
+                        </motion.div>
+                    </Link>
+                ))}
+            </div>
+
+            {/* Calendar & Volume Analysis Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                {/* Calendar View */}
+                <div className="lg:col-span-4 flex flex-col">
+                    <MiniCalendar meetings={stats?.calendarMeetings} />
                 </div>
-                <div className="flex flex-col gap-8 lg:col-span-1">
-                    <MiniCalendar meetingDates={stats?.meetingDates} />
+
+                {/* Main Volume Trend Chart */}
+                <div className="lg:col-span-8 flex flex-col">
+                    <StatsCard
+                        title={t('charts.volumeTitle')}
+                        subtitle={t('charts.volumeSubtitle', { item: ts('meetings') })}
+                        icon={<TrendingUp size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                        iconWrapperClassName="bg-blue-50 text-[#002B5B] border-blue-100"
+                        className="h-full flex flex-col justify-between"
+                        action={
+                            <div className="flex gap-2">
+                                <div className="h-2 w-2 rounded-full bg-[#002B5B]" />
+                                <div className="h-2 w-2 rounded-full bg-slate-100" />
+                            </div>
+                        }
+                    >
+                        <BarChartComponent
+                            data={stats?.trendData || []}
+                            xKey="name"
+                            series={[{ key: 'meetings', name: ts('meetings'), color: '#002B5B' }]}
+                            height={340}
+                        />
+                    </StatsCard>
                 </div>
             </div>
 
-            {/* Analytics Landscape */}
+            {/* Doughnut Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {/* Main Trend Chart */}
-                <StatsCard
-                    title={t('charts.volumeTitle')}
-                    subtitle={t('charts.volumeSubtitle', { item: ts('meetings') })}
-                    icon={<TrendingUp size={14} className="sm:w-[18px] sm:h-[18px]" />}
-                    iconWrapperClassName="bg-blue-50 text-[#002B5B] border-blue-100"
-                    className="lg:col-span-8"
-                    action={
-                        <div className="flex gap-2">
-                            <div className="h-2 w-2 rounded-full bg-[#002B5B]" />
-                            <div className="h-2 w-2 rounded-full bg-slate-100" />
-                        </div>
-                    }
-                >
-                    <BarChartComponent
-                        data={stats?.trendData || []}
-                        xKey="name"
-                        series={[{ key: 'meetings', name: ts('meetings'), color: '#002B5B' }]}
-                        height={400}
-                    />
-                </StatsCard>
-
                 {/* Status Distribution */}
                 <StatsCard
                     title={t('charts.statusMix')}
                     subtitle={t('charts.statusMixSubtitle')}
                     icon={<PieChartIcon size={14} className="sm:w-[18px] sm:h-[18px]" />}
                     iconWrapperClassName="bg-purple-50 text-purple-600 border-purple-100"
-                    className="lg:col-span-4"
+                    className="lg:col-span-6"
                 >
                     <div className="grow flex items-center justify-center min-h-[300px]">
                         {statusData.length > 0 ? (
-                            <PieChartComponent
+                            <DoughnutChartComponent
                                 data={statusData}
-                                donut
                                 colors={statusData.map(entry => STATUS_COLORS[entry.name] || PIE_COLORS[0])}
                                 height={320}
+                                totalLabel={t('charts.statusMix')}
                             />
                         ) : (
                             <div className="flex flex-col items-center justify-center text-slate-300 opacity-20 py-20">
@@ -285,21 +469,21 @@ export default function OverviewPage() {
                     </div>
                 </StatsCard>
 
-                {/* Secondary Metrics Row */}
+                {/* Role Composition */}
                 <StatsCard
                     title={t('charts.roleComposition')}
                     subtitle={t('charts.roleCompositionSubtitle')}
                     icon={<Users size={14} className="sm:w-[18px] sm:h-[18px]" />}
                     iconWrapperClassName="bg-emerald-50 text-emerald-600 border-emerald-100"
-                    className="lg:col-span-4"
+                    className="lg:col-span-6"
                 >
                     <div className="grow flex items-center justify-center min-h-[280px]">
                         {usersRoleData.length > 0 ? (
-                            <PieChartComponent
+                            <DoughnutChartComponent
                                 data={usersRoleData}
-                                donut
                                 colors={PIE_COLORS}
                                 height={280}
+                                totalLabel={ts('users')}
                             />
                         ) : (
                             <div className="py-20 flex flex-col items-center justify-center text-slate-100">
@@ -309,21 +493,493 @@ export default function OverviewPage() {
                     </div>
                 </StatsCard>
 
-                <StatsCard
-                    title={t('charts.systemActivity')}
-                    subtitle={t('charts.systemActivitySubtitle')}
-                    icon={<Activity size={14} className="sm:w-[18px] sm:h-[18px]" />}
-                    iconWrapperClassName="bg-amber-50 text-amber-600 border-amber-100"
-                    className="lg:col-span-8"
-                >
-                    <AreaChartComponent
-                        data={stats?.logsActivity || []}
-                        xKey="name"
-                        series={[{ key: 'activity', name: ts('logs'), color: '#f59e0b' }]}
-                        height={350}
-                    />
-                </StatsCard>
+                {!isDeveloper && (
+                    <StatsCard
+                        title={t('charts.systemActivity')}
+                        subtitle={t('charts.systemActivitySubtitle')}
+                        icon={<Activity size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                        iconWrapperClassName="bg-amber-50 text-amber-600 border-amber-100"
+                        className="lg:col-span-12"
+                    >
+                        <AreaChartComponent
+                            data={stats?.logsActivity || []}
+                            xKey="name"
+                            series={[{ key: 'activity', name: ts('logs'), color: '#f59e0b' }]}
+                            height={350}
+                        />
+                    </StatsCard>
+                )}
             </div>
+
+
+
+            {/* Developer Console Metrics Section */}
+            {isDeveloper && stats?.devStats && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="pt-8 border-t border-slate-200/80 space-y-8"
+                >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 border border-violet-100 flex items-center justify-center shadow-sm">
+                                <Terminal size={20} />
+                            </div>
+                            <div>
+                                <Typography variant="h3" className="text-lg font-bold text-[#002B5B]">
+                                    {t('developer.sectionTitle')}
+                                </Typography>
+                                <Typography variant="p" className="text-xs text-slate-500 font-medium">
+                                    {t('developer.sectionDesc')}
+                                </Typography>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Row 1: Counters and Meters */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {/* 1. Signup Requests Counter */}
+                        <motion.div
+                            whileHover={{ y: -4 }}
+                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between group hover:shadow-xl hover:border-indigo-200 transition-all duration-300 h-full relative overflow-hidden"
+                        >
+                            <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-indigo-50/20 rounded-full blur-2xl group-hover:bg-indigo-50/40 transition-colors" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">{t('developer.pendingSignups')}</span>
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                                        <UserPlus size={15} />
+                                    </div>
+                                </div>
+                                <Typography variant="h3" className="text-lg font-semibold text-slate-800">
+                                    {t('developer.pendingOf', { pending: stats.devStats.signups.pending, total: stats.devStats.signups.total })}
+                                </Typography>
+                            </div>
+                        </motion.div>
+
+                        {/* 2. Contact Support inbox Counter */}
+                        <motion.div
+                            whileHover={{ y: -4 }}
+                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between group hover:shadow-xl hover:border-emerald-200 transition-all duration-300 h-full relative overflow-hidden"
+                        >
+                            <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-emerald-50/20 rounded-full blur-2xl group-hover:bg-emerald-50/40 transition-colors" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">{t('developer.pendingContacts')}</span>
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                                        <MessageSquare size={15} />
+                                    </div>
+                                </div>
+                                <Typography variant="h3" className="text-lg font-semibold text-slate-800">
+                                    {t('developer.pendingOf', { pending: stats.devStats.contacts.pending, total: stats.devStats.contacts.total })}
+                                </Typography>
+                            </div>
+                        </motion.div>
+
+                        {/* 3. AI Providers Keys Counter */}
+                        <motion.div
+                            whileHover={{ y: -4 }}
+                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between group hover:shadow-xl hover:border-purple-200 transition-all duration-300 h-full relative overflow-hidden"
+                        >
+                            <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-purple-50/20 rounded-full blur-2xl group-hover:bg-purple-50/40 transition-colors" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">{t('developer.aiKeys')}</span>
+                                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
+                                        <KeyRound size={15} />
+                                    </div>
+                                </div>
+                                <Typography variant="h3" className="text-lg font-semibold text-slate-800">
+                                    {t('developer.activeOf', { active: stats.devStats.aiKeys.active, total: stats.devStats.aiKeys.total })}
+                                </Typography>
+                            </div>
+                        </motion.div>
+
+                        {/* 4. Chat Sessions Counter */}
+                        <motion.div
+                            whileHover={{ y: -4 }}
+                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between group hover:shadow-xl hover:border-cyan-200 transition-all duration-300 h-full relative overflow-hidden"
+                        >
+                            <div className="absolute -right-4 -bottom-4 w-28 h-28 bg-cyan-50/20 rounded-full blur-2xl group-hover:bg-cyan-50/40 transition-colors" />
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">{t('developer.chatSessions')}</span>
+                                    <div className="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center border border-cyan-100">
+                                        <MessageCircle size={15} />
+                                    </div>
+                                </div>
+                                <Typography variant="h3" className="text-lg font-semibold text-slate-800">
+                                    {t('developer.openOf', { open: stats.devStats.chats.open, total: stats.devStats.chats.total })}
+                                </Typography>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    {/* Row 2: Diagnostics and Breakdown */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {/* AI Gateway Reliability Rate */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between group hover:shadow-xl hover:border-amber-200 transition-all duration-500 h-full relative overflow-hidden"
+                        >
+                            <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-amber-50/30 rounded-full blur-2xl group-hover:bg-amber-50/50 transition-colors duration-500" />
+                            <div className="relative z-10 w-full">
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                                        {t('developer.aiUsage')}
+                                    </span>
+                                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
+                                        <Activity size={16} />
+                                    </div>
+                                </div>
+                                <Typography variant="h3" className="text-sm font-semibold text-slate-800 mb-2">
+                                    {t('developer.successRate', { rate: stats.devStats.aiUsage.successRate })}
+                                </Typography>
+                                <div className="grow flex items-center justify-center min-h-[160px] mt-2">
+                                    <RadialBarChartComponent
+                                        data={[
+                                            { name: 'Success Rate', value: stats.devStats.aiUsage.successRate }
+                                        ]}
+                                        height={160}
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-slate-100 relative z-10 w-full">
+                                <Link href="/logs">
+                                    <Button size="sm" className="w-full justify-between bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-xl shadow-md shadow-amber-900/10 h-9 px-4">
+                                        <span>{t('developer.viewLogs')}</span>
+                                        <ChevronRight size={14} className="rtl:rotate-180" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </motion.div>
+
+                        {/* API HTTP Methods Composition */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between group hover:shadow-xl hover:border-blue-200 transition-all duration-500 h-full relative overflow-hidden"
+                        >
+                            <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-blue-50/30 rounded-full blur-2xl group-hover:bg-blue-50/50 transition-colors duration-500" />
+                            <div className="relative z-10 w-full">
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                                        {t('developer.apiMethods')}
+                                    </span>
+                                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+                                        <Database size={16} />
+                                    </div>
+                                </div>
+                                <Typography variant="h3" className="text-sm font-semibold text-slate-800 mb-2">
+                                    {t('developer.apiMethodsSubtitle')}
+                                </Typography>
+                                <div className="grow flex items-center justify-center min-h-[160px] mt-2">
+                                    {apiMethodsData.length > 0 ? (
+                                        <RadarChartComponent
+                                            data={apiMethodsData}
+                                            height={160}
+                                            color="#3b82f6"
+                                        />
+                                    ) : (
+                                        <div className="text-xs text-slate-400 italic py-6 text-center">{tc('notAvailable')}</div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-slate-100 relative z-10 w-full">
+                                <Link href="/companies/apis">
+                                    <Button size="sm" className="w-full justify-between bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-md shadow-blue-900/10 h-9 px-4">
+                                        <span>{t('stats.apis')}</span>
+                                        <ChevronRight size={14} className="rtl:rotate-180" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </motion.div>
+
+                        {/* AI Capability Breakdown Card */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between group hover:shadow-xl hover:border-purple-200 transition-all duration-500 h-full relative overflow-hidden"
+                        >
+                            <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-purple-50/30 rounded-full blur-2xl group-hover:bg-purple-50/50 transition-colors duration-500" />
+                            <div className="relative z-10 w-full">
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                                        {t('developer.aiFeatureUsage')}
+                                    </span>
+                                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
+                                        <Sparkles size={16} />
+                                    </div>
+                                </div>
+                                <div className="grow min-h-[160px] mt-2">
+                                    {stats?.aiFeatureUsage && stats.aiFeatureUsage.length > 0 ? (
+                                        <HorizontalBarChartComponent
+                                            data={stats.aiFeatureUsage}
+                                            height={160}
+                                        />
+                                    ) : (
+                                        <div className="text-xs text-slate-400 italic py-6 text-center">{tc('notAvailable')}</div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-slate-100 relative z-10 w-full">
+                                <Link href="/ai-tokens">
+                                    <Button size="sm" className="w-full justify-between bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs rounded-xl shadow-md shadow-purple-900/10 h-9 px-4">
+                                        <span>{t('developer.manageKeys')}</span>
+                                        <ChevronRight size={14} className="rtl:rotate-180" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </motion.div>
+
+                        {/* Top Active Tenants List */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between group hover:shadow-xl hover:border-slate-300 transition-all duration-500 h-full relative overflow-hidden"
+                        >
+                            <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-slate-50/30 rounded-full blur-2xl group-hover:bg-slate-50/50 transition-colors duration-500" />
+                            <div className="relative z-10 w-full">
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
+                                        {t('developer.topTenants')}
+                                    </span>
+                                    <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center border border-slate-200">
+                                        <Building2 size={16} />
+                                    </div>
+                                </div>
+                                <div className="space-y-3 mt-2">
+                                    {stats.topCompanies && stats.topCompanies.length > 0 ? (
+                                        stats.topCompanies.map((c, i) => (
+                                            <div key={i} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
+                                                <span className="text-xs font-semibold text-slate-700 truncate max-w-[150px]">{c.name}</span>
+                                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
+                                                    {t('developer.usersCount', { count: c.users })}
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-xs text-slate-400 italic py-2">{tc('notAvailable')}</div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-slate-100 relative z-10 w-full">
+                                <Link href="/companies">
+                                    <Button size="sm" className="w-full justify-between bg-slate-700 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-md shadow-slate-900/10 h-9 px-4">
+                                        <span>{ts('companies')}</span>
+                                        <ChevronRight size={14} className="rtl:rotate-180" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </div>
+
+                    {/* Row 3: Operational Inboxes */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Pending Signups Table Card */}
+                        <StatsCard
+                            title={t('developer.recentSignups')}
+                            subtitle={t('developer.pendingSignups')}
+                            icon={<UserPlus size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                            iconWrapperClassName="bg-indigo-50 text-indigo-600 border-indigo-100"
+                            className="w-full"
+                        >
+                            <div className="overflow-x-auto w-full">
+                                <table className="w-full text-left rtl:text-right border-collapse text-xs">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase text-[9px]">
+                                            <th className="py-2 px-2">{t('developer.sender')}</th>
+                                            <th className="py-2 px-2">{t('developer.companyName')}</th>
+                                            <th className="py-2 px-2 text-right rtl:text-left">{t('developer.logTime')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {stats?.recentSignups && stats.recentSignups.length > 0 ? (
+                                            stats.recentSignups.map((s, i) => {
+                                                const timeStr = new Date(s.created_at).toLocaleDateString(locale === 'ar' ? 'ar-TN' : 'en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                });
+                                                return (
+                                                    <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                                        <td className="py-2.5 px-2">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-semibold text-slate-700">{s.fullname}</span>
+                                                                <span className="text-[9px] text-slate-400 font-medium truncate max-w-[150px]">{s.email}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-2.5 px-2 text-slate-600 font-medium truncate max-w-[120px]">{s.company_name}</td>
+                                                        <td className="py-2.5 px-2 text-right rtl:text-left text-slate-400 font-medium whitespace-nowrap">{timeStr}</td>
+                                                    </tr>
+                                                );
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={3} className="py-6 text-center text-slate-400 font-medium italic">
+                                                    {tc('notAvailable')}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-slate-100">
+                                <Link href="/signup-requests" className="w-full">
+                                    <Button size="sm" className="w-full justify-between bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-md h-9 px-4">
+                                        <span>{t('developer.approveRequests')}</span>
+                                        <ChevronRight size={14} className="rtl:rotate-180" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </StatsCard>
+
+                        {/* Support Messages Table Card */}
+                        <StatsCard
+                            title={t('developer.recentContacts')}
+                            subtitle={t('developer.pendingContacts')}
+                            icon={<MessageSquare size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                            iconWrapperClassName="bg-emerald-50 text-emerald-600 border-emerald-100"
+                            className="w-full"
+                        >
+                            <div className="overflow-x-auto w-full">
+                                <table className="w-full text-left rtl:text-right border-collapse text-xs">
+                                    <thead>
+                                        <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase text-[9px]">
+                                            <th className="py-2 px-2">{t('developer.sender')}</th>
+                                            <th className="py-2 px-2">{t('subject')}</th>
+                                            <th className="py-2 px-2 text-right rtl:text-left">{t('developer.logTime')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {stats?.recentContacts && stats.recentContacts.length > 0 ? (
+                                            stats.recentContacts.map((c, i) => {
+                                                const timeStr = new Date(c.created_at).toLocaleDateString(locale === 'ar' ? 'ar-TN' : 'en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                });
+                                                return (
+                                                    <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                                        <td className="py-2.5 px-2">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-semibold text-slate-700 truncate max-w-[150px]" title={c.sender_name || ''}>{c.sender_name || tc('visitor')}</span>
+                                                                <span className="text-[9px] text-slate-400 font-medium truncate max-w-[150px]">{c.sender_email}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-2.5 px-2 text-slate-600 font-medium truncate max-w-[150px]" title={c.subject}>{c.subject}</td>
+                                                        <td className="py-2.5 px-2 text-right rtl:text-left text-slate-400 font-medium whitespace-nowrap">{timeStr}</td>
+                                                    </tr>
+                                                );
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={3} className="py-6 text-center text-slate-400 font-medium italic">
+                                                    {tc('notAvailable')}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-slate-100">
+                                <Link href="/contact-messages" className="w-full">
+                                    <Button size="sm" className="w-full justify-between bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-md h-9 px-4">
+                                        <span>{t('developer.viewMessages')}</span>
+                                        <ChevronRight size={14} className="rtl:rotate-180" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </StatsCard>
+                    </div>
+
+                    {/* Row 4: System Logs Activity & Logs Audit */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                        {/* System Activity Chart */}
+                        <div className="lg:col-span-7 flex flex-col">
+                            <StatsCard
+                                title={t('charts.systemActivity')}
+                                subtitle={t('charts.systemActivitySubtitle')}
+                                icon={<Activity size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                                iconWrapperClassName="bg-amber-50 text-amber-600 border-amber-100"
+                                className="h-full"
+                            >
+                                <AreaChartComponent
+                                    data={stats?.logsActivity || []}
+                                    xKey="name"
+                                    series={[{ key: 'activity', name: ts('logs'), color: '#f59e0b' }]}
+                                    height={350}
+                                />
+                            </StatsCard>
+                        </div>
+
+                        {/* Recent System Logs Table */}
+                        <div className="lg:col-span-5 flex flex-col">
+                            <StatsCard
+                                title={t('developer.recentLogs')}
+                                subtitle={t('developer.sectionDesc')}
+                                icon={<ScrollText size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                                iconWrapperClassName="bg-amber-50 text-amber-600 border-amber-100"
+                                className="h-full flex flex-col justify-between"
+                            >
+                                <div className="overflow-x-auto w-full flex-1">
+                                    <table className="w-full text-left rtl:text-right border-collapse text-xs">
+                                        <thead>
+                                            <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase text-[9px]">
+                                                <th className="py-2.5 px-3">{t('developer.logActor')}</th>
+                                                <th className="py-2.5 px-3">{t('developer.logMessage')}</th>
+                                                <th className="py-2.5 px-3">{t('developer.logCompany')}</th>
+                                                <th className="py-2.5 px-3 text-right rtl:text-left">{t('developer.logTime')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {stats?.recentLogs && stats.recentLogs.length > 0 ? (
+                                                stats.recentLogs.map((log, i) => {
+                                                    const actor = log.user?.fullname || log.user?.username || tc('system');
+                                                    const timeStr = new Date(log.timestamp).toLocaleString(locale === 'ar' ? 'ar-TN' : locale === 'fr' ? 'fr-FR' : 'en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    });
+                                                    return (
+                                                        <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                                            <td className="py-2 px-3 font-semibold text-slate-700 whitespace-nowrap">{actor}</td>
+                                                            <td className="py-2 px-3 text-slate-500 font-medium truncate max-w-[120px]" title={log.message}>
+                                                                {log.message}
+                                                            </td>
+                                                            <td className="py-2 px-3">
+                                                                {log.company?.name ? (
+                                                                    <Badge variant="secondary" className="bg-slate-100 text-slate-700 font-semibold text-[9px] h-5 rounded-md px-1.5 border-0">
+                                                                        {log.company.name}
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <span className="text-slate-300 italic font-medium">{tm('card.notSpecified')}</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="py-2 px-3 text-right rtl:text-left text-slate-400 font-medium whitespace-nowrap">{timeStr}</td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={4} className="py-6 text-center text-slate-400 font-medium italic">
+                                                        {tc('notAvailable')}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </StatsCard>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
         </div>
     );
 }

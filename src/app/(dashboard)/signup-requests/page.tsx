@@ -117,7 +117,7 @@ export default function SignupRequestsPage() {
             });
             const result = await res.json();
             if (result.status) {
-                toast.success(t('toast.deleted') || 'Demande supprimée');
+                toast.success(t('toast.deleted'));
                 fetchRequests();
                 if (selected?.id === selectedToDelete.id) {
                     setSelected(null);
@@ -145,7 +145,7 @@ export default function SignupRequestsPage() {
             });
             const result = await res.json();
             if (result.status) {
-                toast.success(t('toast.bulkDeleted') || `${bulkSelected.length} demandes supprimées`);
+                toast.success(t('toast.bulkDeleted'));
                 fetchRequests();
                 if (selected && bulkSelected.some(r => r.id === selected.id)) {
                     setSelected(null);

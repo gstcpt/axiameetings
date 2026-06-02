@@ -102,12 +102,12 @@ export default function LoginPage() {
                     >
                         <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-8 w-fit">
                             <Sparkles size={12} className="text-blue-300" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">Secure Gateway</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">{t('secureGateway')}</span>
                         </div>
 
                         <h1 className="text-4xl xl:text-5xl font-black text-white leading-[1.1] mb-6">
-                            Welcome<br />
-                            <span className="text-blue-300">back.</span>
+                            {t('heroTitle')}<br />
+                            <span className="text-blue-300">{t('heroTitleHighlight')}</span>
                         </h1>
                         <p className="text-blue-200/70 text-lg font-medium leading-relaxed max-w-xs">
                             {t('subtitle')}
@@ -116,9 +116,9 @@ export default function LoginPage() {
                         {/* Trust badges */}
                         <div className="mt-12 space-y-3">
                             {[
-                                { icon: ShieldCheck, label: 'End-to-End Encrypted' },
-                                { icon: CheckCircle2, label: 'ISO 27001 Compliant' },
-                                { icon: Sparkles, label: 'AI-Powered Platform' },
+                                { icon: ShieldCheck, label: t('badgeEncrypted') },
+                                { icon: CheckCircle2, label: t('badgeISO') },
+                                { icon: Sparkles, label: t('badgeAI') },
                             ].map(({ icon: Icon, label }) => (
                                 <div key={label} className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
@@ -138,7 +138,7 @@ export default function LoginPage() {
                         className="border-t border-white/10 pt-6"
                     >
                         <p className="text-blue-200/40 text-xs font-medium">
-                            © {new Date().getFullYear()} Axia Meetings. All rights reserved.
+                            © {new Date().getFullYear()} Axia Meetings. {t('allRightsReserved')}
                         </p>
                     </motion.div>
                 </div>
@@ -149,11 +149,11 @@ export default function LoginPage() {
                 {/* Sleek Top Navigation Bar */}
                 <div className="w-full flex items-center justify-between px-6 md:px-12 pt-8 pb-4 shrink-0">
                     <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
-                        <ArrowLeft size={14} /> Back to website
+                        <ArrowLeft size={14} /> {t('backToWebsite')}
                     </Link>
                     <div className="flex gap-4 text-xs font-semibold text-slate-400">
-                        <Link href="/terms-of-use" className="hover:text-slate-600 transition-colors">Terms of Use</Link>
-                        <Link href="/privacy-policy" className="hover:text-slate-600 transition-colors">Privacy Policy</Link>
+                        <Link href="/terms-of-use" className="hover:text-slate-600 transition-colors">{t('termsOfUse')}</Link>
+                        <Link href="/privacy-policy" className="hover:text-slate-600 transition-colors">{t('privacyPolicy')}</Link>
                     </div>
                 </div>
 
@@ -291,7 +291,7 @@ export default function LoginPage() {
                         {/* Footer note */}
                         <div className="mt-8 flex items-center justify-center gap-2 text-slate-300">
                             <ShieldCheck size={14} />
-                            <span className="text-[10px] uppercase font-black tracking-[0.18em]">End-to-End Encryption Enabled</span>
+                            <span className="text-[10px] uppercase font-black tracking-[0.18em]">{t('encryptionEnabled')}</span>
                         </div>
 
                         <p className="text-center text-sm text-slate-400 mt-6">

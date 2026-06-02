@@ -149,12 +149,12 @@ export default function ChatSessionsPage() {
             });
             const data = await res.json();
             if (data.status) {
-                toast.success(t('session.deleted') || 'Session deleted');
+                toast.success(t('session.deleted'));
                 fetchSessions();
                 setModal(null);
                 setSelected(null);
-            } else toast.error(data.message || 'Error deleting session');
-        } catch { toast.error('Error deleting session'); }
+            } else toast.error(data.message || t('session.deleteError'));
+        } catch { toast.error(t('session.deleteError')); }
         finally { setDeleting(false); }
     };
 
@@ -169,12 +169,12 @@ export default function ChatSessionsPage() {
             });
             const data = await res.json();
             if (data.status) {
-                toast.success(t('session.bulkDeleted', { count: bulkSelected.length }) || 'Sessions deleted');
+                toast.success(t('session.bulkDeleted', { count: bulkSelected.length }));
                 fetchSessions();
                 setModal(null);
                 setBulkSelected([]);
-            } else toast.error(data.message || 'Error deleting sessions');
-        } catch { toast.error('Error deleting sessions'); }
+            } else toast.error(data.message || t('session.deleteBulkError'));
+        } catch { toast.error(t('session.deleteBulkError')); }
         finally { setDeleting(false); }
     };
 

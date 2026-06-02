@@ -4,6 +4,7 @@
         "description": "Axia Meetings is a meeting management tool that helps you to organize and manage your meetings."
     },
     "Common": {
+        "showAll": "Show All",
         "loading": "Loading...",
         "save": "Save",
         "cancel": "Cancel",
@@ -52,7 +53,9 @@
                 "first": "First page",
                 "previous": "Previous page",
                 "next": "Next page",
-                "last": "Last page"
+                "last": "Last page",
+                "page": "Page",
+                "of": "of"
             },
             "refresh": "Refresh",
             "export": "Export",
@@ -134,8 +137,15 @@
                 "fileTitle": "Document Title",
                 "submit": "Add Document",
                 "uploading": "Uploading...",
-                "drop": "Drop file here or click to upload"
+                "drop": "Drop file here or click to upload",
+                "allowedTypes": "PDF, Word, Images, etc."
             }
+        },
+        "required": "Required",
+        "visitor": "Visitor",
+        "participant": "Participant",
+        "toast": {
+            "error": "An error occurred"
         }
     },
     "Navbar": {
@@ -168,11 +178,12 @@
             "subscribe": "Subscribe",
             "success": "Subscribed successfully! Thank you.",
             "error": "Error subscribing"
-        }
+        },
+        "processing": "Processing..."
     },
     "Auth": {
         "login": {
-            "title": "Welcome back",
+            "title": "Sign in to your account",
             "subtitle": "Welcome back to excellence.",
             "email": "Identity",
             "emailPlaceholder": "Username or Email",
@@ -186,11 +197,23 @@
             "tabLogin": "Sign In",
             "tabSignup": "Sign Up",
             "titleSub": "Enter your credentials below to continue",
-            "signupLink": "Create one"
+            "signupLink": "Create one",
+            "secureGateway": "Secure Gateway",
+            "heroTitle": "Welcome",
+            "heroTitleHighlight": "back.",
+            "badgeEncrypted": "End-to-End Encrypted",
+            "badgeISO": "ISO 27001 Compliant",
+            "badgeAI": "AI-Powered Platform",
+            "allRightsReserved": "All rights reserved.",
+            "backToWebsite": "Back to website",
+            "termsOfUse": "Terms of Use",
+            "privacyPolicy": "Privacy Policy",
+            "encryptionEnabled": "End-to-End Encryption Enabled"
         },
         "logout": {
             "title": "Logging out...",
-            "message": "You will be redirected to the home page."
+            "message": "You will be redirected to the home page.",
+            "clearingSession": "Securely clearing your session"
         },
         "guard": {
             "checking": "Checking authentication..."
@@ -210,7 +233,21 @@
             "noEmail": "Didn't receive it?",
             "tryAgain": "Try again",
             "errorEmail": "Please enter your email address",
-            "errorGeneral": "Something went wrong. Please try again."
+            "errorGeneral": "Something went wrong. Please try again.",
+            "accountRecovery": "Account Recovery",
+            "forgot": "Forgot your",
+            "password": "password?",
+            "step1Title": "Enter your email",
+            "step1Desc": "We'll look up your account.",
+            "step2Title": "Check your inbox",
+            "step2Desc": "A secure reset link will be sent.",
+            "step3Title": "Set a new password",
+            "step3Desc": "Link expires in 1 hour for security.",
+            "allRightsReserved": "All rights reserved.",
+            "termsOfUse": "Terms of Use",
+            "privacyPolicy": "Privacy Policy",
+            "linkExpires": "Link expires in 1 hour",
+            "encryptionEnabled": "End-to-End Encryption Enabled"
         },
         "resetPassword": {
             "title": "Set a new password",
@@ -240,7 +277,14 @@
             "errorFields": "Please fill in all fields",
             "errorLength": "Password must be at least 8 characters",
             "errorMatch": "Passwords do not match",
-            "errorGeneral": "Something went wrong. Please try again."
+            "errorGeneral": "Something went wrong. Please try again.",
+            "secureReset": "Secure Reset",
+            "createYour": "Create your",
+            "newPassword": "new password.",
+            "allRightsReserved": "All rights reserved.",
+            "termsOfUse": "Terms of Use",
+            "privacyPolicy": "Privacy Policy",
+            "encryptionEnabled": "End-to-End Encryption Enabled"
         }
     },
     "Home": {
@@ -409,7 +453,8 @@
                 "admins": "Admins",
                 "createMeeting": "New Meeting",
                 "live": "LIVE",
-                "cancelled": "Cancelled"
+                "cancelled": "Cancelled",
+                "aiWorkers": "AI Workers"
             },
             "charts": {
                 "apisByMethod": "APIs / Method",
@@ -454,7 +499,53 @@
                     "October",
                     "November",
                     "December"
-                ]
+                ],
+                "upcomingSchedules": "Upcoming Schedules",
+                "eventsHeader": "EVENTS:",
+                "noEvents": "No events scheduled for this month",
+                "viewAllMeetings": "View All Meetings"
+            },
+            "recentMeetings": "Recent Meetings",
+            "subject": "Subject",
+            "dateTime": "Date & Time",
+            "type": "Type",
+            "status": "Status",
+            "action": "Action",
+            "noMeetings": "No recent meetings found.",
+            "viewMeeting": "View Details",
+            "developer": {
+                "sectionTitle": "Developer Console Metrics",
+                "sectionDesc": "System diagnostics, tenant activity, and pending administrative tasks",
+                "pendingSignups": "Pending Signups",
+                "pendingContacts": "Unreplied Messages",
+                "aiKeys": "AI Providers Keys",
+                "aiUsage": "AI Request Success Rate",
+                "chatSessions": "Active Chat Sessions",
+                "topTenants": "Top Active Tenants",
+                "approveRequests": "Approve Requests",
+                "viewMessages": "View Messages",
+                "manageKeys": "Manage Keys",
+                "viewLogs": "View System Logs",
+                "activeOf": "{active} of {total} active",
+                "pendingOf": "{pending} pending of {total}",
+                "openOf": "{open} open of {total}",
+                "successRate": "{rate}% success rate",
+                "usersCount": "{count} users",
+                "recentLogs": "Recent System Logs",
+                "logMessage": "Message",
+                "logActor": "Actor",
+                "logTime": "Timestamp",
+                "logCompany": "Company",
+                "recentSignups": "Pending Signups Inbox",
+                "recentContacts": "Support Messages Inbox",
+                "sender": "Sender",
+                "companyName": "Company Name",
+                "pack": "Plan",
+                "aiFeatureUsage": "AI Capability Breakdown",
+                "aiFeatureTitle": "Feature",
+                "aiFeatureCalls": "API Calls",
+                "apiMethods": "API HTTP Methods",
+                "apiMethodsSubtitle": "Distribution of API endpoints by HTTP method"
             }
         },
         "sidebar": {
@@ -1226,7 +1317,9 @@
             "user": "User",
             "title": "Conversation Details",
             "deleted": "Chat session deleted",
-            "bulkDeleted": "{count} chat sessions deleted"
+            "bulkDeleted": "{count} chat sessions deleted",
+            "deleteError": "Error deleting chat session",
+            "deleteBulkError": "Error deleting chat sessions"
         },
         "empty": {
             "title": "No chat sessions yet",
@@ -1318,7 +1411,8 @@
                 "title": "Waiting Room",
                 "message": "Your access request has been sent to the organizers. Please wait while they validate your entry.",
                 "cancel": "Cancel Request"
-            }
+            },
+            "finished": "Finished"
         },
         "header": {
             "live": "Live Session",
@@ -1351,7 +1445,8 @@
                 "for": "For (YES)",
                 "against": "Against (NO)",
                 "neutral": "Abstain"
-            }
+            },
+            "stopVote": "Stop Vote"
         },
         "participants": {
             "requests": "Access Requests",
@@ -1492,7 +1587,8 @@
         "placeholder": "Type your message...",
         "error": "Sorry, something went wrong. Please try again.",
         "export": "Export conversation",
-        "poweredBy": "Powered by Axia AI"
+        "poweredBy": "Powered by Axia AI",
+        "privacyNotice": "Your conversation is private, secure, and encrypted. Your personal information will not be shared."
     },
     "MeetingDetails": {
         "back": "Back to meetings",
@@ -1591,7 +1687,14 @@
                 "agendaItems": "Agenda Items",
                 "describeItem": "Describe the item...",
                 "addDocument": "Add a document",
-                "errorRequired": "Subject, date and time are required"
+                "errorRequired": "Subject, date and time are required",
+                "foundations": "Meeting Foundations",
+                "subjectPlaceholder": "Meeting subject",
+                "securityContext": "Security Context",
+                "adminAccess": "Administrative access",
+                "timeVenue": "Time & Venue",
+                "locationPlaceholder": "Physical or virtual address",
+                "contextualDescription": "Contextual Description"
             },
             "reschedule": {
                 "title": "Reschedule Meeting",
@@ -1611,7 +1714,8 @@
                 "description": "The AI has generated a new description for your meeting. Would you like to apply it?",
                 "confirm": "Change"
             }
-        }
+        },
+        "aiSubtitle": "Real-time administrative enhancement"
     },
     "Contact": {
         "badge": "Get In Touch",
@@ -1652,22 +1756,39 @@
         }
     },
     "Signup": {
-        "badge": "Get Started",
-        "title": "Start Your Journey",
-        "subtitle": "Choose a plan and set up your organization on Axia Meetings.",
+        "badge": "Sign Up",
+        "title": "Choose your workspace plan",
+        "subtitle": "Select the ideal plan for your organization size",
         "step1": "Choose Plan",
         "step2": "Your Details",
         "free": "Free",
+        "perMonth": "/month",
+        "perYear": "/year",
         "noPacks": "No plans available",
         "noPacksDesc": "Please contact us for pricing information.",
-        "skipPack": "Continue without selecting a plan",
-        "selectPack": "Select This Plan",
+        "skipPack": "Skip Plan Selection",
+        "selectPack": "Select Plan",
         "selectedPlan": "Selected Plan",
         "changePlan": "Change plan",
         "whatsIncluded": "What's included",
         "feature1": "Full admin dashboard access",
         "feature2": "AI-powered meeting tools",
         "feature3": "Priority support",
+        "workspace": "Axia Workspace",
+        "startYour": "Start your",
+        "journey": "journey.",
+        "heroSubtitle": "Configure your custom meeting environment and empower your team today.",
+        "milestone1Title": "Select a customized plan",
+        "milestone1Desc": "Find the package that fits your organization.",
+        "milestone2Title": "Register your company",
+        "milestone2Desc": "Secure unique domain and user profiles.",
+        "milestone3Title": "Fast administrative approval",
+        "milestone3Desc": "We launch your meetings workspace instantly.",
+        "allRightsReserved": "All rights reserved.",
+        "backToWebsite": "Back to website",
+        "termsOfUse": "Terms of Use",
+        "privacyPolicy": "Privacy Policy",
+        "backToPlans": "Back to plans",
         "form": {
             "title": "Your Account Details",
             "subtitle": "Create your admin account and company profile.",

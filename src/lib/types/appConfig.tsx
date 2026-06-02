@@ -73,6 +73,7 @@ export interface OverviewStats {
     apis: number;
     admins: number;
     logs: number;
+    aiWorkers?: number;
     meetingsByStatus?: Record<string, number>;
     meetingsByType?: Record<string, number>;
     trendData?: { name: string; meetings: number }[];
@@ -81,4 +82,58 @@ export interface OverviewStats {
     logsActivity?: { name: string; activity: number }[];
     topCompanies?: { name: string; users: number }[];
     meetingDates?: string[];
+    devStats?: {
+        signups: { total: number; pending: number };
+        contacts: { total: number; pending: number };
+        aiKeys: { total: number; active: number };
+        aiUsage: { total: number; success: number; successRate: number };
+        chats: { total: number; open: number };
+    } | null;
+    recentMeetings?: {
+        id: number;
+        subject: string;
+        date: string;
+        time: string;
+        type: string;
+        status: string;
+    }[];
+    calendarMeetings?: {
+        id: number;
+        subject: string;
+        date: string;
+        time: string;
+        status: string;
+        company?: { name: string } | null;
+    }[];
+    recentLogs?: {
+        id: number;
+        message: string;
+        timestamp: string;
+        user?: {
+            fullname: string | null;
+            username: string | null;
+        } | null;
+        company?: {
+            name: string;
+        } | null;
+    }[];
+    recentSignups?: {
+        id: number;
+        fullname: string;
+        email: string;
+        company_name: string;
+        pack_id: number;
+        created_at: string;
+    }[];
+    recentContacts?: {
+        id: number;
+        sender_name: string | null;
+        sender_email: string;
+        subject: string;
+        created_at: string;
+    }[];
+    aiFeatureUsage?: {
+        name: string;
+        value: number;
+    }[];
 }

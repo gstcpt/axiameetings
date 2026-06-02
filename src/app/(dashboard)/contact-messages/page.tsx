@@ -106,7 +106,7 @@ export default function ContactMessagesPage() {
             });
             const result = await res.json();
             if (result.status) {
-                toast.success(t('toast.deleted') || 'Message supprimé');
+                toast.success(t('toast.deleted'));
                 fetchMessages();
                 if (selected?.id === selectedToDelete.id) {
                     setSelected(null);
@@ -133,7 +133,7 @@ export default function ContactMessagesPage() {
             });
             const result = await res.json();
             if (result.status) {
-                toast.success(t('toast.bulkDeleted') || `${bulkSelected.length} messages supprimés`);
+                toast.success(t('toast.bulkDeleted'));
                 fetchMessages();
                 if (selected && bulkSelected.some(m => m.id === selected.id)) {
                     setSelected(null);
