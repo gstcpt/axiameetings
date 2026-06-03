@@ -15,13 +15,49 @@ import { Badge } from '@/components/ui/badges';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/cards';
 import { StatsCard } from '@/components/ui/StatsCard';
 import { Progress } from '@/components/ui/progress';
-import AreaChartComponent from '@/components/ui/charts/areas';
-import BarChartComponent from '@/components/ui/charts/bars';
-import PieChartComponent from '@/components/ui/charts/pies';
-import DoughnutChartComponent from '@/components/ui/charts/doughnuts';
-import RadialBarChartComponent from '@/components/ui/charts/radialbars';
-import HorizontalBarChartComponent from '@/components/ui/charts/horizontal-bars';
-import RadarChartComponent from '@/components/ui/charts/radars';
+import dynamic from 'next/dynamic';
+
+const ChartSkeleton = ({ height = 200 }: { height?: number }) => (
+  <div 
+    style={{ height }} 
+    className="w-full bg-slate-50/50 animate-pulse rounded-2xl flex items-center justify-center border border-slate-100/50"
+  >
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-slate-500 animate-spin" />
+      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Loading...</span>
+    </div>
+  </div>
+);
+
+const AreaChartComponent = dynamic(() => import('@/components/ui/charts/areas'), { 
+  ssr: false, 
+  loading: () => <ChartSkeleton height={160} /> 
+});
+const BarChartComponent = dynamic(() => import('@/components/ui/charts/bars'), { 
+  ssr: false, 
+  loading: () => <ChartSkeleton height={340} /> 
+});
+const PieChartComponent = dynamic(() => import('@/components/ui/charts/pies'), { 
+  ssr: false, 
+  loading: () => <ChartSkeleton height={200} /> 
+});
+const DoughnutChartComponent = dynamic(() => import('@/components/ui/charts/doughnuts'), { 
+  ssr: false, 
+  loading: () => <ChartSkeleton height={180} /> 
+});
+const RadialBarChartComponent = dynamic(() => import('@/components/ui/charts/radialbars'), { 
+  ssr: false, 
+  loading: () => <ChartSkeleton height={180} /> 
+});
+const HorizontalBarChartComponent = dynamic(() => import('@/components/ui/charts/horizontal-bars'), { 
+  ssr: false, 
+  loading: () => <ChartSkeleton height={160} /> 
+});
+const RadarChartComponent = dynamic(() => import('@/components/ui/charts/radars'), { 
+  ssr: false, 
+  loading: () => <ChartSkeleton height={200} /> 
+});
+
 import { cn } from '@/lib/utils';
 import { CompanyCarousel } from '@/components/ui/carousels';
 
@@ -325,9 +361,51 @@ export default function OverviewPage() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-32 gap-6 bg-slate-50 min-h-screen">
-                <div className="w-16 h-16 border-4 border-[#002B5B]/20 border-t-[#002B5B] rounded-full animate-spin" />
-                <Typography variant="label" className="animate-pulse">{tc('loading')}</Typography>
+            <div className="space-y-8 md:space-y-12 pb-20 animate-pulse">
+                {/* Header Skeleton */}
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div className="flex items-center gap-6 w-full">
+                        <div className="w-12 h-12 bg-slate-200 rounded-xl shrink-0" />
+                        <div className="space-y-2 w-full max-w-sm">
+                            <div className="h-4 bg-slate-200 rounded w-1/3" />
+                            <div className="h-3 bg-slate-100 rounded w-2/3" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Key Metrics Grid Skeleton */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                            <div className="space-y-3 w-2/3">
+                                <div className="h-2.5 bg-slate-200 rounded w-1/2" />
+                                <div className="h-6 bg-slate-300 rounded w-3/4" />
+                            </div>
+                            <div className="w-10 h-10 bg-slate-200 rounded-xl shrink-0" />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Main Content Grid Skeleton */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-2 w-1/3">
+                                <div className="h-3 bg-slate-200 rounded" />
+                                <div className="h-2.5 bg-slate-100 rounded w-2/3" />
+                            </div>
+                            <div className="w-20 h-8 bg-slate-200 rounded-lg" />
+                        </div>
+                        <div className="h-80 bg-slate-50/50 rounded-2xl w-full" />
+                    </div>
+                    <div className="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+                        <div className="space-y-2">
+                            <div className="h-3 bg-slate-200 rounded w-1/2" />
+                            <div className="h-2.5 bg-slate-100 rounded w-3/4" />
+                        </div>
+                        <div className="h-80 bg-slate-50/50 rounded-2xl w-full" />
+                    </div>
+                </div>
             </div>
         );
     }

@@ -143,6 +143,8 @@ model ia_token_usage {
   success  Boolean        @default(true)
   /// Many-to-one relation to the parent token
   token    ia_tokens_keys @relation(fields: [token_id], references: [id], onDelete: Cascade)
+
+  @@index([used_at])
 }
 
 /// PURPOSE: Newsletter subscribers

@@ -32,10 +32,11 @@ def check_json(file_path):
             print(f"Error decoding {file_path}: {e}")
             return None, set()
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
 files = [
-    'e:/AxiaProjects/AxiaMeetings/src/messages/en.json',
-    'e:/AxiaProjects/AxiaMeetings/src/messages/fr.json',
-    'e:/AxiaProjects/AxiaMeetings/src/messages/ar.json'
+    os.path.join(script_dir, 'en.json'),
+    os.path.join(script_dir, 'fr.json'),
+    os.path.join(script_dir, 'ar.json')
 ]
 
 data_sets = {}

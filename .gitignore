@@ -13,9 +13,10 @@ dist/
 # Environment Variables (CRITICAL)
 # -----------------------------------------------------------------------------
 .env
-.docker.env
-.vercel.env
-.render.env
+.env.local
+.env.docker
+.env.vercel
+.env.render
 
 # -----------------------------------------------------------------------------
 # Prisma / Database

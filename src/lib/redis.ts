@@ -1,14 +1,15 @@
 import Redis from 'ioredis';
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+const REDIS_URL = process.env.REDIS_URL;
+const isRedisEnabled = typeof window === 'undefined' && !!REDIS_URL && REDIS_URL !== 'none' && process.env.REDIS_ENABLED !== 'false';
 
 let redisClient: Redis | null = null;
 let isRedisConnected = false;
 let warningLogged = false;
 
-if (typeof window === 'undefined') {
+if (isRedisEnabled) {
     try {
-        redisClient = new Redis(REDIS_URL, {
+        redisClient = new Redis(REDIS_URL!, {
             maxRetriesPerRequest: 1, // Fail fast so it fallback to DB immediately
             connectTimeout: 2000,
             retryStrategy(times) {
