@@ -50,7 +50,6 @@ export function Sidebar({ isOpen, onClose, isCompact, toggleCompact }: SidebarPr
     ];
     const appSettingsItems = [];
     if (isDeveloper) {
-        appSettingsItems.push({ icon: Settings, label: tc("configurations") || "Configurations", href: "/configurations" });
         appSettingsItems.push({ icon: Package, label: t("packs"), href: "/packs" });
         appSettingsItems.push({ icon: Globe, label: t("references"), href: "/references" });
         appSettingsItems.push({ icon: Mail, label: t("newsletters"), href: "/newsletters" });
@@ -58,7 +57,6 @@ export function Sidebar({ isOpen, onClose, isCompact, toggleCompact }: SidebarPr
         appSettingsItems.push({ icon: Sparkles, label: t("aiTokens"), href: "/ai-tokens" });
         appSettingsItems.push({ icon: Inbox, label: t("contactMessages"), href: "/contact-messages" });
         appSettingsItems.push({ icon: ClipboardList, label: t("signupRequests"), href: "/signup-requests" });
-        appSettingsItems.push({ icon: FileText, label: tc("logs") || "Logs", href: "/logs" });
     }
     const featuresItems = [];
     if (isDeveloper) {
